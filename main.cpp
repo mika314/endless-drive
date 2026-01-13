@@ -1,4 +1,6 @@
+#include "assets.hpp"
 #include "example-cubes.hpp"
+#include "mesh.hpp"
 #include <bgfx/platform.h>
 #include <bx/readerwriter.h>
 #include <sdlpp/sdlpp.hpp>
@@ -29,6 +31,10 @@ auto main(int argc, char **argv) -> int
     "bgfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_width, m_height, SDL_WINDOW_SHOWN};
 
   bgfx::renderFrame();
+
+  Assets assets;
+
+  auto &car = assets.get<Mesh>("assets/car.fbx/Car");
 
   auto cubes = ExampleCubes{window};
 
