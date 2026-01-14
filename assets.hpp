@@ -1,5 +1,5 @@
 #pragma once
-#include "asset.hpp"
+#include "base-asset.hpp"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -18,5 +18,5 @@ public:
   }
 
 private:
-  std::unordered_map<std::string, std::unique_ptr<Asset>> assets;
+  std::unordered_map<std::string, std::unique_ptr<BaseAsset>> assets;
 };
