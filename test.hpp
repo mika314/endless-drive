@@ -20,7 +20,7 @@ private:
   bgfx::UniformHandle transUniform;
   bgfx::UniformHandle viewPosUniform;
   bgfx::ProgramHandle prog;
-  glm::vec3 camPos = glm::vec3{-10.f, 0.0f, 0.0f};
+  glm::vec3 camPos = glm::vec3{-2.5f, 0.0f, 0.5f};
   float camYaw = 0.0f;
   float camPitch = 0.0f;
 };

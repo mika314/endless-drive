@@ -43,7 +43,7 @@ Mesh::Mesh(Mesh &&mesh)
     filePath(std::move(mesh.filePath)),
     verts(std::move(mesh.verts)),
     idxes(std::move(mesh.idxes)),
-    mats(std::move(mesh.mats)),
+    mat(std::move(mesh.mat)),
     vbh(mesh.vbh),
     ibh(mesh.ibh)
 {
@@ -97,14 +97,11 @@ auto Mesh::processMesh(const aiMesh *mesh, const aiScene *scene) -> void
   // process material
   if (mesh->mMaterialIndex >= 0)
   {
-    if (mesh->mMaterialIndex >= 0)
-    {
-      aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-      aiString name;
-      material->Get(AI_MATKEY_NAME, name);
-      LOG("Material:", name.C_Str());
-      mats.push_back(filePath + "/" + name.C_Str());
-    }
+    aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+    aiString name;
+    material->Get(AI_MATKEY_NAME, name);
+    LOG("Material:", name.C_Str());
+    mat = filePath + "/" + name.C_Str();
   }
 }
 

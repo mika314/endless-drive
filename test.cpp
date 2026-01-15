@@ -56,8 +56,8 @@ auto Test::tick() -> void
 
     const auto secs = SDL_GetTicks() / 1000.f;
 
-    modelMat = glm::rotate(modelMat, glm::radians(-20 * secs), glm::vec3(0.0f, 1.0f, 0.0f));
-    modelMat = glm::rotate(modelMat, glm::radians(-5 * secs), glm::vec3(1.0f, 0.0f, 0.0f));
+    // modelMat = glm::rotate(modelMat, glm::radians(-20 * secs), glm::vec3(0.0f, 1.0f, 0.0f));
+    // modelMat = glm::rotate(modelMat, glm::radians(-5 * secs), glm::vec3(1.0f, 0.0f, 0.0f));
 
     bgfx::setTransform(&modelMat);
 
@@ -70,6 +70,8 @@ auto Test::tick() -> void
     trans = glm::scale(trans, glm::vec3(1., 1080. / 1920., 1.));
     bgfx::setUniform(transUniform, &trans);
     bgfx::setUniform(viewPosUniform, &camPos);
+    // auto &mat = assets.get<Mat>(car.mat);
+    // mat.arm();
     car.arm();
     bgfx::submit(0, prog);
   }

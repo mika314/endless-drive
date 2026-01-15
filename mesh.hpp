@@ -20,7 +20,11 @@ private:
   std::string filePath;
   std::vector<Vert> verts;
   std::vector<uint16_t> idxes;
-  std::vector<std::string> mats;
+
+public:
+  std::string mat;
+
+private:
   bgfx::VertexBufferHandle vbh;
   bgfx::IndexBufferHandle ibh;
 
