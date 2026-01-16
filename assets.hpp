@@ -7,13 +7,13 @@
 class Assets
 {
 public:
-  template <typename T>
-  auto get(const std::string &path) -> T &
+  template <typename T, typename... Args>
+  auto get(const std::string &path, Args &&...args) -> T &
   {
     auto it = assets.find(path);
     if (it != std::end(assets))
       return static_cast<T &>(*it->second);
-    auto tmp = assets.emplace(path, std::make_unique<T>(path));
+    auto tmp = assets.emplace(path, std::make_unique<T>(path, std::forward<Args>(args)...));
     return static_cast<T &>(*tmp.first->second);
   }
 

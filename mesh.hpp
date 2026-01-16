@@ -2,17 +2,18 @@
 #include "base-asset.hpp"
 #include "vert.hpp"
 #include <assimp/scene.h>
+#include <functional>
 #include <string>
 #include <vector>
 
 class Mesh final : public BaseAsset
 {
 public:
-  Mesh(const std::string &path);
+  Mesh(const std::string &path, class Assets &);
   Mesh(const Mesh &) = delete;
   Mesh(Mesh &&);
   ~Mesh();
-  auto arm() -> void;
+  auto arm() -> class Mat *;
 
 private:
   bool isInit = false;
@@ -20,14 +21,10 @@ private:
   std::string filePath;
   std::vector<Vert> verts;
   std::vector<uint16_t> idxes;
-
-public:
-  std::string mat;
-
-private:
+  Mat *mat = nullptr;
   bgfx::VertexBufferHandle vbh;
   bgfx::IndexBufferHandle ibh;
 
-  auto processNode(const aiNode *, const aiScene *) -> void;
-  auto processMesh(const aiMesh *, const aiScene *) -> void;
+  auto processNode(Assets &, const aiNode *, const aiScene *) -> void;
+  auto processMesh(Assets &, const aiMesh *, const aiScene *) -> void;
 };

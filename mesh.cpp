@@ -1,11 +1,13 @@
 #include "mesh.hpp"
+#include "assets.hpp"
+#include "mat.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <log/log.hpp>
 
-Mesh::Mesh(const std::string &path)
+Mesh::Mesh(const std::string &path, Assets &assets)
 {
   auto [lFilePath, lMeshName] = [&]() {
     auto idx = path.rfind('/');
@@ -30,7 +32,7 @@ Mesh::Mesh(const std::string &path)
     }
     return;
   }
-  processNode(scene->mRootNode, scene);
+  processNode(assets, scene->mRootNode, scene);
   vbh = bgfx::createVertexBuffer(bgfx::makeRef(verts.data(), verts.size() * sizeof(verts[0])),
                                  Vert::msLayout);
   ibh = bgfx::createIndexBuffer(bgfx::makeRef(idxes.data(), idxes.size() * sizeof(idxes[0])));
@@ -43,7 +45,7 @@ Mesh::Mesh(Mesh &&mesh)
     filePath(std::move(mesh.filePath)),
     verts(std::move(mesh.verts)),
     idxes(std::move(mesh.idxes)),
-    mat(std::move(mesh.mat)),
+    mat(mesh.mat),
     vbh(mesh.vbh),
     ibh(mesh.ibh)
 {
@@ -58,7 +60,7 @@ Mesh::~Mesh()
   bgfx::destroy(vbh);
 }
 
-auto Mesh::processNode(const aiNode *node, const aiScene *scene) -> void
+auto Mesh::processNode(Assets &assets, const aiNode *node, const aiScene *scene) -> void
 {
   for (unsigned int i = 0; i < node->mNumMeshes; i++)
   {
@@ -69,13 +71,13 @@ auto Mesh::processNode(const aiNode *node, const aiScene *scene) -> void
       continue;
     }
     LOG("Mesh is found:", meshName);
-    processMesh(mesh, scene);
+    processMesh(assets, mesh, scene);
   }
   for (unsigned int i = 0; i < node->mNumChildren; i++)
-    processNode(node->mChildren[i], scene);
+    processNode(assets, node->mChildren[i], scene);
 }
 
-auto Mesh::processMesh(const aiMesh *mesh, const aiScene *scene) -> void
+auto Mesh::processMesh(Assets &assets, const aiMesh *mesh, const aiScene *scene) -> void
 {
   for (auto i = 0U; i < mesh->mNumVertices; ++i)
   {
@@ -101,12 +103,13 @@ auto Mesh::processMesh(const aiMesh *mesh, const aiScene *scene) -> void
     aiString name;
     material->Get(AI_MATKEY_NAME, name);
     LOG("Material:", name.C_Str());
-    mat = filePath + "/" + name.C_Str();
+    mat = &assets.get<Mat>(filePath + "/" + name.C_Str(), assets, material);
   }
 }
 
-auto Mesh::arm() -> void
+auto Mesh::arm() -> Mat *
 {
   bgfx::setIndexBuffer(ibh);
   bgfx::setVertexBuffer(0, vbh);
+  return mat;
 }

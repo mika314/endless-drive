@@ -19,8 +19,15 @@ private:
   Mesh &car;
   bgfx::UniformHandle transUniform;
   bgfx::UniformHandle viewPosUniform;
-  bgfx::ProgramHandle prog;
   glm::vec3 camPos = glm::vec3{-2.5f, 0.0f, 0.5f};
   float camYaw = 0.0f;
   float camPitch = 0.0f;
+  bgfx::UniformHandle baseColorTex;
+  bgfx::UniformHandle metalicTex;
+  bgfx::UniformHandle roughnessTex;
+  bgfx::UniformHandle setup;
+  bgfx::UniformHandle baseColor;
+  bgfx::UniformHandle metalic;
+  bgfx::UniformHandle roughness;
+  bgfx::ProgramHandle prog;
 };

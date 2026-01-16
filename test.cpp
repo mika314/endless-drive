@@ -1,6 +1,8 @@
 #include "test.hpp"
 #include "get-natives.hpp"
 #include "load-program.hpp"
+#include "mat.hpp"
+#include "tex.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
@@ -9,9 +11,16 @@ Test::Test(sdl::Window &aWin, int aW, int aH)
   : win(aWin),
     w(aW),
     h(aH),
-    car(assets.get<Mesh>("assets/car.fbx/Car.001")),
+    car(assets.get<Mesh>("assets/car.gltf/Car", assets)),
     transUniform(bgfx::createUniform("trans", bgfx::UniformType::Mat4)),
     viewPosUniform(bgfx::createUniform("viewPos", bgfx::UniformType::Vec4)),
+    baseColorTex(bgfx::createUniform("baseColorTex", bgfx::UniformType::Sampler)),
+    metalicTex(bgfx::createUniform("metalicTex", bgfx::UniformType::Sampler)),
+    roughnessTex(bgfx::createUniform("roughnessTex", bgfx::UniformType::Sampler)),
+    setup(bgfx::createUniform("setup", bgfx::UniformType::Vec4)),
+    baseColor(bgfx::createUniform("baseColor", bgfx::UniformType::Vec4)),
+    metalic(bgfx::createUniform("metalic", bgfx::UniformType::Vec4)),
+    roughness(bgfx::createUniform("roughness", bgfx::UniformType::Vec4)),
     prog(loadProgram("test-vs", "test-fs"))
 {
   bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x505050ff, 1.0f, 0);
@@ -56,7 +65,7 @@ auto Test::tick() -> void
 
     const auto secs = SDL_GetTicks() / 1000.f;
 
-    // modelMat = glm::rotate(modelMat, glm::radians(-20 * secs), glm::vec3(0.0f, 1.0f, 0.0f));
+    modelMat = glm::rotate(modelMat, glm::radians(-20 * secs), glm::vec3(0.0f, 0.0f, 1.0f));
     // modelMat = glm::rotate(modelMat, glm::radians(-5 * secs), glm::vec3(1.0f, 0.0f, 0.0f));
 
     bgfx::setTransform(&modelMat);
@@ -72,7 +81,49 @@ auto Test::tick() -> void
     bgfx::setUniform(viewPosUniform, &camPos);
     // auto &mat = assets.get<Mat>(car.mat);
     // mat.arm();
-    car.arm();
+    auto mat = car.arm();
+    auto lSetup = glm::vec4{};
+    if (mat)
+    {
+      if (std::holds_alternative<glm::vec4>(mat->baseColor))
+      {
+        lSetup.x = 0.0f;
+        bgfx::setUniform(baseColor, &std::get<glm::vec4>(mat->baseColor));
+      }
+      else
+      {
+        lSetup.x = 1.f;
+        const auto tex = std::get<Tex *>(mat->baseColor);
+        assert(tex);
+        bgfx::setTexture(0, baseColorTex, std::get<Tex *>(mat->baseColor)->h);
+      }
+      if (std::holds_alternative<float>(mat->metalic))
+      {
+        lSetup.y = 0.0f;
+        bgfx::setUniform(baseColor, &std::get<float>(mat->metalic));
+      }
+      else
+      {
+        lSetup.y = 1.f;
+        const auto tex = std::get<Tex *>(mat->metalic);
+        assert(tex);
+        bgfx::setTexture(1, metalicTex, std::get<Tex *>(mat->baseColor)->h);
+      }
+      if (std::holds_alternative<float>(mat->roughness))
+      {
+        lSetup.z = 0.0f;
+        bgfx::setUniform(baseColor, &std::get<float>(mat->roughness));
+      }
+      else
+      {
+        lSetup.z = 1.f;
+        const auto tex = std::get<Tex *>(mat->roughness);
+        assert(tex);
+        bgfx::setTexture(2, roughnessTex, std::get<Tex *>(mat->baseColor)->h);
+      }
+    }
+    bgfx::setUniform(setup, &lSetup);
+
     bgfx::submit(0, prog);
   }
 
@@ -81,6 +132,13 @@ auto Test::tick() -> void
 
 Test::~Test()
 {
+  bgfx::destroy(roughness);
+  bgfx::destroy(metalic);
+  bgfx::destroy(baseColor);
+  bgfx::destroy(setup);
+  bgfx::destroy(roughnessTex);
+  bgfx::destroy(metalicTex);
+  bgfx::destroy(baseColorTex);
   bgfx::destroy(prog);
   bgfx::destroy(viewPosUniform);
   bgfx::destroy(transUniform);
