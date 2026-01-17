@@ -3,7 +3,7 @@
 #include <bgfx/bgfx.h>
 #include <log/log.hpp>
 
-Tex::Tex(const std::string &path) : h(loadTexture(("assets/" + path).c_str()))
+Tex::Tex(const std::string &path) : h(loadTexture(("data/" + path).c_str()))
 {
   LOG("Loading texture:", path);
   if (!isValid(h))

@@ -55,7 +55,7 @@ static bgfx::ShaderHandle loadShader(const char *_name)
   case bgfx::RendererType::Gnm: shaderPath = "bgfx/bgfx/examples/runtime/shaders/pssl/"; break;
   case bgfx::RendererType::Metal: shaderPath = "bgfx/bgfx/examples/runtime/shaders/metal/"; break;
   case bgfx::RendererType::Nvn: shaderPath = "bgfx/bgfx/examples/runtime/shaders/nvn/"; break;
-  case bgfx::RendererType::OpenGL: shaderPath = ".bins/"; break;
+  case bgfx::RendererType::OpenGL: shaderPath = "data/"; break;
   case bgfx::RendererType::OpenGLES: shaderPath = "bgfx/bgfx/examples/runtime/shaders/essl/"; break;
   case bgfx::RendererType::Vulkan: shaderPath = "bgfx/bgfx/examples/runtime/shaders/spirv/"; break;
 

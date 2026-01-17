@@ -11,7 +11,7 @@ Test::Test(sdl::Window &aWin, int aW, int aH)
   : win(aWin),
     w(aW),
     h(aH),
-    car(assets.get<Mesh>("assets/car.gltf/Car", assets)),
+    car(assets.get<Mesh>("data/car.gltf/Car", assets)),
     u_trans(bgfx::createUniform("trans", bgfx::UniformType::Mat4)),
     u_camPos(bgfx::createUniform("camPos", bgfx::UniformType::Vec4)),
     u_baseColorTex(bgfx::createUniform("baseColorTex", bgfx::UniformType::Sampler)),
