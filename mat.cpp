@@ -24,14 +24,14 @@ Mat::Mat(const std::string &path, class Assets &assets, class aiMaterial *aiMat)
   {
     auto str = aiString{};
     aiMat->GetTexture(aiTextureType_METALNESS, 0, &str);
-    metalic = &assets.get<Tex>(str.C_Str());
+    metallic = &assets.get<Tex>(str.C_Str());
   }
   else
   {
     auto m = 0.0f;
     aiMat->Get(AI_MATKEY_METALLIC_FACTOR, m);
-    metalic = m;
-    LOG("metalic:", m);
+    metallic = m;
+    LOG("metallic:", m);
   }
   if (aiMat->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0)
   {

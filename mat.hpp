@@ -10,6 +10,6 @@ public:
   Mat(const std::string &path, class Assets &, class aiMaterial *);
 
   std::variant<glm::vec4, class Tex *> baseColor;
-  std::variant<float, class Tex *> metalic;
+  std::variant<float, class Tex *> metallic;
   std::variant<float, class Tex *> roughness;
 };
