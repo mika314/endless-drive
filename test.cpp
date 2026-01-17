@@ -108,7 +108,7 @@ auto Test::tick() -> void
         settings.y = 1.f;
         const auto tex = std::get<Tex *>(mat->metallic);
         assert(tex);
-        bgfx::setTexture(1, u_metallicTex, std::get<Tex *>(mat->baseColor)->h);
+        bgfx::setTexture(1, u_metallicTex, std::get<Tex *>(mat->metallic)->h);
       }
       if (std::holds_alternative<float>(mat->roughness))
       {
@@ -121,7 +121,7 @@ auto Test::tick() -> void
         settings.z = 1.f;
         const auto tex = std::get<Tex *>(mat->roughness);
         assert(tex);
-        bgfx::setTexture(2, u_roughnessTex, std::get<Tex *>(mat->baseColor)->h);
+        bgfx::setTexture(2, u_roughnessTex, std::get<Tex *>(mat->roughness)->h);
       }
     }
     bgfx::setUniform(u_settings, &settings);

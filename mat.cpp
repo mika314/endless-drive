@@ -7,6 +7,7 @@
 Mat::Mat(const std::string &path, class Assets &assets, class aiMaterial *aiMat)
 {
   LOG("Loading material:", path);
+
   if (aiMat->GetTextureCount(aiTextureType_BASE_COLOR) > 0)
   {
     auto str = aiString{};
@@ -20,10 +21,17 @@ Mat::Mat(const std::string &path, class Assets &assets, class aiMaterial *aiMat)
     baseColor = glm::vec4(color.r, color.g, color.b, color.a);
     LOG("base color:", color.r, color.g, color.b, color.a);
   }
+
   if (aiMat->GetTextureCount(aiTextureType_METALNESS) > 0)
   {
     auto str = aiString{};
     aiMat->GetTexture(aiTextureType_METALNESS, 0, &str);
+    metallic = &assets.get<Tex>(str.C_Str());
+  }
+  else if (aiMat->GetTextureCount(aiTextureType_UNKNOWN) > 0)
+  {
+    auto str = aiString{};
+    aiMat->GetTexture(aiTextureType_UNKNOWN, 0, &str);
     metallic = &assets.get<Tex>(str.C_Str());
   }
   else
@@ -33,10 +41,17 @@ Mat::Mat(const std::string &path, class Assets &assets, class aiMaterial *aiMat)
     metallic = m;
     LOG("metallic:", m);
   }
+
   if (aiMat->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0)
   {
     auto str = aiString{};
     aiMat->GetTexture(aiTextureType_DIFFUSE_ROUGHNESS, 0, &str);
+    roughness = &assets.get<Tex>(str.C_Str());
+  }
+  else if (aiMat->GetTextureCount(aiTextureType_UNKNOWN) > 0)
+  {
+    auto str = aiString{};
+    aiMat->GetTexture(aiTextureType_UNKNOWN, 0, &str);
     roughness = &assets.get<Tex>(str.C_Str());
   }
   else

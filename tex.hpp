@@ -10,6 +10,6 @@ public:
   Tex(const Tex &) = delete;
   ~Tex();
 
-//private:
+// private: TODO-Mika make texture handle private
   bgfx::TextureHandle h;
 };

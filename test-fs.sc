@@ -54,8 +54,8 @@ float sphereIntersect(vec3 ro, vec3 rd, vec4 sph)
 void main()
 {
   vec3 lBaseColor = settings.x > .5f ? texture2D(baseColorTex, v_uv).rgb : baseColor.rgb;
-  float lMetallic = settings.y > .5f ? texture2D(metallicTex, v_uv).r : metallic.r;
-  float lRoughness = settings.z > .5f ? texture2D(roughnessTex, v_uv).r : roughness.r;
+  float lMetallic = settings.y > .5f ? texture2D(metallicTex, v_uv).b : metallic.r;
+  float lRoughness = settings.z > .5f ? texture2D(roughnessTex, v_uv).g : roughness.r;
 
   vec3 lightPos = vec3(-1.25, 1.0, 2);
   vec3 lightColor = vec3(4.0);
