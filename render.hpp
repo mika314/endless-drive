@@ -1,26 +1,22 @@
 #pragma once
-#include "assets.hpp"
-#include "mesh.hpp"
 #include "uni.hpp"
 #include <bgfx/bgfx.h>
 #include <sdlpp/sdlpp.hpp>
 
-class Test
+class Render
 {
 public:
-  Test(sdl::Window &, int w, int h);
-  ~Test();
-  auto tick() -> void;
+  Render(sdl::Window &, int w, int h);
+  ~Render();
+  auto render(const class Scene &) -> void;
+  auto setMaterialAndRender(const class Material *) -> void;
 
 private:
   sdl::Window &win;
   int w;
   int h;
-  Assets assets;
-  Mesh &car;
   float camYaw = 0.0f;
   float camPitch = 0.0f;
-  Uni<glm::mat4x4> u_trans = "trans";
   Uni<glm::vec4> u_camPos = {"camPos", glm::vec4{-2.5f, 0.0f, .5f, 1.f}};
   Uni<glm::mat4x4> u_mtx = "mtx";
   Uni<Tex> u_baseColorTex = {"baseColorTex", 0};

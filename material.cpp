@@ -1,10 +1,10 @@
-#include "mat.hpp"
+#include "material.hpp"
 #include "assets.hpp"
 #include "tex.hpp"
 #include <assimp/material.h>
 #include <log/log.hpp>
 
-Mat::Mat(const std::string &path, class Assets &assets, class aiMaterial *aiMat)
+Material::Material(const std::string &path, class Assets &assets, class aiMaterial *aiMat)
 {
   LOG("Loading material:", path);
 

@@ -4,10 +4,10 @@
 #include <string>
 #include <variant>
 
-class Mat final : public BaseAsset
+class Material final : public BaseAsset
 {
 public:
-  Mat(const std::string &path, class Assets &, class aiMaterial *);
+  Material(const std::string &path, class Assets &, class aiMaterial *);
 
   std::variant<glm::vec4, class Tex *> baseColor;
   std::variant<float, class Tex *> metallic;

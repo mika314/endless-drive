@@ -13,7 +13,8 @@ public:
   Mesh(const Mesh &) = delete;
   Mesh(Mesh &&);
   ~Mesh();
-  auto arm() -> class Mat *;
+  auto geomPass(class Render &) const -> void;
+  auto lightPass(class Render &) const -> void;
 
 private:
   bool isInit = false;
@@ -21,7 +22,7 @@ private:
   std::string filePath;
   std::vector<Vert> verts;
   std::vector<uint16_t> idxes;
-  Mat *mat = nullptr;
+  class Material *material = nullptr;
   bgfx::VertexBufferHandle vbh;
   bgfx::IndexBufferHandle ibh;
 

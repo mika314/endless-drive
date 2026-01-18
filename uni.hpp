@@ -17,9 +17,9 @@ namespace internal
       return bgfx::UniformType::Sampler;
     else if constexpr (std::is_same_v<T, glm::vec4>)
       return bgfx::UniformType::Vec4;
-    else if constexpr (std::is_same_v<T, glm::mat3x3>)
+    else if constexpr (std::is_same_v<T, glm::mat3>)
       return bgfx::UniformType::Mat3;
-    else if constexpr (std::is_same_v<T, glm::mat4x4>)
+    else if constexpr (std::is_same_v<T, glm::mat4>)
       return bgfx::UniformType::Mat4;
     else
       static_assert(always_false_v<T>, "Unsupported uniform type");
@@ -39,7 +39,7 @@ public:
   Uni &operator=(const T &aV)
   {
     v = std::move(aV);
-    bgfx::setUniform(h, &v);
+    arm();
     return *this;
   }
   operator T() { return v; }

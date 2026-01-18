@@ -1,6 +1,7 @@
 #include "mesh.hpp"
 #include "assets.hpp"
-#include "mat.hpp"
+#include "material.hpp"
+#include "render.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <glm/vec2.hpp>
@@ -15,7 +16,7 @@ Mesh::Mesh(const std::string &path, Assets &assets)
   }();
   meshName = std::move(lMeshName);
   filePath = std::move(lFilePath);
-  LOG(filePath, meshName);
+  LOG(this, "Mesh", filePath, meshName);
   Assimp::Importer import;
   const aiScene *scene = import.ReadFile(filePath, aiProcess_Triangulate | aiProcess_FlipUVs);
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -45,7 +46,7 @@ Mesh::Mesh(Mesh &&mesh)
     filePath(std::move(mesh.filePath)),
     verts(std::move(mesh.verts)),
     idxes(std::move(mesh.idxes)),
-    mat(mesh.mat),
+    material(mesh.material),
     vbh(mesh.vbh),
     ibh(mesh.ibh)
 {
@@ -67,10 +68,10 @@ auto Mesh::processNode(Assets &assets, const aiNode *node, const aiScene *scene)
     auto mesh = scene->mMeshes[node->mMeshes[i]];
     if (mesh->mName.C_Str() != meshName)
     {
-      LOG("Mesh:", mesh->mName.C_Str());
+      LOG(this, "Mesh:", mesh->mName.C_Str());
       continue;
     }
-    LOG("Mesh is found:", meshName);
+    LOG(this, "Mesh is found:", meshName);
     processMesh(assets, mesh, scene);
   }
   for (unsigned int i = 0; i < node->mNumChildren; i++)
@@ -99,17 +100,19 @@ auto Mesh::processMesh(Assets &assets, const aiMesh *mesh, const aiScene *scene)
   // process material
   if (mesh->mMaterialIndex >= 0)
   {
-    aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+    aiMaterial *aiMat = scene->mMaterials[mesh->mMaterialIndex];
     aiString name;
-    material->Get(AI_MATKEY_NAME, name);
-    LOG("Material:", name.C_Str());
-    mat = &assets.get<Mat>(filePath + "/" + name.C_Str(), assets, material);
+    aiMat->Get(AI_MATKEY_NAME, name);
+    LOG(this, "Material:", name.C_Str());
+    material = &assets.get<Material>(filePath + "/" + name.C_Str(), aiMat);
   }
 }
 
-auto Mesh::arm() -> Mat *
+auto Mesh::geomPass(class Render &render) const -> void
 {
   bgfx::setIndexBuffer(ibh);
   bgfx::setVertexBuffer(0, vbh);
-  return mat;
+  render.setMaterialAndRender(material);
 }
+
+auto Mesh::lightPass(class Render &) const -> void {}

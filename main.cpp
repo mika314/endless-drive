@@ -1,9 +1,11 @@
 #include "assets.hpp"
 #include "get-natives.hpp"
 #include "mesh.hpp"
-#include "test.hpp"
+#include "render.hpp"
+#include "scene.hpp"
 #include <bgfx/platform.h>
 #include <bx/readerwriter.h>
+#include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>
 
 #if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
@@ -46,7 +48,10 @@ auto main(int argc, char **argv) -> int
 
   bgfx::renderFrame();
   {
-    auto example = Test{win, m_width, m_height};
+    auto render = Render{win, m_width, m_height};
+    auto assets = Assets{};
+    auto scene = Scene{assets};
+    auto &car = scene.addVisualNode<Mesh>("data/car.gltf/Car");
 
     auto done = false;
     auto e = sdl::EventHandler{};
@@ -60,7 +65,12 @@ auto main(int argc, char **argv) -> int
     while (!done)
     {
       while (e.poll()) {}
-      example.tick();
+      auto now = SDL_GetTicks();
+      car.setRot(glm::vec3{0.0f, 0.0f, now / 1000.f});
+      car.setScale(glm::vec3{1.0f, 1.0f, 1 + sin(now / 1000.f)});
+      car.setPos(glm::vec3{cos(now / 1000.f), sin(now / 1000.f), 0.0f});
+
+      render.render(scene);
     }
   }
 

@@ -6,7 +6,7 @@
 class Tex final : public BaseAsset
 {
 public:
-  Tex(const std::string &path);
+  Tex(const std::string &path, class Assets&);
   Tex(const Tex &) = delete;
   ~Tex();
 

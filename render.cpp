@@ -1,7 +1,8 @@
-#include "test.hpp"
+#include "render.hpp"
 #include "get-natives.hpp"
 #include "load-program.hpp"
-#include "mat.hpp"
+#include "material.hpp"
+#include "scene.hpp"
 #include "tex.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -67,11 +68,10 @@ namespace
   }
 } // namespace
 
-Test::Test(sdl::Window &aWin, int aW, int aH)
+Render::Render(sdl::Window &aWin, int aW, int aH)
   : win(aWin),
     w(aW),
     h(aH),
-    car(assets.get<Mesh>("data/car.gltf/Car", assets)),
     deferrd(w, h),
     geom(loadProgram("geom-vs", "geom-fs")),
     light(loadProgram("light-vs", "light-fs")),
@@ -79,7 +79,7 @@ Test::Test(sdl::Window &aWin, int aW, int aH)
 {
 }
 
-auto Test::tick() -> void
+auto Render::render(const Scene &scene) -> void
 {
   deferrd.geom();
   {
@@ -99,83 +99,7 @@ auto Test::tick() -> void
 
   u_camPos.arm();
 
-  auto i = 0;
-  for (auto cubePosition : std::array{
-         glm::vec3(0.0f, 0.0f, 0.0f),
-         // glm::vec3(2.0f, 5.0f, -15.0f),
-         // glm::vec3(-1.5f, -2.2f, -2.5f),
-         // glm::vec3(-3.8f, -2.0f, -12.3f),
-         // glm::vec3(2.4f, -0.4f, -3.5f),
-         // glm::vec3(-1.7f, 3.0f, -7.5f),
-         // glm::vec3(1.3f, -2.0f, -2.5f),
-         // glm::vec3(1.5f, 2.0f, -2.5f),
-         // glm::vec3(1.5f, 0.2f, -1.5f),
-         // glm::vec3(-1.3f, 1.0f, -1.5f)
-       })
-  {
-    auto modelMat = glm::mat4(1.0f);
-    modelMat = glm::translate(modelMat, cubePosition);
-    float angle = 20.0f * i++;
-    modelMat = glm::rotate(modelMat, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-
-    const auto secs = SDL_GetTicks() / 1000.f;
-
-    modelMat = glm::rotate(modelMat, glm::radians(-20 * secs), glm::vec3(0.0f, 0.0f, 1.0f));
-    // modelMat = glm::rotate(modelMat, glm::radians(-5 * secs), glm::vec3(1.0f, 0.0f, 0.0f));
-
-    bgfx::setTransform(&modelMat);
-
-    u_trans = [&]() {
-      auto r = glm::mat4(1.0f);
-      r = glm::rotate(r, glm::radians(50.f * secs), glm::vec3(0.0, 0.0, 1.0));
-      r = glm::scale(r, glm::vec3(1.f, 1.f * h / w, 1.f));
-      return r;
-    }();
-    const auto mat = car.arm();
-    auto tmpSettings = glm::vec4{};
-    if (mat)
-    {
-      if (std::holds_alternative<glm::vec4>(mat->baseColor))
-      {
-        tmpSettings.x = 0.0f;
-        u_baseColor = std::get<glm::vec4>(mat->baseColor);
-      }
-      else
-      {
-        tmpSettings.x = 1.f;
-        const auto tex = std::get<Tex *>(mat->baseColor);
-        assert(tex);
-        u_baseColorTex = *tex;
-      }
-      if (std::holds_alternative<float>(mat->metallic))
-      {
-        tmpSettings.y = 0.0f;
-        u_metallic = glm::vec4{std::get<float>(mat->metallic)};
-      }
-      else
-      {
-        tmpSettings.y = 1.f;
-        const auto tex = std::get<Tex *>(mat->metallic);
-        assert(tex);
-        u_metallicTex = *tex;
-      }
-      if (std::holds_alternative<float>(mat->roughness))
-      {
-        tmpSettings.z = 0.0f;
-        u_roughness = glm::vec4{std::get<float>(mat->roughness)};
-      }
-      else
-      {
-        tmpSettings.z = 1.f;
-        const auto tex = std::get<Tex *>(mat->roughness);
-        assert(tex);
-        u_roughnessTex = *tex;
-      }
-    }
-    u_settings = tmpSettings;
-
-    bgfx::submit(geomRenderPass, geom);
-  }
+  scene.geomPass(*this);
 
   for (auto x = -2.f; x < 2.f; x += 1.f)
     for (auto y = -2.f; y < 2.f; y += 1.f)
@@ -194,7 +118,7 @@ auto Test::tick() -> void
   bgfx::frame();
 }
 
-Test::~Test()
+Render::~Render()
 {
   bgfx::destroy(combine);
   bgfx::destroy(light);
@@ -220,7 +144,7 @@ static auto depthBufTexFmt()
            : bgfx::TextureFormat::D24;
 }
 
-Test::Deferrd::Deferrd(int w, int h)
+Render::Deferrd::Deferrd(int w, int h)
   : t_baseColor(
       bgfx::createTexture2D(w, h, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT | flags)),
     t_metallicRoughness(
@@ -271,7 +195,7 @@ Test::Deferrd::Deferrd(int w, int h)
   bgfx::setViewTransform(combineRenderPass, nullptr, &proj);
 }
 
-Test::Deferrd::~Deferrd()
+Render::Deferrd::~Deferrd()
 {
   bgfx::destroy(lightBuffer);
   bgfx::destroy(t_lightBuffer);
@@ -282,13 +206,13 @@ Test::Deferrd::~Deferrd()
   bgfx::destroy(t_baseColor);
 }
 
-auto Test::Deferrd::geom() -> void
+auto Render::Deferrd::geom() -> void
 {
   bgfx::setState(BGFX_STATE_WRITE_R | BGFX_STATE_WRITE_G | BGFX_STATE_WRITE_B | BGFX_STATE_WRITE_A |
                  BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LESS | BGFX_STATE_CULL_CW | BGFX_STATE_MSAA);
 }
 
-auto Test::Deferrd::light() -> void
+auto Render::Deferrd::light() -> void
 {
   u_normals = t_normals;
   u_metallicRoughness = t_metallicRoughness;
@@ -297,10 +221,57 @@ auto Test::Deferrd::light() -> void
   screenSpaceQuad(caps->originBottomLeft);
 }
 
-auto Test::Deferrd::combine() -> void
+auto Render::Deferrd::combine() -> void
 {
   u_baseColor = t_baseColor;
   u_lightBuffer = t_lightBuffer;
   bgfx::setState(0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
   screenSpaceQuad(caps->originBottomLeft);
+}
+
+auto Render::setMaterialAndRender(const Material *mat) -> void
+{
+  auto tmpSettings = glm::vec4{};
+  if (mat)
+  {
+    if (std::holds_alternative<glm::vec4>(mat->baseColor))
+    {
+      tmpSettings.x = 0.0f;
+      u_baseColor = std::get<glm::vec4>(mat->baseColor);
+    }
+    else
+    {
+      tmpSettings.x = 1.f;
+      const auto tex = std::get<Tex *>(mat->baseColor);
+      assert(tex);
+      u_baseColorTex = *tex;
+    }
+    if (std::holds_alternative<float>(mat->metallic))
+    {
+      tmpSettings.y = 0.0f;
+      u_metallic = glm::vec4{std::get<float>(mat->metallic)};
+    }
+    else
+    {
+      tmpSettings.y = 1.f;
+      const auto tex = std::get<Tex *>(mat->metallic);
+      assert(tex);
+      u_metallicTex = *tex;
+    }
+    if (std::holds_alternative<float>(mat->roughness))
+    {
+      tmpSettings.z = 0.0f;
+      u_roughness = glm::vec4{std::get<float>(mat->roughness)};
+    }
+    else
+    {
+      tmpSettings.z = 1.f;
+      const auto tex = std::get<Tex *>(mat->roughness);
+      assert(tex);
+      u_roughnessTex = *tex;
+    }
+  }
+  u_settings = tmpSettings;
+
+  bgfx::submit(geomRenderPass, geom);
 }

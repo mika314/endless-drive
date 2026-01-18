@@ -13,7 +13,7 @@ public:
     auto it = assets.find(path);
     if (it != std::end(assets))
       return static_cast<T &>(*it->second);
-    auto tmp = assets.emplace(path, std::make_unique<T>(path, std::forward<Args>(args)...));
+    auto tmp = assets.emplace(path, std::make_unique<T>(path, *this, std::forward<Args>(args)...));
     return static_cast<T &>(*tmp.first->second);
   }
 
