@@ -5,6 +5,7 @@
 #include "render.hpp"
 #include "scene.hpp"
 #include <bgfx/platform.h>
+#include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>
 
 #if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
@@ -64,11 +65,20 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       assets, "data/fancy-car.gltf/SM_vehCar_vehicle06_LOD-" + std::to_string(i));
     carParts.push_back(part);
   }
+
+  for (auto i = -10; i < 100; ++i)
+  {
+    const auto dx = 10 * sin(i * 0.1f) + 5 * sin(i * 0.2);
+
+    auto &trafficConeR = scene.addVisualNodeFromAssets<Mesh>(assets, "data/traffic-cone.gltf/SM_Cone01");
+    trafficConeR.setPos(glm::vec3{dx + 4.f, 2 * i, 0.0f});
+    auto &trafficConeL = scene.addVisualNodeFromAssets<Mesh>(assets, "data/traffic-cone.gltf/SM_Cone01");
+    trafficConeL.setPos(glm::vec3{dx - 4.f, 2 * i, 0.0f});
+  }
   for (auto x = -2.f; x < 2.f; x += 1.f)
     for (auto y = -2.f; y < 2.f; y += 1.f)
     {
-      auto &light = scene.addVisualNode<Light>(
-        2.f * glm::vec4{(2.f * x + 2.f) / 4.f, (2.f * y + 2.f) / 4.f, .5f, 0.0f});
+      auto &light = scene.addVisualNode<Light>(2.f * glm::vec3{1.f});
       light.setPos(glm::vec3{x, y, 2});
     }
 
@@ -81,6 +91,10 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     case SDLK_q: done = true; break;
     }
   };
+
+  auto t0 = SDL_GetTicks();
+  auto cnt = 0;
+
   while (!done)
   {
     while (e.poll()) {}
@@ -93,5 +107,12 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     }
 
     render.render(scene);
+    if (cnt++ > 1200)
+    {
+      auto t1 = SDL_GetTicks();
+      LOG("FPS:", cnt * 1000 / (t1 - t0));
+      cnt -= 1200;
+      t0 = t1;
+    }
   }
 }

@@ -89,7 +89,7 @@ auto Render::render(const Scene &scene) -> void
       tmpCamPos,
       tmpCamPos + glm::vec3{glm::rotate(glm::mat4{1.0f}, camYaw, glm::vec3{0.0f, 0.0f, 1.f}) *
                             glm::rotate(glm::mat4{1.0f}, camPitch, glm::vec3{0.0f, 1.f, 0.0f}) *
-                            glm::vec4{1.f, 0.f, 0.f, 1.f}},
+                            glm::vec4{0.f, 1.f, 0.f, 1.f}},
       glm::vec3(0.0, 0.0, 1.0));
 
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), 1.f * w / h, 0.1f, 100.0f);
@@ -267,10 +267,10 @@ auto Render::setMaterialAndRender(const Material *mat) -> void
   bgfx::submit(geomRenderPass, geom);
 }
 
-auto Render::setLightAndRender(glm::vec3 pos, glm::vec4 color) -> void
+auto Render::setLightAndRender(glm::vec3 pos, glm::vec3 color) -> void
 {
   deferrd.light();
   u_lightPos = glm::vec4{pos, 1.f};
-  u_lightColor = color;
+  u_lightColor = glm::vec4{color, 1.f};
   bgfx::submit(lightRenderPass, light);
 }

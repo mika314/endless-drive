@@ -1,0 +1,197 @@
+{
+	"asset":
+	{
+		"version": "2.0",
+		"generator": "Unreal Engine 5.5.4"
+	},
+	"scene": 0,
+	"accessors": [
+		{
+			"bufferView": 0,
+			"count": 2106,
+			"type": "SCALAR",
+			"componentType": 5123
+		},
+		{
+			"bufferView": 1,
+			"count": 592,
+			"type": "VEC3",
+			"componentType": 5126,
+			"min": [ -0.248396292, -7.62939436e-08, -0.249538183 ],
+			"max": [ 0.248396292, 0.943223178, 0.249538109 ]
+		},
+		{
+			"bufferView": 2,
+			"count": 592,
+			"type": "VEC3",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 3,
+			"count": 592,
+			"type": "VEC4",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 4,
+			"count": 592,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 5,
+			"count": 592,
+			"type": "VEC2",
+			"componentType": 5126
+		}
+	],
+	"buffers": [
+		{
+			"uri": "SM_Cone01.bin",
+			"byteLength": 37364
+		}
+	],
+	"bufferViews": [
+		{
+			"buffer": 0,
+			"byteLength": 4212,
+			"target": 34963
+		},
+		{
+			"buffer": 0,
+			"byteLength": 7104,
+			"byteOffset": 4212,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 7104,
+			"byteOffset": 11316,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 9472,
+			"byteOffset": 18420,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 4736,
+			"byteOffset": 27892,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 4736,
+			"byteOffset": 32628,
+			"target": 34962
+		}
+	],
+	"images": [
+		{
+			"uri": "MI_RoadBarriers_BaseColor.png"
+		},
+		{
+			"uri": "MI_RoadBarriers_MetallicRoughness.png"
+		},
+		{
+			"uri": "MI_RoadBarriers_Emissive.png"
+		},
+		{
+			"uri": "T_RoadBarriers_Normal.png"
+		}
+	],
+	"materials": [
+		{
+			"name": "MI_RoadBarriers",
+			"pbrMetallicRoughness":
+			{
+				"baseColorTexture":
+				{
+					"index": 0
+				},
+				"metallicRoughnessTexture":
+				{
+					"index": 1
+				}
+			},
+			"normalTexture":
+			{
+				"index": 3
+			},
+			"emissiveTexture":
+			{
+				"index": 2
+			},
+			"emissiveFactor": [ 1, 1, 1 ],
+			"extensions":
+			{
+				"KHR_materials_emissive_strength":
+				{
+					"emissiveStrength": 10
+				}
+			}
+		}
+	],
+	"meshes": [
+		{
+			"name": "SM_Cone01",
+			"primitives": [
+				{
+					"attributes":
+					{
+						"POSITION": 1,
+						"NORMAL": 2,
+						"TANGENT": 3,
+						"TEXCOORD_0": 4,
+						"TEXCOORD_1": 5
+					},
+					"indices": 0,
+					"material": 0
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"mesh": 0
+		}
+	],
+	"samplers": [
+		{
+			"minFilter": 9987,
+			"magFilter": 9729
+		}
+	],
+	"scenes": [
+		{
+			"nodes": [ 0 ]
+		}
+	],
+	"textures": [
+		{
+			"name": "MI_RoadBarriers_BaseColor",
+			"sampler": 0,
+			"source": 0
+		},
+		{
+			"name": "MI_RoadBarriers_MetallicRoughness",
+			"sampler": 0,
+			"source": 1
+		},
+		{
+			"name": "MI_RoadBarriers_Emissive",
+			"sampler": 0,
+			"source": 2
+		},
+		{
+			"name": "T_RoadBarriers_Normal",
+			"sampler": 0,
+			"source": 3
+		}
+	],
+	"extensionsUsed": [
+		"KHR_materials_emissive_strength"
+	]
+}
