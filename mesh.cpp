@@ -18,7 +18,7 @@ Mesh::Mesh(const std::string &path, Assets &assets)
   filePath = std::move(lFilePath);
   LOG(this, "Mesh", filePath, meshName);
   Assimp::Importer import;
-  const aiScene *scene = import.ReadFile(filePath, aiProcess_Triangulate | aiProcess_FlipUVs);
+  const aiScene *scene = import.ReadFile("data/" + filePath, aiProcess_Triangulate | aiProcess_FlipUVs);
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
   {
     LOG("ERROR::ASSIMP::", import.GetErrorString());
