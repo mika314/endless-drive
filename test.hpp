@@ -1,6 +1,7 @@
 #pragma once
 #include "assets.hpp"
 #include "mesh.hpp"
+#include "uni.hpp"
 #include <bgfx/bgfx.h>
 #include <sdlpp/sdlpp.hpp>
 
@@ -17,19 +18,18 @@ private:
   int h;
   Assets assets;
   Mesh &car;
-  glm::vec3 camPos = glm::vec3{-2.5f, 0.0f, 0.5f};
   float camYaw = 0.0f;
   float camPitch = 0.0f;
-  bgfx::UniformHandle u_trans;
-  bgfx::UniformHandle u_camPos;
-  bgfx::UniformHandle u_mtx;
-  bgfx::UniformHandle u_baseColorTex;
-  bgfx::UniformHandle u_metallicTex;
-  bgfx::UniformHandle u_roughnessTex;
-  bgfx::UniformHandle u_settings;
-  bgfx::UniformHandle u_baseColor;
-  bgfx::UniformHandle u_metallic;
-  bgfx::UniformHandle u_roughness;
+  Uni<glm::mat4x4> u_trans = "trans";
+  Uni<glm::vec4> u_camPos = {"camPos", glm::vec4{-2.5f, 0.0f, .5f, 1.f}};
+  Uni<glm::mat4x4> u_mtx = "mtx";
+  Uni<Tex> u_baseColorTex = {"baseColorTex", 0};
+  Uni<Tex> u_metallicTex = {"metallicTex", 1};
+  Uni<Tex> u_roughnessTex = {"roughnessTex", 2};
+  Uni<glm::vec4> u_settings = "settings";
+  Uni<glm::vec4> u_baseColor = "baseColor";
+  Uni<glm::vec4> u_metallic = "metallic";
+  Uni<glm::vec4> u_roughness = "roughness";
 
   class Deferrd
   {
@@ -37,8 +37,11 @@ private:
     Deferrd(int w, int h);
     Deferrd(const Deferrd &) = delete;
     ~Deferrd();
+    auto geom() -> void;
+    auto light() -> void;
+    auto combine() -> void;
 
-    // private: TODO-Mika make it private
+  private:
     bgfx::TextureHandle t_baseColor;
     bgfx::TextureHandle t_metallicRoughness;
     bgfx::TextureHandle t_normals;
@@ -47,15 +50,15 @@ private:
     bgfx::FrameBufferHandle gBuffer;
     bgfx::TextureHandle t_lightBuffer;
     bgfx::FrameBufferHandle lightBuffer;
-    bgfx::UniformHandle u_baseColor;
-    bgfx::UniformHandle u_metallicRoughness;
-    bgfx::UniformHandle u_normals;
-    bgfx::UniformHandle u_depth;
-    bgfx::UniformHandle u_lightBuffer;
+    Uni<Tex> u_normals = {"normals", 0};
+    Uni<Tex> u_metallicRoughness = {"metallicRoughness", 1};
+    Uni<Tex> u_depth = {"depth", 2};
+    Uni<Tex> u_baseColor = {"baseColor", 0};
+    Uni<Tex> u_lightBuffer = {"lightBuffer", 1};
+    const bgfx::Caps *caps;
   } deferrd;
 
   bgfx::ProgramHandle geom;
   bgfx::ProgramHandle light;
   bgfx::ProgramHandle combine;
-  const bgfx::Caps *caps;
 };
