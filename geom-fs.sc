@@ -11,14 +11,18 @@ uniform vec4 metallic;
 uniform vec4 roughness;
 uniform vec4 camPos;
 
+vec4 encodeNormalUint(vec4 normal)
+{
+  return vec4(normalize(normal.xyz) * .5f + .5f, 0.f);
+}
+
 void main()
 {
   vec3 lBaseColor = settings.x > .5f ? texture2D(baseColorTex, v_uv).rgb : baseColor.rgb;
   float lMetallic = settings.y > .5f ? texture2D(metallicTex, v_uv).b : metallic.r;
   float lRoughness = settings.z > .5f ? texture2D(roughnessTex, v_uv).g : roughness.r;
-  vec3 N = normalize(v_norm.xyz);
 
   gl_FragData[0] = vec4(lBaseColor, 1.f);
   gl_FragData[1] = vec4(1.f, lRoughness, lMetallic, 1.f);
-  gl_FragData[2] = vec4(N, 1.f);
+  gl_FragData[2] = encodeNormalUint(v_norm);
 }

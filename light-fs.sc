@@ -37,9 +37,9 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
   return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec3 decodeNormalUint(vec3 _encodedNormal)
+vec3 decodeNormalUint(vec4 _encodedNormal)
 {
-	return _encodedNormal * 2.0 - 1.0;
+  return normalize(_encodedNormal.xyz * 2.0 - 1.0);
 }
 
 // https://www.shadertoy.com/view/4d2XWV by Inigo Quilez
@@ -74,10 +74,10 @@ void main()
   vec3 lBaseColor = vec3(1.f);
   float lMetallic = texture2D(metallicRoughness, v_uv).b;
   float lRoughness = texture2D(metallicRoughness, v_uv).g;
-  vec3 normal = decodeNormalUint(texture2D(normals, v_uv).xyz);
+  vec3 normal = decodeNormalUint(texture2D(normals, v_uv));
 
-  vec3 lightPos = vec3(-1.25, -1.0, 2);
-  vec3 lightColor = vec3(36.0);
+  vec3 lightPos = vec3(-1.25, 1.0, 2);
+  vec3 lightColor = vec3(4.0);
   vec3 totColor = vec3(0.0);
 
   // Reconstruct world position from depth
@@ -90,7 +90,7 @@ void main()
 #endif
   vec3 worldPos = clipToWorld(mtx, clip);
 
-  vec3 N = texture2D(normals, v_uv).xyz;
+  vec3 N = normal;
   vec3 V = normalize(camPos.xyz - worldPos);
 
   vec3 F0 = vec3(0.04);
