@@ -26,3 +26,9 @@ auto Scene::lightPass(Render &render) const -> void
     visualNode->lightPass(render);
   }
 }
+
+auto Scene::render(class Render &render) const -> void
+{
+  geomPass(render);
+  lightPass(render);
+}

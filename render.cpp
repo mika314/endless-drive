@@ -7,6 +7,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
+#include <log/log.hpp>
 
 static const auto geomRenderPass = 0;
 static const auto lightRenderPass = 1;
@@ -99,16 +100,7 @@ auto Render::render(const Scene &scene) -> void
 
   u_camPos.arm();
 
-  scene.geomPass(*this);
-
-  for (auto x = -2.f; x < 2.f; x += 1.f)
-    for (auto y = -2.f; y < 2.f; y += 1.f)
-    { // light render pass
-      deferrd.light();
-      u_lightPos = glm::vec4{x, y, 2, 0.0f};
-      u_lightColor = glm::vec4{(x + 2.f) / 4.f, (y + 2.f) / 4.f, .5f, 0.0f};
-      bgfx::submit(lightRenderPass, light);
-    }
+  scene.render(*this);
 
   { // combine render pass
     deferrd.combine();
@@ -274,4 +266,12 @@ auto Render::setMaterialAndRender(const Material *mat) -> void
   u_settings = tmpSettings;
 
   bgfx::submit(geomRenderPass, geom);
+}
+
+auto Render::setLightAndRender(glm::vec3 pos, glm::vec4 color) -> void
+{
+  deferrd.light();
+  u_lightPos = glm::vec4{pos, 1.f};
+  u_lightColor = color;
+  bgfx::submit(lightRenderPass, light);
 }

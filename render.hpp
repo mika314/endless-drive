@@ -10,6 +10,7 @@ public:
   ~Render();
   auto render(const class Scene &) -> void;
   auto setMaterialAndRender(const class Material *) -> void;
+  auto setLightAndRender(glm::vec3 pos, glm::vec4 color) -> void;
 
 private:
   sdl::Window &win;

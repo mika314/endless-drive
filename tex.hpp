@@ -6,10 +6,11 @@
 class Tex final : public BaseAsset
 {
 public:
-  Tex(const std::string &path, class Assets&);
+  Tex(const std::string &path, class Assets &);
   Tex(const Tex &) = delete;
   ~Tex();
+  auto arm(int idx, bgfx::UniformHandle) const -> void;
 
-// private: TODO-Mika make texture handle private
+private:
   bgfx::TextureHandle h;
 };

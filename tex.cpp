@@ -16,3 +16,8 @@ Tex::~Tex()
 {
   bgfx::destroy(h);
 }
+
+auto Tex::arm(int idx, bgfx::UniformHandle uni) const -> void
+{
+  bgfx::setTexture(idx, uni, h);
+}

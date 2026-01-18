@@ -37,26 +37,10 @@ Mesh::Mesh(const std::string &path, Assets &assets)
   vbh = bgfx::createVertexBuffer(bgfx::makeRef(verts.data(), verts.size() * sizeof(verts[0])),
                                  Vert::msLayout);
   ibh = bgfx::createIndexBuffer(bgfx::makeRef(idxes.data(), idxes.size() * sizeof(idxes[0])));
-  isInit = true;
-}
-
-Mesh::Mesh(Mesh &&mesh)
-  : isInit(mesh.isInit),
-    meshName(std::move(mesh.meshName)),
-    filePath(std::move(mesh.filePath)),
-    verts(std::move(mesh.verts)),
-    idxes(std::move(mesh.idxes)),
-    material(mesh.material),
-    vbh(mesh.vbh),
-    ibh(mesh.ibh)
-{
-  mesh.isInit = false;
 }
 
 Mesh::~Mesh()
 {
-  if (!isInit)
-    return;
   bgfx::destroy(ibh);
   bgfx::destroy(vbh);
 }
@@ -115,4 +99,4 @@ auto Mesh::geomPass(class Render &render) const -> void
   render.setMaterialAndRender(material);
 }
 
-auto Mesh::lightPass(class Render &) const -> void {}
+auto Mesh::lightPass(class Render &, glm::vec3) const -> void {}

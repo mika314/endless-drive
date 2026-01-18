@@ -60,7 +60,7 @@ public:
   ~Uni() { bgfx::destroy(h); }
   Uni &operator=(const Tex &v)
   {
-    bgfx::setTexture(idx, h, v.h);
+    v.arm(idx, h);
     return *this;
   }
   Uni &operator=(bgfx::TextureHandle aH)

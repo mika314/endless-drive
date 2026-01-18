@@ -31,13 +31,25 @@ private:
 };
 
 template <typename T>
+class VisualNodeRef final : public BaseVisualNode
+{
+public:
+  VisualNodeRef(const T &aAsset) : asset(aAsset) {}
+  auto geomPass(class Render &render) const -> void final { asset.get().geomPass(render); }
+  auto lightPass(class Render &render) const -> void final { asset.get().lightPass(render, getPos()); }
+
+private:
+  std::reference_wrapper<const T> asset;
+};
+
+template <typename T>
 class VisualNode final : public BaseVisualNode
 {
 public:
-  VisualNode(T &aAsset) : asset(aAsset) {}
-  auto geomPass(class Render &render) const -> void final { asset.get().geomPass(render); }
-  auto lightPass(class Render &render) const -> void final { asset.get().lightPass(render); }
+  VisualNode(const T &aAsset) : asset(aAsset) {}
+  auto geomPass(class Render &render) const -> void final { asset.geomPass(render); }
+  auto lightPass(class Render &render) const -> void final { asset.lightPass(render, getPos()); }
 
 private:
-  std::reference_wrapper<T> asset;
+  T asset;
 };

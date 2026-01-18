@@ -3,6 +3,7 @@
 #include "vert.hpp"
 #include <assimp/scene.h>
 #include <functional>
+#include <glm/vec4.hpp>
 #include <string>
 #include <vector>
 
@@ -11,13 +12,11 @@ class Mesh final : public BaseAsset
 public:
   Mesh(const std::string &path, class Assets &);
   Mesh(const Mesh &) = delete;
-  Mesh(Mesh &&);
   ~Mesh();
   auto geomPass(class Render &) const -> void;
-  auto lightPass(class Render &) const -> void;
+  auto lightPass(class Render &, glm::vec3 pos) const -> void;
 
 private:
-  bool isInit = false;
   std::string meshName;
   std::string filePath;
   std::vector<Vert> verts;
