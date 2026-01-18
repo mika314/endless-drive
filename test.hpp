@@ -22,6 +22,7 @@ private:
   float camPitch = 0.0f;
   bgfx::UniformHandle u_trans;
   bgfx::UniformHandle u_camPos;
+  bgfx::UniformHandle u_mtx;
   bgfx::UniformHandle u_baseColorTex;
   bgfx::UniformHandle u_metallicTex;
   bgfx::UniformHandle u_roughnessTex;
@@ -29,5 +30,32 @@ private:
   bgfx::UniformHandle u_baseColor;
   bgfx::UniformHandle u_metallic;
   bgfx::UniformHandle u_roughness;
-  bgfx::ProgramHandle prog;
+
+  class Deferrd
+  {
+  public:
+    Deferrd(int w, int h);
+    Deferrd(const Deferrd &) = delete;
+    ~Deferrd();
+
+    // private: TODO-Mika make it private
+    bgfx::TextureHandle t_baseColor;
+    bgfx::TextureHandle t_metallicRoughness;
+    bgfx::TextureHandle t_normals;
+    bgfx::TextureHandle t_depth;
+    std::array<bgfx::Attachment, 4> gBufferAt;
+    bgfx::FrameBufferHandle gBuffer;
+    bgfx::TextureHandle t_lightBuffer;
+    bgfx::FrameBufferHandle lightBuffer;
+    bgfx::UniformHandle u_baseColor;
+    bgfx::UniformHandle u_metallicRoughness;
+    bgfx::UniformHandle u_normals;
+    bgfx::UniformHandle u_depth;
+    bgfx::UniformHandle u_lightBuffer;
+  } deferrd;
+
+  bgfx::ProgramHandle geom;
+  bgfx::ProgramHandle light;
+  bgfx::ProgramHandle combine;
+  const bgfx::Caps *caps;
 };

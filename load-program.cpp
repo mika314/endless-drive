@@ -1,5 +1,6 @@
 #include "load-program.hpp"
 #include <bx/os.h>
+#include <log/log.hpp>
 #include <stdio.h>
 
 static const bgfx::Memory *loadMem(const char *_filePath)
@@ -74,6 +75,7 @@ static bgfx::ShaderHandle loadShader(const char *_name)
 
 auto loadProgram(const char *_vsName, const char *_fsName) -> bgfx::ProgramHandle
 {
+  LOG("Loading shaders. Vertex shader:", _vsName, "fragment shader:", _fsName);
   bgfx::ShaderHandle vsh = loadShader(_vsName);
   bgfx::ShaderHandle fsh = BGFX_INVALID_HANDLE;
   if (NULL != _fsName)
