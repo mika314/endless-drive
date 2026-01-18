@@ -81,6 +81,7 @@ Test::Test(sdl::Window &aWin, int aW, int aH)
 
 auto Test::tick() -> void
 {
+  deferrd.geom();
   {
     auto tmpCamPos = glm::vec3{u_camPos.get()};
     const auto view = glm::lookAt(
@@ -97,7 +98,6 @@ auto Test::tick() -> void
   }
 
   u_camPos.arm();
-  deferrd.geom();
 
   auto i = 0;
   for (auto cubePosition : std::array{
@@ -128,10 +128,10 @@ auto Test::tick() -> void
     u_trans = [&]() {
       auto r = glm::mat4(1.0f);
       r = glm::rotate(r, glm::radians(50.f * secs), glm::vec3(0.0, 0.0, 1.0));
-      r = glm::scale(r, glm::vec3(1., 1080. / 1920., 1.));
+      r = glm::scale(r, glm::vec3(1.f, 1.f * h / w, 1.f));
       return r;
     }();
-    auto mat = car.arm();
+    const auto mat = car.arm();
     auto tmpSettings = glm::vec4{};
     if (mat)
     {
@@ -177,14 +177,17 @@ auto Test::tick() -> void
     bgfx::submit(geomRenderPass, geom);
   }
 
-  { // light render pass
-    deferrd.light();
-    bgfx::submit(lightRenderPass, light);
-  }
+  for (auto x = -2.f; x < 2.f; x += 1.f)
+    for (auto y = -2.f; y < 2.f; y += 1.f)
+    { // light render pass
+      deferrd.light();
+      u_lightPos = glm::vec4{x, y, 2, 0.0f};
+      u_lightColor = glm::vec4{(x + 2.f) / 4.f, (y + 2.f) / 4.f, .5f, 0.0f};
+      bgfx::submit(lightRenderPass, light);
+    }
 
   { // combine render pass
     deferrd.combine();
-
     bgfx::submit(combineRenderPass, combine);
   }
 

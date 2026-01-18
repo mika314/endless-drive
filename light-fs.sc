@@ -4,6 +4,8 @@ $input v_uv
 
 uniform mat4 mtx;
 uniform vec4 camPos;
+uniform vec4 lightPos;
+uniform vec4 lightColor;
 
 SAMPLER2D(normals, 0);
 SAMPLER2D(metallicRoughness, 1);
@@ -76,8 +78,6 @@ void main()
   float lRoughness = texture2D(metallicRoughness, v_uv).g;
   vec3 normal = decodeNormalUint(texture2D(normals, v_uv));
 
-  vec3 lightPos = vec3(-1.25, 1.0, 2);
-  vec3 lightColor = vec3(4.0);
   vec3 totColor = vec3(0.0);
 
   // Reconstruct world position from depth
@@ -100,11 +100,11 @@ void main()
   vec3 Lo = vec3(0.0);
 
   // calculate per-light radiance
-  vec3 L = normalize(lightPos - worldPos);
+  vec3 L = normalize(lightPos.xyz - worldPos);
   vec3 H = normalize(V + L);
-  float distance = length(lightPos - worldPos);
+  float distance = length(lightPos.xyz - worldPos);
   float attenuation = 1.0 / (distance * distance);
-  vec3 radiance = lightColor * attenuation;
+  vec3 radiance = lightColor.rgb * attenuation;
 
   // cook-torrance brdf
   float NDF = distributionGGX(N, H, lRoughness);
@@ -123,7 +123,7 @@ void main()
   float NdotL = max(dot(N, L), 0.0);
   Lo += (kD * lBaseColor / PI + specular) * radiance * NdotL;
 
-  vec3 ambient = vec3(0.03) * lBaseColor; // * ao;
+  vec3 ambient = vec3(0.0) * lBaseColor; // * ao;
   vec3 color = ambient + Lo;
 
   color = color / (color + vec3(1.0));

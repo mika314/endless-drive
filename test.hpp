@@ -30,6 +30,8 @@ private:
   Uni<glm::vec4> u_baseColor = "baseColor";
   Uni<glm::vec4> u_metallic = "metallic";
   Uni<glm::vec4> u_roughness = "roughness";
+  Uni<glm::vec4> u_lightPos = {"lightPos", glm::vec4{-1.25f, 1.f, 2.f, 0.f}};
+  Uni<glm::vec4> u_lightColor = {"lightColor", glm::vec4{1.f}};
 
   class Deferrd
   {
