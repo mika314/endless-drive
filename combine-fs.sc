@@ -7,5 +7,5 @@ SAMPLER2D(lightBuffer, 1);
 
 void main()
 {
-  gl_FragColor = texture2D(baseColor, v_uv) * texture2D(lightBuffer, v_uv);
+  gl_FragColor = texture2D(baseColor, v_uv) * (texture2D(lightBuffer, v_uv) + vec4(.1f));
 }

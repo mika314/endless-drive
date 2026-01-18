@@ -123,8 +123,7 @@ void main()
   float NdotL = max(dot(N, L), 0.0);
   Lo += (kD * lBaseColor / PI + specular) * radiance * NdotL;
 
-  vec3 ambient = vec3(0.0) * lBaseColor; // * ao;
-  vec3 color = ambient + Lo;
+  vec3 color = Lo;
 
   color = color / (color + vec3(1.0));
   color = pow(color, vec3(1.0 / 2.2));
