@@ -18,10 +18,11 @@ public:
   }
 
   template <typename T, typename... Args>
-  auto addVisualNodeFromAssets(Assets &assets, Args &&...args) -> VisualNode<T> &
+  auto addVisualNodeFromAssets(Assets &assets, Args &&...args) -> VisualNodeRef<T> &
   {
     const auto &asset = assets.get<T>(std::forward<Args>(args)...);
-    return static_cast<VisualNode<T> &>(*nodes.emplace_back(std::make_unique<VisualNodeRef<T>>(asset)));
+    return static_cast<VisualNodeRef<T> &>(
+      *nodes.emplace_back(std::make_unique<VisualNodeRef<T>>(asset)));
   }
 
   auto render(class Render &) const -> void;

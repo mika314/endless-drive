@@ -55,11 +55,20 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto assets = Assets{};
   auto scene = Scene{};
 
-  auto &car = scene.addVisualNodeFromAssets<Mesh>(assets, "data/car.gltf/Car");
+  std::vector<std::reference_wrapper<VisualNodeRef<Mesh>>> carParts;
+
+  for (auto i : {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13})
+  {
+
+    auto &part = scene.addVisualNodeFromAssets<Mesh>(
+      assets, "data/fancy-car.gltf/SM_vehCar_vehicle06_LOD-" + std::to_string(i));
+    carParts.push_back(part);
+  }
   for (auto x = -2.f; x < 2.f; x += 1.f)
     for (auto y = -2.f; y < 2.f; y += 1.f)
     {
-      auto &light = scene.addVisualNode<Light>(glm::vec4{(x + 2.f) / 4.f, (y + 2.f) / 4.f, .5f, 0.0f});
+      auto &light = scene.addVisualNode<Light>(
+        2.f * glm::vec4{(2.f * x + 2.f) / 4.f, (2.f * y + 2.f) / 4.f, .5f, 0.0f});
       light.setPos(glm::vec3{x, y, 2});
     }
 
@@ -76,9 +85,12 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   {
     while (e.poll()) {}
     auto now = SDL_GetTicks();
-    car.setRot(glm::vec3{0.0f, 0.0f, now / 1000.f});
-    car.setScale(glm::vec3{1.0f, 1.0f, 1 + sin(now / 1000.f)});
-    car.setPos(glm::vec3{cos(now / 1000.f), sin(now / 1000.f), 0.0f});
+    for (auto &p : carParts)
+    {
+      p.get().setRot(glm::vec3{0.0f, 0.0f, now / 1000.f});
+      p.get().setScale(glm::vec3{1.0f, 1.0f, 1.f + .1f * sin(now / 100.f)});
+      p.get().setPos(glm::vec3{cos(now / 1000.f), sin(now / 1000.f), 0.0f});
+    }
 
     render.render(scene);
   }

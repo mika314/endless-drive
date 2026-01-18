@@ -51,10 +51,7 @@ auto Mesh::processNode(Assets &assets, const aiNode *node, const aiScene *scene)
   {
     auto mesh = scene->mMeshes[node->mMeshes[i]];
     if (mesh->mName.C_Str() != meshName)
-    {
-      LOG(this, "Mesh:", mesh->mName.C_Str());
       continue;
-    }
     LOG(this, "Mesh is found:", meshName);
     processMesh(assets, mesh, scene);
   }

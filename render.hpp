@@ -17,8 +17,8 @@ private:
   int w;
   int h;
   float camYaw = 0.0f;
-  float camPitch = 0.0f;
-  Uni<glm::vec4> u_camPos = {"camPos", glm::vec4{-2.5f, 0.0f, .5f, 1.f}};
+  float camPitch = 0.3f;
+  Uni<glm::vec4> u_camPos = {"camPos", glm::vec4{-5.f, 0.0f, 1.8f, 1.f}};
   Uni<glm::mat4x4> u_mtx = "mtx";
   Uni<Tex> u_baseColorTex = {"baseColorTex", 0};
   Uni<Tex> u_metallicTex = {"metallicTex", 1};

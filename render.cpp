@@ -126,8 +126,7 @@ Render::~Render()
 //   uint64_t _flags = BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE,
 //   const Memory *_mem = NULL)
 
-static const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIP_POINT |
-                          BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
+static const auto flags = BGFX_SAMPLER_MIN_POINT | BGFX_SAMPLER_MAG_POINT | BGFX_SAMPLER_MIP_POINT;
 
 static auto depthBufTexFmt()
 {
