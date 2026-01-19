@@ -1,0 +1,841 @@
+{
+	"asset":
+	{
+		"version": "2.0",
+		"generator": "Unreal Engine 5.5.4"
+	},
+	"scene": 0,
+	"accessors": [
+		{
+			"bufferView": 0,
+			"count": 3840,
+			"type": "SCALAR",
+			"componentType": 5123
+		},
+		{
+			"bufferView": 1,
+			"count": 856,
+			"type": "VEC3",
+			"componentType": 5126,
+			"min": [ -0.324929774, -0.00594952703, -0.621366382 ],
+			"max": [ 0.296276748, 0.644493699, 0.430184364 ]
+		},
+		{
+			"bufferView": 2,
+			"count": 856,
+			"type": "VEC3",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 3,
+			"count": 856,
+			"type": "VEC4",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 4,
+			"count": 856,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 5,
+			"count": 856,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 6,
+			"count": 1728,
+			"type": "SCALAR",
+			"componentType": 5123
+		},
+		{
+			"bufferView": 7,
+			"count": 396,
+			"type": "VEC3",
+			"componentType": 5126,
+			"min": [ -0.884458959, -2.14457505e-05, -0.556899667 ],
+			"max": [ -0.267376721, 0.200340956, 0.0601826385 ]
+		},
+		{
+			"bufferView": 8,
+			"count": 396,
+			"type": "VEC3",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 9,
+			"count": 396,
+			"type": "VEC4",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 10,
+			"count": 396,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 11,
+			"count": 396,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 12,
+			"count": 1728,
+			"type": "SCALAR",
+			"componentType": 5123
+		},
+		{
+			"bufferView": 13,
+			"count": 392,
+			"type": "VEC3",
+			"componentType": 5126,
+			"min": [ -0.299580753, 0.18793264, -0.245866463 ],
+			"max": [ 0.359799296, 0.460135996, 0.416220993 ]
+		},
+		{
+			"bufferView": 14,
+			"count": 392,
+			"type": "VEC3",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 15,
+			"count": 392,
+			"type": "VEC4",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 16,
+			"count": 392,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 17,
+			"count": 392,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 18,
+			"count": 1584,
+			"type": "SCALAR",
+			"componentType": 5123
+		},
+		{
+			"bufferView": 19,
+			"count": 412,
+			"type": "VEC3",
+			"componentType": 5126,
+			"min": [ -0.383876592, -0.0035470291, -0.261031955 ],
+			"max": [ 0.415469348, 0.206721708, 0.5376665 ]
+		},
+		{
+			"bufferView": 20,
+			"count": 412,
+			"type": "VEC3",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 21,
+			"count": 412,
+			"type": "VEC4",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 22,
+			"count": 412,
+			"type": "VEC2",
+			"componentType": 5126
+		},
+		{
+			"bufferView": 23,
+			"count": 412,
+			"type": "VEC2",
+			"componentType": 5126
+		}
+	],
+	"buffers": [
+		{
+			"uri": "SM_TiresBunch_02.bin",
+			"byteLength": 132896
+		}
+	],
+	"bufferViews": [
+		{
+			"buffer": 0,
+			"byteLength": 7680,
+			"target": 34963
+		},
+		{
+			"buffer": 0,
+			"byteLength": 10272,
+			"byteOffset": 7680,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 10272,
+			"byteOffset": 17952,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 13696,
+			"byteOffset": 28224,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 6848,
+			"byteOffset": 41920,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 6848,
+			"byteOffset": 48768,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 3456,
+			"byteOffset": 55616,
+			"target": 34963
+		},
+		{
+			"buffer": 0,
+			"byteLength": 4752,
+			"byteOffset": 59072,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 4752,
+			"byteOffset": 63824,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 6336,
+			"byteOffset": 68576,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 3168,
+			"byteOffset": 74912,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 3168,
+			"byteOffset": 78080,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 3456,
+			"byteOffset": 81248,
+			"target": 34963
+		},
+		{
+			"buffer": 0,
+			"byteLength": 4704,
+			"byteOffset": 84704,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 4704,
+			"byteOffset": 89408,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 6272,
+			"byteOffset": 94112,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 3136,
+			"byteOffset": 100384,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 3136,
+			"byteOffset": 103520,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 3168,
+			"byteOffset": 106656,
+			"target": 34963
+		},
+		{
+			"buffer": 0,
+			"byteLength": 4944,
+			"byteOffset": 109824,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 4944,
+			"byteOffset": 114768,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 6592,
+			"byteOffset": 119712,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 3296,
+			"byteOffset": 126304,
+			"target": 34962
+		},
+		{
+			"buffer": 0,
+			"byteLength": 3296,
+			"byteOffset": 129600,
+			"target": 34962
+		}
+	],
+	"images": [
+		{
+			"uri": "MI_Tires_01_SM_TiresBunch_02_BaseColor.png"
+		},
+		{
+			"uri": "MI_Tires_01_SM_TiresBunch_02_MetallicRoughness.png"
+		},
+		{
+			"uri": "MI_Tires_01_SM_TiresBunch_02_Normal.png"
+		},
+		{
+			"uri": "MI_Tires_01_SM_TiresBunch_02_Occlusion.png"
+		},
+		{
+			"uri": "MI_Tires_01_SM_TiresBunch_02_Specular.png"
+		},
+		{
+			"uri": "MI_Tires_02_SM_TiresBunch_02_BaseColor.png"
+		},
+		{
+			"uri": "MI_Tires_02_SM_TiresBunch_02_MetallicRoughness.png"
+		},
+		{
+			"uri": "MI_Tires_02_SM_TiresBunch_02_Normal.png"
+		},
+		{
+			"uri": "MI_Tires_02_SM_TiresBunch_02_Occlusion.png"
+		},
+		{
+			"uri": "MI_Tires_02_SM_TiresBunch_02_Specular.png"
+		},
+		{
+			"uri": "MI_Tires_03_SM_TiresBunch_02_BaseColor.png"
+		},
+		{
+			"uri": "MI_Tires_03_SM_TiresBunch_02_MetallicRoughness.png"
+		},
+		{
+			"uri": "MI_Tires_03_SM_TiresBunch_02_Normal.png"
+		},
+		{
+			"uri": "MI_Tires_03_SM_TiresBunch_02_Occlusion.png"
+		},
+		{
+			"uri": "MI_Tires_03_SM_TiresBunch_02_Specular.png"
+		},
+		{
+			"uri": "MI_Tires_04_SM_TiresBunch_02_BaseColor.png"
+		},
+		{
+			"uri": "MI_Tires_04_SM_TiresBunch_02_MetallicRoughness.png"
+		},
+		{
+			"uri": "MI_Tires_04_SM_TiresBunch_02_Normal.png"
+		},
+		{
+			"uri": "MI_Tires_04_SM_TiresBunch_02_Specular.png"
+		}
+	],
+	"materials": [
+		{
+			"name": "MI_Tires_01_SM_TiresBunch_02",
+			"pbrMetallicRoughness":
+			{
+				"baseColorTexture":
+				{
+					"index": 0,
+					"texCoord": 1,
+					"extensions":
+					{
+						"KHR_texture_transform":
+						{
+							"offset": [ -0.00191465777, -0.0211590379 ],
+							"scale": [ 1.00584376, 1.02869344 ]
+						}
+					}
+				},
+				"metallicRoughnessTexture":
+				{
+					"index": 1,
+					"texCoord": 1,
+					"extensions":
+					{
+						"KHR_texture_transform":
+						{
+							"offset": [ -0.00191465777, -0.0211590379 ],
+							"scale": [ 1.00584376, 1.02869344 ]
+						}
+					}
+				}
+			},
+			"normalTexture":
+			{
+				"index": 2,
+				"texCoord": 1,
+				"extensions":
+				{
+					"KHR_texture_transform":
+					{
+						"offset": [ -0.00191465777, -0.0211590379 ],
+						"scale": [ 1.00584376, 1.02869344 ]
+					}
+				}
+			},
+			"occlusionTexture":
+			{
+				"index": 3,
+				"texCoord": 1,
+				"extensions":
+				{
+					"KHR_texture_transform":
+					{
+						"offset": [ -0.00191465777, -0.0211590379 ],
+						"scale": [ 1.00584376, 1.02869344 ]
+					}
+				}
+			},
+			"extensions":
+			{
+				"KHR_materials_specular":
+				{
+					"specularTexture":
+					{
+						"index": 4,
+						"texCoord": 1,
+						"extensions":
+						{
+							"KHR_texture_transform":
+							{
+								"offset": [ -0.00191465777, -0.0211590379 ],
+								"scale": [ 1.00584376, 1.02869344 ]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"name": "MI_Tires_02_SM_TiresBunch_02",
+			"pbrMetallicRoughness":
+			{
+				"baseColorTexture":
+				{
+					"index": 5,
+					"texCoord": 1,
+					"extensions":
+					{
+						"KHR_texture_transform":
+						{
+							"offset": [ -0, -0.0105820559 ],
+							"scale": [ 1.00638819, 1.14157307 ]
+						}
+					}
+				},
+				"metallicRoughnessTexture":
+				{
+					"index": 6,
+					"texCoord": 1,
+					"extensions":
+					{
+						"KHR_texture_transform":
+						{
+							"offset": [ -0, -0.0105820559 ],
+							"scale": [ 1.00638819, 1.14157307 ]
+						}
+					}
+				}
+			},
+			"normalTexture":
+			{
+				"index": 7,
+				"texCoord": 1,
+				"extensions":
+				{
+					"KHR_texture_transform":
+					{
+						"offset": [ -0, -0.0105820559 ],
+						"scale": [ 1.00638819, 1.14157307 ]
+					}
+				}
+			},
+			"occlusionTexture":
+			{
+				"index": 8,
+				"texCoord": 1,
+				"extensions":
+				{
+					"KHR_texture_transform":
+					{
+						"offset": [ -0, -0.0105820559 ],
+						"scale": [ 1.00638819, 1.14157307 ]
+					}
+				}
+			},
+			"extensions":
+			{
+				"KHR_materials_specular":
+				{
+					"specularTexture":
+					{
+						"index": 9,
+						"texCoord": 1,
+						"extensions":
+						{
+							"KHR_texture_transform":
+							{
+								"offset": [ -0, -0.0105820559 ],
+								"scale": [ 1.00638819, 1.14157307 ]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"name": "MI_Tires_03_SM_TiresBunch_02",
+			"pbrMetallicRoughness":
+			{
+				"baseColorTexture":
+				{
+					"index": 10,
+					"texCoord": 1,
+					"extensions":
+					{
+						"KHR_texture_transform":
+						{
+							"offset": [ -0, -0.0104302373 ],
+							"scale": [ 1.3662442, 1.01043022 ]
+						}
+					}
+				},
+				"metallicRoughnessTexture":
+				{
+					"index": 11,
+					"texCoord": 1,
+					"extensions":
+					{
+						"KHR_texture_transform":
+						{
+							"offset": [ -0, -0.0104302373 ],
+							"scale": [ 1.3662442, 1.01043022 ]
+						}
+					}
+				}
+			},
+			"normalTexture":
+			{
+				"index": 12,
+				"texCoord": 1,
+				"extensions":
+				{
+					"KHR_texture_transform":
+					{
+						"offset": [ -0, -0.0104302373 ],
+						"scale": [ 1.3662442, 1.01043022 ]
+					}
+				}
+			},
+			"occlusionTexture":
+			{
+				"index": 13,
+				"texCoord": 1,
+				"extensions":
+				{
+					"KHR_texture_transform":
+					{
+						"offset": [ -0, -0.0104302373 ],
+						"scale": [ 1.3662442, 1.01043022 ]
+					}
+				}
+			},
+			"extensions":
+			{
+				"KHR_materials_specular":
+				{
+					"specularTexture":
+					{
+						"index": 14,
+						"texCoord": 1,
+						"extensions":
+						{
+							"KHR_texture_transform":
+							{
+								"offset": [ -0, -0.0104302373 ],
+								"scale": [ 1.3662442, 1.01043022 ]
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"name": "MI_Tires_04_SM_TiresBunch_02",
+			"pbrMetallicRoughness":
+			{
+				"baseColorTexture":
+				{
+					"index": 15,
+					"texCoord": 1,
+					"extensions":
+					{
+						"KHR_texture_transform":
+						{
+							"offset": [ -0, -0.590679646 ],
+							"scale": [ 1.08130944, 1.59067965 ]
+						}
+					}
+				},
+				"metallicRoughnessTexture":
+				{
+					"index": 16,
+					"texCoord": 1,
+					"extensions":
+					{
+						"KHR_texture_transform":
+						{
+							"offset": [ -0, -0.590679646 ],
+							"scale": [ 1.08130944, 1.59067965 ]
+						}
+					}
+				}
+			},
+			"normalTexture":
+			{
+				"index": 17,
+				"texCoord": 1,
+				"extensions":
+				{
+					"KHR_texture_transform":
+					{
+						"offset": [ -0, -0.590679646 ],
+						"scale": [ 1.08130944, 1.59067965 ]
+					}
+				}
+			},
+			"extensions":
+			{
+				"KHR_materials_specular":
+				{
+					"specularTexture":
+					{
+						"index": 18,
+						"texCoord": 1,
+						"extensions":
+						{
+							"KHR_texture_transform":
+							{
+								"offset": [ -0, -0.590679646 ],
+								"scale": [ 1.08130944, 1.59067965 ]
+							}
+						}
+					}
+				}
+			}
+		}
+	],
+	"meshes": [
+		{
+			"name": "SM_TiresBunch_02",
+			"primitives": [
+				{
+					"attributes":
+					{
+						"POSITION": 1,
+						"NORMAL": 2,
+						"TANGENT": 3,
+						"TEXCOORD_0": 4,
+						"TEXCOORD_1": 5
+					},
+					"indices": 0,
+					"material": 0
+				},
+				{
+					"attributes":
+					{
+						"POSITION": 7,
+						"NORMAL": 8,
+						"TANGENT": 9,
+						"TEXCOORD_0": 10,
+						"TEXCOORD_1": 11
+					},
+					"indices": 6,
+					"material": 1
+				},
+				{
+					"attributes":
+					{
+						"POSITION": 13,
+						"NORMAL": 14,
+						"TANGENT": 15,
+						"TEXCOORD_0": 16,
+						"TEXCOORD_1": 17
+					},
+					"indices": 12,
+					"material": 2
+				},
+				{
+					"attributes":
+					{
+						"POSITION": 19,
+						"NORMAL": 20,
+						"TANGENT": 21,
+						"TEXCOORD_0": 22,
+						"TEXCOORD_1": 23
+					},
+					"indices": 18,
+					"material": 3
+				}
+			]
+		}
+	],
+	"nodes": [
+		{
+			"mesh": 0
+		}
+	],
+	"samplers": [
+		{
+			"minFilter": 9987,
+			"magFilter": 9729
+		}
+	],
+	"scenes": [
+		{
+			"nodes": [ 0 ]
+		}
+	],
+	"textures": [
+		{
+			"name": "MI_Tires_01_SM_TiresBunch_02_BaseColor",
+			"sampler": 0,
+			"source": 0
+		},
+		{
+			"name": "MI_Tires_01_SM_TiresBunch_02_MetallicRoughness",
+			"sampler": 0,
+			"source": 1
+		},
+		{
+			"name": "MI_Tires_01_SM_TiresBunch_02_Normal",
+			"sampler": 0,
+			"source": 2
+		},
+		{
+			"name": "MI_Tires_01_SM_TiresBunch_02_Occlusion",
+			"sampler": 0,
+			"source": 3
+		},
+		{
+			"name": "MI_Tires_01_SM_TiresBunch_02_Specular",
+			"sampler": 0,
+			"source": 4
+		},
+		{
+			"name": "MI_Tires_02_SM_TiresBunch_02_BaseColor",
+			"sampler": 0,
+			"source": 5
+		},
+		{
+			"name": "MI_Tires_02_SM_TiresBunch_02_MetallicRoughness",
+			"sampler": 0,
+			"source": 6
+		},
+		{
+			"name": "MI_Tires_02_SM_TiresBunch_02_Normal",
+			"sampler": 0,
+			"source": 7
+		},
+		{
+			"name": "MI_Tires_02_SM_TiresBunch_02_Occlusion",
+			"sampler": 0,
+			"source": 8
+		},
+		{
+			"name": "MI_Tires_02_SM_TiresBunch_02_Specular",
+			"sampler": 0,
+			"source": 9
+		},
+		{
+			"name": "MI_Tires_03_SM_TiresBunch_02_BaseColor",
+			"sampler": 0,
+			"source": 10
+		},
+		{
+			"name": "MI_Tires_03_SM_TiresBunch_02_MetallicRoughness",
+			"sampler": 0,
+			"source": 11
+		},
+		{
+			"name": "MI_Tires_03_SM_TiresBunch_02_Normal",
+			"sampler": 0,
+			"source": 12
+		},
+		{
+			"name": "MI_Tires_03_SM_TiresBunch_02_Occlusion",
+			"sampler": 0,
+			"source": 13
+		},
+		{
+			"name": "MI_Tires_03_SM_TiresBunch_02_Specular",
+			"sampler": 0,
+			"source": 14
+		},
+		{
+			"name": "MI_Tires_04_SM_TiresBunch_02_BaseColor",
+			"sampler": 0,
+			"source": 15
+		},
+		{
+			"name": "MI_Tires_04_SM_TiresBunch_02_MetallicRoughness",
+			"sampler": 0,
+			"source": 16
+		},
+		{
+			"name": "MI_Tires_04_SM_TiresBunch_02_Normal",
+			"sampler": 0,
+			"source": 17
+		},
+		{
+			"name": "MI_Tires_04_SM_TiresBunch_02_Specular",
+			"sampler": 0,
+			"source": 18
+		}
+	],
+	"extensionsUsed": [
+		"KHR_texture_transform",
+		"KHR_materials_specular"
+	]
+}

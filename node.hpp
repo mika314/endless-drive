@@ -35,7 +35,11 @@ class VisualNodeRef final : public BaseVisualNode
 {
 public:
   VisualNodeRef(const T &aAsset) : asset(aAsset) {}
-  auto geomPass(class Render &render) const -> void final { asset.get().geomPass(render); }
+  auto geomPass(class Render &render) const -> void final
+  {
+    const auto trans = getTrans();
+    asset.get().geomPass(render, trans);
+  }
   auto lightPass(class Render &render) const -> void final { asset.get().lightPass(render, getPos()); }
 
 private:
@@ -47,7 +51,7 @@ class VisualNode final : public BaseVisualNode
 {
 public:
   VisualNode(const T &aAsset) : asset(aAsset) {}
-  auto geomPass(class Render &render) const -> void final { asset.geomPass(render); }
+  auto geomPass(class Render &render) const -> void final { asset.geomPass(render, getTrans()); }
   auto lightPass(class Render &render) const -> void final { asset.lightPass(render, getPos()); }
 
 private:

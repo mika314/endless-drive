@@ -8,10 +8,6 @@ auto Scene::geomPass(Render &render) const -> void
     auto visualNode = dynamic_cast<const BaseVisualNode *>(node.get());
     if (!visualNode)
       continue;
-
-    const auto trans = visualNode->getTrans();
-    bgfx::setTransform(&trans);
-
     visualNode->geomPass(render);
   }
 }

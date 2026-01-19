@@ -34,15 +34,21 @@ Mesh::Mesh(const std::string &path, Assets &assets)
     return;
   }
   processNode(assets, scene->mRootNode, scene);
-  vbh = bgfx::createVertexBuffer(bgfx::makeRef(verts.data(), verts.size() * sizeof(verts[0])),
-                                 Vert::msLayout);
-  ibh = bgfx::createIndexBuffer(bgfx::makeRef(idxes.data(), idxes.size() * sizeof(idxes[0])));
 }
 
-Mesh::~Mesh()
+Mesh::Part::Part(Part &&v)
+  : verts(std::move(v.verts)), idxes(std::move(v.idxes)), material(v.material), vbh(v.vbh), ibh(v.ibh)
 {
-  bgfx::destroy(ibh);
-  bgfx::destroy(vbh);
+  v.vbh = BGFX_INVALID_HANDLE;
+  v.ibh = BGFX_INVALID_HANDLE;
+}
+
+Mesh::Part::~Part()
+{
+  if (bgfx::isValid(ibh))
+    bgfx::destroy(ibh);
+  if (bgfx::isValid(vbh))
+    bgfx::destroy(vbh);
 }
 
 auto Mesh::processNode(Assets &assets, const aiNode *node, const aiScene *scene) -> void
@@ -50,9 +56,21 @@ auto Mesh::processNode(Assets &assets, const aiNode *node, const aiScene *scene)
   for (unsigned int i = 0; i < node->mNumMeshes; i++)
   {
     auto mesh = scene->mMeshes[node->mMeshes[i]];
-    if (mesh->mName.C_Str() != meshName)
+    const auto aiMeshName = std::string{mesh->mName.C_Str()};
+    if (![&]() {
+          if (aiMeshName.find(meshName) != 0)
+            return false;
+          if (aiMeshName.size() == meshName.size())
+            return true;
+          if (aiMeshName[meshName.size()] != '-')
+            return false;
+          for (auto i = meshName.size() + 1; i < aiMeshName.size(); ++i)
+            if (!std::isdigit(aiMeshName[i]))
+              return false;
+          return true;
+        }())
       continue;
-    LOG(this, "Mesh is found:", meshName);
+    LOG(this, "Mesh is found:", aiMeshName);
     processMesh(assets, mesh, scene);
   }
   for (unsigned int i = 0; i < node->mNumChildren; i++)
@@ -61,9 +79,10 @@ auto Mesh::processNode(Assets &assets, const aiNode *node, const aiScene *scene)
 
 auto Mesh::processMesh(Assets &assets, const aiMesh *mesh, const aiScene *scene) -> void
 {
+  auto &part = parts.emplace_back();
   for (auto i = 0U; i < mesh->mNumVertices; ++i)
   {
-    verts.push_back(
+    part.verts.push_back(
       Vert{.pos = glm::vec3{mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z},
            .norm = glm::vec3{mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z},
            .uv = mesh->mTextureCoords[0]
@@ -75,7 +94,7 @@ auto Mesh::processMesh(Assets &assets, const aiMesh *mesh, const aiScene *scene)
   {
     aiFace face = mesh->mFaces[i];
     for (auto j = 0U; j < face.mNumIndices; j++)
-      idxes.push_back(face.mIndices[j]);
+      part.idxes.push_back(face.mIndices[j]);
   }
 
   // process material
@@ -85,15 +104,24 @@ auto Mesh::processMesh(Assets &assets, const aiMesh *mesh, const aiScene *scene)
     aiString name;
     aiMat->Get(AI_MATKEY_NAME, name);
     LOG(this, "Material:", name.C_Str());
-    material = &assets.get<Material>(filePath + "/" + name.C_Str(), aiMat);
+    part.material = &assets.get<Material>(filePath + "/" + name.C_Str(), aiMat);
   }
+  part.vbh = bgfx::createVertexBuffer(
+    bgfx::makeRef(part.verts.data(), part.verts.size() * sizeof(part.verts[0])), Vert::msLayout);
+  part.ibh =
+    bgfx::createIndexBuffer(bgfx::makeRef(part.idxes.data(), part.idxes.size() * sizeof(part.idxes[0])));
 }
 
-auto Mesh::geomPass(class Render &render) const -> void
+auto Mesh::geomPass(class Render &render, glm::mat4 trans) const -> void
 {
-  bgfx::setIndexBuffer(ibh);
-  bgfx::setVertexBuffer(0, vbh);
-  render.setMaterialAndRender(material);
+  for (const auto &part : parts)
+  {
+    bgfx::setTransform(&trans);
+
+    bgfx::setIndexBuffer(part.ibh);
+    bgfx::setVertexBuffer(0, part.vbh);
+    render.setMaterialAndRender(part.material);
+  }
 }
 
 auto Mesh::lightPass(class Render &, glm::vec3) const -> void {}
