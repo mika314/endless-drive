@@ -75,7 +75,8 @@ Render::Render(sdl::Window &aWin, int aW, int aH)
     h(aH),
     deferrd(w, h),
     geom(loadProgram("geom-vs", "geom-fs")),
-    light(loadProgram("light-vs", "light-fs")),
+    pointLight(loadProgram("point-light-vs", "point-light-fs")),
+    spotlight(loadProgram("spotlight-vs", "spotlight-fs")),
     combine(loadProgram("combine-vs", "combine-fs"))
 {
 }
@@ -119,7 +120,8 @@ auto Render::render(const Scene &scene) -> void
 Render::~Render()
 {
   bgfx::destroy(combine);
-  bgfx::destroy(light);
+  bgfx::destroy(spotlight);
+  bgfx::destroy(pointLight);
   bgfx::destroy(geom);
 }
 
@@ -273,12 +275,21 @@ auto Render::setMaterialAndRender(const Material *mat) -> void
   bgfx::submit(geomRenderPass, geom);
 }
 
-auto Render::setLightAndRender(glm::vec3 pos, glm::vec3 color) -> void
+auto Render::setPointLightAndRender(glm::vec3 pos, glm::vec3 color) -> void
 {
   deferrd.light();
   u_lightPos = glm::vec4{pos, 1.f};
   u_lightColor = glm::vec4{color, 1.f};
-  bgfx::submit(lightRenderPass, light);
+  bgfx::submit(lightRenderPass, pointLight);
+}
+
+auto Render::setSpotlightAndRender(glm::mat4 trans, glm::vec3 color, float angle) -> void
+{
+  deferrd.light();
+  u_lightTrans = trans;
+  u_lightColor = glm::vec4{color, 1.f};
+  u_lightAngle = glm::vec4{angle};
+  bgfx::submit(lightRenderPass, spotlight);
 }
 
 auto Render::setCamPos(glm::vec3 v) -> void

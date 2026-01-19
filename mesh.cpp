@@ -124,4 +124,4 @@ auto Mesh::geomPass(class Render &render, glm::mat4 trans) const -> void
   }
 }
 
-auto Mesh::lightPass(class Render &, glm::vec3) const -> void {}
+auto Mesh::lightPass(class Render &, glm::mat4) const -> void {}

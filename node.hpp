@@ -77,8 +77,7 @@ public:
   auto lightPass(class Render &render) const -> void final
   {
     BaseVisualNode::lightPass(render);
-    const auto trans = getTrans();
-    asset.get().lightPass(render, glm::vec3(trans[3]));
+    asset.get().lightPass(render, getTrans());
   }
 
 private:
@@ -98,8 +97,7 @@ public:
   auto lightPass(class Render &render) const -> void final
   {
     BaseVisualNode::lightPass(render);
-    const auto trans = getTrans();
-    asset.lightPass(render, glm::vec3(trans[3]));
+    asset.lightPass(render, getTrans());
   }
 
 private:

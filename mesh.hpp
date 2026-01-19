@@ -14,7 +14,7 @@ public:
   Mesh(const std::string &path, class Assets &);
   Mesh(const Mesh &) = delete;
   auto geomPass(class Render &, glm::mat4 trans) const -> void;
-  auto lightPass(class Render &, glm::vec3 pos) const -> void;
+  auto lightPass(class Render &, glm::mat4 trans) const -> void;
 
 private:
   std::string meshName;

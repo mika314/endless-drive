@@ -10,7 +10,8 @@ public:
   ~Render();
   auto render(const class Scene &) -> void;
   auto setMaterialAndRender(const class Material *) -> void;
-  auto setLightAndRender(glm::vec3 pos, glm::vec3 color) -> void;
+  auto setPointLightAndRender(glm::vec3 pos, glm::vec3 color) -> void;
+  auto setSpotlightAndRender(glm::mat4 trans, glm::vec3 color, float angle) -> void;
   auto setCamPos(glm::vec3) -> void;
   auto setCamRot(glm::vec3) -> void;
 
@@ -31,6 +32,8 @@ private:
   Uni<glm::vec4> u_roughness = "roughness";
   Uni<glm::vec4> u_lightPos = {"lightPos", glm::vec4{-1.25f, 1.f, 2.f, 0.f}};
   Uni<glm::vec4> u_lightColor = {"lightColor", glm::vec4{1.f}};
+  Uni<glm::mat4> u_lightTrans = "lightTrans";
+  Uni<glm::vec4> u_lightAngle = {"lightAngle", glm::vec4{.4f}};
 
   class Deferrd
   {
@@ -60,6 +63,7 @@ private:
   } deferrd;
 
   bgfx::ProgramHandle geom;
-  bgfx::ProgramHandle light;
+  bgfx::ProgramHandle pointLight;
+  bgfx::ProgramHandle spotlight;
   bgfx::ProgramHandle combine;
 };

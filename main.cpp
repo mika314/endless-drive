@@ -1,9 +1,10 @@
 #include "assets.hpp"
 #include "get-natives.hpp"
-#include "light.hpp"
 #include "mesh.hpp"
+#include "point-light.hpp"
 #include "render.hpp"
 #include "scene.hpp"
+#include "spotlight.hpp"
 #include <bgfx/platform.h>
 #include <list>
 #include <log/log.hpp>
@@ -65,46 +66,46 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   {
     const auto dx = 10 * sin(i * 0.1f) + 5 * sin(i * 0.2);
     {
-      auto &mesh = scene.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
-      mesh.setPos(glm::vec3{dx + 4.f, 2 * i, 0.0f});
-      mesh.setScale(glm::vec3{.5f});
-      tmpMesh.push_back(mesh);
+      auto &node = scene.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
+      node.setPos(glm::vec3{dx + 4.f, 2 * i, 0.0f});
+      node.setScale(glm::vec3{.5f});
+      tmpMesh.push_back(node);
     }
     {
-      auto &mesh = scene.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
-      mesh.setPos(glm::vec3{dx - 4.f, 2 * i, 0.0f});
-      mesh.setScale(glm::vec3{.5f});
-      tmpMesh.push_back(mesh);
+      auto &node = scene.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
+      node.setPos(glm::vec3{dx - 4.f, 2 * i, 0.0f});
+      node.setScale(glm::vec3{.5f});
+      tmpMesh.push_back(node);
     }
     if (i % 5 == 0)
     {
       {
-        auto &mesh = scene.addVisualNode<Mesh>(assets, "street-light.gltf/SM_SingleLight_01");
-        mesh.setPos(glm::vec3{dx + 5.f, 2 * i, 0.0f});
-        mesh.setRot(glm::vec3{0.0f, 0.0f, 3.1415926f});
-        tmpMesh.push_back(mesh);
+        auto &node = scene.addVisualNode<Mesh>(assets, "street-light.gltf/SM_SingleLight_01");
+        node.setPos(glm::vec3{dx + 5.f, 2 * i, 0.0f});
+        node.setRot(glm::vec3{0.0f, 0.0f, 3.1415926f});
+        tmpMesh.push_back(node);
       }
       {
-        auto &mesh = scene.addVisualNode<Mesh>(assets, "street-light.gltf/SM_SingleLight_01");
-        mesh.setPos(glm::vec3{dx - 5.f, 2 * i, 0.0f});
-        tmpMesh.push_back(mesh);
+        auto &node = scene.addVisualNode<Mesh>(assets, "street-light.gltf/SM_SingleLight_01");
+        node.setPos(glm::vec3{dx - 5.f, 2 * i, 0.0f});
+        tmpMesh.push_back(node);
       }
     }
   }
 
   {
-    auto &mesh = car.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
-    mesh.setPos(glm::vec3{0.0f, -1.5f, 1.5f});
-    mesh.setScale(glm::vec3{.5f});
+    auto &node = car.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
+    node.setPos(glm::vec3{0.0f, -1.5f, 1.5f});
+    node.setScale(glm::vec3{.5f});
   }
 
   {
-    auto &mesh = car.addVisualNode<Light>(0.4f * glm::vec3{1.f});
-    mesh.setPos(glm::vec3{.596434f, 2.1f, .704822f});
+    auto &node = car.addVisualNode<Spotlight>(0.4f * glm::vec3{1.f}, .4f);
+    node.setPos(glm::vec3{.596434f, 2.1f, .704822f});
   }
   {
-    auto &mesh = car.addVisualNode<Light>(0.4f * glm::vec3{1.f});
-    mesh.setPos(glm::vec3{-.596434f, 2.1f, .704822f});
+    auto &node = car.addVisualNode<Spotlight>(0.4f * glm::vec3{1.f}, .4f);
+    node.setPos(glm::vec3{-.596434f, 2.1f, .704822f});
   }
 
   auto &canister = scene.addVisualNode<Mesh>(assets, "canister.gltf/SM_Canister");
@@ -115,17 +116,17 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   }
 
   {
-    auto &mesh = scene.addVisualNode<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
+    auto &node = scene.addVisualNode<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
     auto i = 3;
     const auto dx = 10.f * sinf(i * 0.1f) + 5.f * sinf(i * 0.2f);
-    mesh.setPos(glm::vec3{dx - 1.f, 2.f * i, 0.0f});
+    node.setPos(glm::vec3{dx - 1.f, 2.f * i, 0.0f});
   }
 
   for (auto x = -2.f; x < 2.f; x += 1.f)
     for (auto y = -2.f; y < 2.f; y += 1.f)
     {
-      auto &mesh = scene.addVisualNode<Light>(0.4f * glm::vec3{1.f});
-      mesh.setPos(glm::vec3{x, y, 2});
+      auto &node = scene.addVisualNode<PointLight>(0.4f * glm::vec3{1.f});
+      node.setPos(glm::vec3{x, y, 2});
     }
 
   auto done = false;
