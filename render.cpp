@@ -84,13 +84,19 @@ auto Render::render(const Scene &scene) -> void
 {
   deferrd.geom();
   {
-    auto tmpCamPos = glm::vec3{u_camPos.get()};
-    const auto view = glm::lookAt(
-      tmpCamPos,
-      tmpCamPos + glm::vec3{glm::rotate(glm::mat4{1.0f}, camYaw, glm::vec3{0.0f, 0.0f, 1.f}) *
-                            glm::rotate(glm::mat4{1.0f}, camPitch, glm::vec3{0.0f, 1.f, 0.0f}) *
-                            glm::vec4{0.f, 1.f, 0.f, 1.f}},
-      glm::vec3(0.0, 0.0, 1.0));
+    const auto tmpCamPos = camPos;
+
+    // Build rotation matrix: Yaw (Z) * Pitch (X) * Roll (Y)
+    const auto rotationMatrix =
+      glm::rotate(glm::mat4{1.0f}, camRot.z, glm::vec3{0.0f, 0.0f, 1.0f}) * // Yaw around Z
+      glm::rotate(glm::mat4{1.0f}, camRot.x, glm::vec3{1.0f, 0.0f, 0.0f}) * // Pitch around X
+      glm::rotate(glm::mat4{1.0f}, camRot.y, glm::vec3{0.0f, 1.0f, 0.0f});  // Roll around Y
+
+    // Apply rotation to forward vector (Y-forward)
+    const auto forwardDir = glm::vec3(rotationMatrix * glm::vec4{0.0f, 1.0f, 0.0f, 0.0f});
+
+    const auto view =
+      glm::lookAt(tmpCamPos, tmpCamPos + forwardDir, glm::vec3(0.0f, 0.0f, 1.0f) /* Z-up */);
 
     glm::mat4 proj = glm::perspective(glm::radians(60.0f), 1.f * w / h, 0.1f, 100.0f);
     bgfx::setViewTransform(geomRenderPass, &view, &proj);
@@ -98,7 +104,7 @@ auto Render::render(const Scene &scene) -> void
     u_mtx = glm::inverse(viewProj);
   }
 
-  u_camPos.arm();
+  u_camPos = glm::vec4{camPos, 1.f};
 
   scene.render(*this);
 
@@ -273,4 +279,14 @@ auto Render::setLightAndRender(glm::vec3 pos, glm::vec3 color) -> void
   u_lightPos = glm::vec4{pos, 1.f};
   u_lightColor = glm::vec4{color, 1.f};
   bgfx::submit(lightRenderPass, light);
+}
+
+auto Render::setCamPos(glm::vec3 v) -> void
+{
+  camPos = v;
+}
+
+auto Render::setCamRot(glm::vec3 v) -> void
+{
+  camRot = v;
 }

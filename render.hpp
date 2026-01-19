@@ -11,14 +11,16 @@ public:
   auto render(const class Scene &) -> void;
   auto setMaterialAndRender(const class Material *) -> void;
   auto setLightAndRender(glm::vec3 pos, glm::vec3 color) -> void;
+  auto setCamPos(glm::vec3) -> void;
+  auto setCamRot(glm::vec3) -> void;
 
 private:
   sdl::Window &win;
   int w;
   int h;
-  float camYaw = 0.0f;
-  float camPitch = 0.3f;
-  Uni<glm::vec4> u_camPos = {"camPos", glm::vec4{0.f, -5.f, 1.8f, 1.f}};
+  glm::vec3 camPos = {0.f, -5.f, 1.8f};
+  glm::vec3 camRot = {-0.3f, 0.0f, 0.0f};
+  Uni<glm::vec4> u_camPos = {"camPos"};
   Uni<glm::mat4x4> u_mtx = "mtx";
   Uni<Tex> u_baseColorTex = {"baseColorTex", 0};
   Uni<Tex> u_metallicTex = {"metallicTex", 1};

@@ -5,6 +5,7 @@
 #include "render.hpp"
 #include "scene.hpp"
 #include <bgfx/platform.h>
+#include <list>
 #include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>
 
@@ -56,36 +57,42 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto assets = Assets{};
   auto scene = Scene{};
 
-  auto &car = scene.addVisualNodeFromAssets<Mesh>(assets, "fancy-car.gltf/SM_vehCar_vehicle06_LOD");
+  auto &car = scene.addVisualNode<Mesh>(assets, "fancy-car.gltf/SM_vehCar_vehicle06_LOD");
+
+  std::list<std::reference_wrapper<BaseVisualNode>> tmpMesh;
 
   for (auto i = -10; i < 100; ++i)
   {
     const auto dx = 10 * sin(i * 0.1f) + 5 * sin(i * 0.2);
     {
-      auto &mesh = scene.addVisualNodeFromAssets<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
+      auto &mesh = scene.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
       mesh.setPos(glm::vec3{dx + 4.f, 2 * i, 0.0f});
       mesh.setScale(glm::vec3{.5f});
+      tmpMesh.push_back(mesh);
     }
     {
-      auto &mesh = scene.addVisualNodeFromAssets<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
+      auto &mesh = scene.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
       mesh.setPos(glm::vec3{dx - 4.f, 2 * i, 0.0f});
       mesh.setScale(glm::vec3{.5f});
+      tmpMesh.push_back(mesh);
     }
     if (i % 5 == 0)
     {
       {
-        auto &mesh = scene.addVisualNodeFromAssets<Mesh>(assets, "street-light.gltf/SM_SingleLight_01");
+        auto &mesh = scene.addVisualNode<Mesh>(assets, "street-light.gltf/SM_SingleLight_01");
         mesh.setPos(glm::vec3{dx + 5.f, 2 * i, 0.0f});
         mesh.setRot(glm::vec3{0.0f, 0.0f, 3.1415926f});
+        tmpMesh.push_back(mesh);
       }
       {
-        auto &mesh = scene.addVisualNodeFromAssets<Mesh>(assets, "street-light.gltf/SM_SingleLight_01");
+        auto &mesh = scene.addVisualNode<Mesh>(assets, "street-light.gltf/SM_SingleLight_01");
         mesh.setPos(glm::vec3{dx - 5.f, 2 * i, 0.0f});
+        tmpMesh.push_back(mesh);
       }
     }
   }
 
-  auto &canister = scene.addVisualNodeFromAssets<Mesh>(assets, "canister.gltf/SM_Canister");
+  auto &canister = scene.addVisualNode<Mesh>(assets, "canister.gltf/SM_Canister");
   {
     auto i = 2;
     const auto dx = 10.f * sinf(i * 0.1f) + 5.f * sinf(i * 0.2f);
@@ -93,7 +100,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   }
 
   {
-    auto &mesh = scene.addVisualNodeFromAssets<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
+    auto &mesh = scene.addVisualNode<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
     auto i = 3;
     const auto dx = 10.f * sinf(i * 0.1f) + 5.f * sinf(i * 0.2f);
     mesh.setPos(glm::vec3{dx - 1.f, 2.f * i, 0.0f});
@@ -123,17 +130,27 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   {
     while (e.poll()) {}
     auto now = SDL_GetTicks();
+    const auto carYOffset = now / 1'000.f;
     car.setRot(glm::vec3{0.0f, 0.0f, now / 1000.f});
     car.setScale(glm::vec3{1.0f, 1.0f, 1.f + .1f * sin(now / 100.f)});
-    car.setPos(glm::vec3{cos(now / 1000.f), sin(now / 1000.f), 0.0f});
+    car.setPos(glm::vec3{cos(now / 1000.f), sin(now / 1000.f) + carYOffset, 0.0f});
     canister.setRot(glm::vec3{0.0f, 0.0f, now / 300.f});
 
+    const auto r = 5.f + 3.f * sin(now / 12000.f);
+    render.setCamPos(glm::vec3{r * sin(-(now / 6000.f)), -r * cos(-(now / 6000.f)) + carYOffset, 1.8f});
+    render.setCamRot(glm::vec3{-0.3f, 0.0f, -(now / 6000.f)});
     render.render(scene);
-    if (cnt++ > 1200)
+    while (!tmpMesh.empty() && tmpMesh.front().get().getPos().y < carYOffset - 6.f)
     {
-      auto t1 = SDL_GetTicks();
-      LOG("FPS:", cnt * 1000 / (t1 - t0));
-      cnt -= 1200;
+      scene.remove(tmpMesh.front());
+      tmpMesh.pop_front();
+    }
+    auto t1 = SDL_GetTicks();
+    ++cnt;
+    if (t1 - t0 >= 10'000)
+    {
+      LOG("FPS:", cnt * 1000. / (t1 - t0));
+      cnt = 0;
       t0 = t1;
     }
   }

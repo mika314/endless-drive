@@ -1,21 +1,53 @@
 #pragma once
+#include "assets.hpp"
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
+#include <memory>
+
+template <typename T>
+class VisualNodeRef;
+
+template <typename T>
+class VisualNode;
+
+class Render;
 
 class BaseNode
 {
 public:
-  BaseNode() = default;
+  BaseNode(BaseNode *parent);
   BaseNode(const BaseNode &) = delete;
   virtual ~BaseNode() = default;
   virtual auto tick(float /*dt*/) -> void {}
+
+  template <typename T, typename... Args>
+  auto addVisualNode(Args &&...args) -> VisualNode<T> &
+  {
+    return static_cast<VisualNode<T> &>(
+      *nodes.emplace_back(std::make_unique<VisualNode<T>>(this, T{std::forward<Args>(args)...})));
+  }
+
+  template <typename T, typename... Args>
+  auto addVisualNode(Assets &assets, Args &&...args) -> VisualNodeRef<T> &
+  {
+    const auto &asset = assets.get<T>(std::forward<Args>(args)...);
+    return static_cast<VisualNodeRef<T> &>(
+      *nodes.emplace_back(std::make_unique<VisualNodeRef<T>>(this, asset)));
+  }
+
+  virtual auto geomPass(Render &render) const -> void;
+  virtual auto lightPass(Render &render) const -> void;
+  auto remove(BaseNode &) -> void;
+
+private:
+  std::vector<std::unique_ptr<BaseNode>> nodes;
+  BaseNode *parent = nullptr;
 };
 
 class BaseVisualNode : public BaseNode
 {
 public:
-  virtual auto geomPass(class Render &render) const -> void = 0;
-  virtual auto lightPass(class Render &render) const -> void = 0;
+  using BaseNode::BaseNode;
   auto getPos() const -> glm::vec3;
   auto getScale() const -> glm::vec3;
   auto getRot() const -> glm::vec3;
@@ -34,13 +66,18 @@ template <typename T>
 class VisualNodeRef final : public BaseVisualNode
 {
 public:
-  VisualNodeRef(const T &aAsset) : asset(aAsset) {}
+  VisualNodeRef(BaseNode *parent, const T &aAsset) : BaseVisualNode(parent), asset(aAsset) {}
   auto geomPass(class Render &render) const -> void final
   {
+    BaseVisualNode::geomPass(render);
     const auto trans = getTrans();
     asset.get().geomPass(render, trans);
   }
-  auto lightPass(class Render &render) const -> void final { asset.get().lightPass(render, getPos()); }
+  auto lightPass(class Render &render) const -> void final
+  {
+    BaseVisualNode::lightPass(render);
+    asset.get().lightPass(render, getPos());
+  }
 
 private:
   std::reference_wrapper<const T> asset;
@@ -50,9 +87,17 @@ template <typename T>
 class VisualNode final : public BaseVisualNode
 {
 public:
-  VisualNode(const T &aAsset) : asset(aAsset) {}
-  auto geomPass(class Render &render) const -> void final { asset.geomPass(render, getTrans()); }
-  auto lightPass(class Render &render) const -> void final { asset.lightPass(render, getPos()); }
+  VisualNode(BaseNode *parent, const T &aAsset) : BaseVisualNode(parent), asset(aAsset) {}
+  auto geomPass(class Render &render) const -> void final
+  {
+    BaseVisualNode::geomPass(render);
+    asset.geomPass(render, getTrans());
+  }
+  auto lightPass(class Render &render) const -> void final
+  {
+    BaseVisualNode::lightPass(render);
+    asset.lightPass(render, getPos());
+  }
 
 private:
   T asset;

@@ -1,6 +1,30 @@
 #include "node.hpp"
 #include <glm/ext/matrix_transform.hpp>
 
+BaseNode::BaseNode(BaseNode *aParent) : parent(aParent) {}
+
+auto BaseNode::geomPass(Render &render) const -> void
+{
+  for (const auto &node : nodes)
+    node->geomPass(render);
+}
+
+auto BaseNode::lightPass(Render &render) const -> void
+{
+  for (const auto &node : nodes)
+    node->lightPass(render);
+}
+
+auto BaseNode::remove(BaseNode &n) -> void
+{
+  auto p = n.parent ? n.parent : this;
+  auto it =
+    std::find_if(std::begin(p->nodes), std::end(p->nodes), [&](const auto &x) { return x.get() == &n; });
+  if (it == std::end(p->nodes))
+    return;
+  p->nodes.erase(it);
+}
+
 auto BaseVisualNode::getPos() const -> glm::vec3
 {
   return pos;

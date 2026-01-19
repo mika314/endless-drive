@@ -1,11 +1,5 @@
 #pragma once
-#include "assets.hpp"
 #include "node.hpp"
-#include <functional>
-#include <memory>
-#include <vector>
-
-class BaseNode;
 
 class Scene
 {
@@ -13,23 +7,18 @@ public:
   template <typename T, typename... Args>
   auto addVisualNode(Args &&...args) -> VisualNode<T> &
   {
-    return static_cast<VisualNode<T> &>(
-      *nodes.emplace_back(std::make_unique<VisualNode<T>>(T{std::forward<Args>(args)...})));
+    return rootNode.addVisualNode<T>(std::forward<Args>(args)...);
   }
 
   template <typename T, typename... Args>
-  auto addVisualNodeFromAssets(Assets &assets, Args &&...args) -> VisualNodeRef<T> &
+  auto addVisualNode(class Assets &assets, Args &&...args) -> VisualNodeRef<T> &
   {
-    const auto &asset = assets.get<T>(std::forward<Args>(args)...);
-    return static_cast<VisualNodeRef<T> &>(
-      *nodes.emplace_back(std::make_unique<VisualNodeRef<T>>(asset)));
+    return rootNode.addVisualNode<T>(assets, std::forward<Args>(args)...);
   }
 
   auto render(class Render &) const -> void;
+  auto remove(BaseNode &) -> void;
 
 private:
-  auto geomPass(class Render &) const -> void;
-  auto lightPass(class Render &) const -> void;
-
-  std::vector<std::unique_ptr<BaseNode>> nodes;
+  BaseNode rootNode = {nullptr};
 };
