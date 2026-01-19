@@ -92,6 +92,21 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     }
   }
 
+  {
+    auto &mesh = car.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
+    mesh.setPos(glm::vec3{0.0f, -1.5f, 1.5f});
+    mesh.setScale(glm::vec3{.5f});
+  }
+
+  {
+    auto &mesh = car.addVisualNode<Light>(0.4f * glm::vec3{1.f});
+    mesh.setPos(glm::vec3{.596434f, 2.1f, .704822f});
+  }
+  {
+    auto &mesh = car.addVisualNode<Light>(0.4f * glm::vec3{1.f});
+    mesh.setPos(glm::vec3{-.596434f, 2.1f, .704822f});
+  }
+
   auto &canister = scene.addVisualNode<Mesh>(assets, "canister.gltf/SM_Canister");
   {
     auto i = 2;

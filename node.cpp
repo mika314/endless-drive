@@ -25,6 +25,11 @@ auto BaseNode::remove(BaseNode &n) -> void
   p->nodes.erase(it);
 }
 
+auto BaseNode::getParent() const -> const BaseNode *
+{
+  return parent;
+}
+
 auto BaseVisualNode::getPos() const -> glm::vec3
 {
   return pos;
@@ -57,7 +62,8 @@ auto BaseVisualNode::setRot(glm::vec3 v) -> void
 
 auto BaseVisualNode::getTrans() const -> glm::mat4
 {
-  auto r = glm::mat4{1.0f};
+  auto p = dynamic_cast<const BaseVisualNode *>(getParent());
+  auto r = p ? p->getTrans() : glm::mat4{1.0f};
   r = glm::translate(r, pos);
 
   r = glm::rotate(r, rot.z, glm::vec3(0.0f, 0.0f, 1.0f));

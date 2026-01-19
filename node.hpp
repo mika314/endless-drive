@@ -38,6 +38,7 @@ public:
   virtual auto geomPass(Render &render) const -> void;
   virtual auto lightPass(Render &render) const -> void;
   auto remove(BaseNode &) -> void;
+  auto getParent() const -> const BaseNode *;
 
 private:
   std::vector<std::unique_ptr<BaseNode>> nodes;
@@ -76,7 +77,8 @@ public:
   auto lightPass(class Render &render) const -> void final
   {
     BaseVisualNode::lightPass(render);
-    asset.get().lightPass(render, getPos());
+    const auto trans = getTrans();
+    asset.get().lightPass(render, glm::vec3(trans[3]));
   }
 
 private:
@@ -96,7 +98,8 @@ public:
   auto lightPass(class Render &render) const -> void final
   {
     BaseVisualNode::lightPass(render);
-    asset.lightPass(render, getPos());
+    const auto trans = getTrans();
+    asset.lightPass(render, glm::vec3(trans[3]));
   }
 
 private:
