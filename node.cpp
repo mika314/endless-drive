@@ -3,16 +3,18 @@
 
 BaseNode::BaseNode(BaseNode *aParent) : parent(aParent) {}
 
-auto BaseNode::geomPass(Render &render) const -> void
+auto BaseNode::geomPassInternal(Render &render) const -> void
 {
   for (const auto &node : nodes)
-    node->geomPass(render);
+    node->geomPassInternal(render);
+  geomPass(render);
 }
 
-auto BaseNode::lightPass(Render &render) const -> void
+auto BaseNode::lightPassInternal(Render &render) const -> void
 {
   for (const auto &node : nodes)
-    node->lightPass(render);
+    node->lightPassInternal(render);
+  lightPass(render);
 }
 
 auto BaseNode::remove(BaseNode &n) -> void
@@ -28,6 +30,18 @@ auto BaseNode::remove(BaseNode &n) -> void
 auto BaseNode::getParent() const -> const BaseNode *
 {
   return parent;
+}
+
+auto BaseNode::getParent() -> BaseNode *
+{
+  return parent;
+}
+
+auto BaseNode::tickInternal(float dt) -> void
+{
+  for (const auto &node : nodes)
+    node->tick(dt);
+  tick(dt);
 }
 
 auto BaseVisualNode::getPos() const -> glm::vec3

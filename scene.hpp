@@ -16,8 +16,15 @@ public:
     return rootNode.addVisualNode<T>(assets, std::forward<Args>(args)...);
   }
 
+  template <typename T, typename... Args>
+  auto addNode(Args &&...args) -> T &
+  {
+    return rootNode.addNode<T>(std::forward<Args>(args)...);
+  }
+
   auto render(class Render &) const -> void;
   auto remove(BaseNode &) -> void;
+  auto tick(float dt) -> void;
 
 private:
   BaseNode rootNode = {nullptr};

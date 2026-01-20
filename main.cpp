@@ -1,4 +1,5 @@
 #include "assets.hpp"
+#include "car.hpp"
 #include "get-natives.hpp"
 #include "mesh.hpp"
 #include "point-light.hpp"
@@ -58,7 +59,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto assets = Assets{};
   auto scene = Scene{};
 
-  auto &car = scene.addVisualNode<Mesh>(assets, "fancy-car.gltf/SM_vehCar_vehicle06_LOD");
+  auto &car = scene.addNode<Car>(assets);
 
   std::list<std::reference_wrapper<BaseVisualNode>> tmpMesh;
 
@@ -91,21 +92,6 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         tmpMesh.push_back(node);
       }
     }
-  }
-
-  {
-    auto &node = car.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
-    node.setPos(glm::vec3{0.0f, -1.5f, 1.5f});
-    node.setScale(glm::vec3{.5f});
-  }
-
-  {
-    auto &node = car.addVisualNode<Spotlight>(0.4f * glm::vec3{1.f}, .4f);
-    node.setPos(glm::vec3{.596434f, 2.1f, .704822f});
-  }
-  {
-    auto &node = car.addVisualNode<Spotlight>(0.4f * glm::vec3{1.f}, .4f);
-    node.setPos(glm::vec3{-.596434f, 2.1f, .704822f});
   }
 
   auto &canister = scene.addVisualNode<Mesh>(assets, "canister.gltf/SM_Canister");
@@ -142,15 +128,17 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto t0 = SDL_GetTicks();
   auto cnt = 0;
 
+  auto dt0 = t0;
+
   while (!done)
   {
     while (e.poll()) {}
-    auto now = SDL_GetTicks();
+    const auto now = SDL_GetTicks();
     const auto carYOffset = now / 1'000.f;
-    car.setRot(glm::vec3{0.0f, 0.0f, now / 1000.f});
-    car.setScale(glm::vec3{1.0f, 1.0f, 1.f + .1f * sin(now / 100.f)});
-    car.setPos(glm::vec3{cos(now / 1000.f), sin(now / 1000.f) + carYOffset, 0.0f});
+
     canister.setRot(glm::vec3{0.0f, 0.0f, now / 300.f});
+    scene.tick((now - dt0) / 1000.f);
+    dt0 = now;
 
     const auto r = 5.f + 3.f * sin(now / 12000.f);
     render.setCamPos(glm::vec3{r * sin(-(now / 6000.f)), -r * cos(-(now / 6000.f)) + carYOffset, 1.8f});
