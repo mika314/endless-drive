@@ -57,6 +57,7 @@ auto Mesh::processNode(Assets &assets, const aiNode *node, const aiScene *scene)
   {
     auto mesh = scene->mMeshes[node->mMeshes[i]];
     const auto aiMeshName = std::string{mesh->mName.C_Str()};
+    // LOG("ai mesh name", aiMeshName);
     if (![&]() {
           if (aiMeshName.find(meshName) != 0)
             return false;

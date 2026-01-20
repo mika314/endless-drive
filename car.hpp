@@ -1,9 +1,8 @@
 #pragma once
 
-#include "mesh.hpp"
-#include "node.hpp"
+#include "mesh-node.hpp"
 
-class Car : public VisualNodeRef<Mesh>
+class Car : public MeshNode
 {
 public:
   Car(BaseNode *parent, class Assets &);

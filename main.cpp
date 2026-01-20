@@ -1,11 +1,13 @@
 #include "assets.hpp"
 #include "car.hpp"
 #include "get-natives.hpp"
+#include "get-road-offset.hpp"
 #include "mesh.hpp"
 #include "point-light.hpp"
 #include "render.hpp"
 #include "scene.hpp"
 #include "spotlight.hpp"
+#include "street-light.hpp"
 #include <bgfx/platform.h>
 #include <list>
 #include <log/log.hpp>
@@ -59,37 +61,38 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto assets = Assets{};
   auto scene = Scene{};
 
-  auto &car = scene.addNode<Car>(assets);
+  scene.addNode<Car>(assets);
 
-  std::list<std::reference_wrapper<BaseVisualNode>> tmpMesh;
-
+  std::list<std::reference_wrapper<BaseVisualNode>> tmpNodes;
   for (auto i = -10; i < 100; ++i)
   {
-    const auto dx = 10 * sin(i * 0.1f) + 5 * sin(i * 0.2);
+    const auto y = 2 * i;
+    const auto dx = getRoadOffset(y);
     {
       auto &node = scene.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
-      node.setPos(glm::vec3{dx + 4.f, 2 * i, 0.0f});
+      node.setPos({dx + 4.f, y, 0.0f});
       node.setScale(glm::vec3{.5f});
-      tmpMesh.push_back(node);
+      tmpNodes.push_back(node);
     }
     {
       auto &node = scene.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
-      node.setPos(glm::vec3{dx - 4.f, 2 * i, 0.0f});
+      node.setPos({dx - 4.f, y, 0.0f});
       node.setScale(glm::vec3{.5f});
-      tmpMesh.push_back(node);
+      tmpNodes.push_back(node);
     }
     if (i % 5 == 0)
     {
       {
-        auto &node = scene.addVisualNode<Mesh>(assets, "street-light.gltf/SM_SingleLight_01");
-        node.setPos(glm::vec3{dx + 5.f, 2 * i, 0.0f});
-        node.setRot(glm::vec3{0.0f, 0.0f, 3.1415926f});
-        tmpMesh.push_back(node);
+        auto &node = scene.addNode<StreetLight>(assets);
+        node.setPos({dx + 5.f, y, 0.0f});
+        node.setRot({0.0f, 0.0f, -3.1415926f / 2});
+        tmpNodes.push_back(node);
       }
       {
-        auto &node = scene.addVisualNode<Mesh>(assets, "street-light.gltf/SM_SingleLight_01");
-        node.setPos(glm::vec3{dx - 5.f, 2 * i, 0.0f});
-        tmpMesh.push_back(node);
+        auto &node = scene.addNode<StreetLight>(assets);
+        node.setPos({dx - 5.f, y, 0.0f});
+        node.setRot({0.0f, 0.0f, 3.1415926f / 2});
+        tmpNodes.push_back(node);
       }
     }
   }
@@ -98,22 +101,17 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   {
     auto i = 2;
     const auto dx = 10.f * sinf(i * 0.1f) + 5.f * sinf(i * 0.2f);
-    canister.setPos(glm::vec3{dx, 2.f * i, 0.0f});
+    canister.setPos({dx, 2.f * i, 0.0f});
   }
 
   {
     auto &node = scene.addVisualNode<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
     auto i = 3;
     const auto dx = 10.f * sinf(i * 0.1f) + 5.f * sinf(i * 0.2f);
-    node.setPos(glm::vec3{dx - 1.f, 2.f * i, 0.0f});
+    node.setPos({dx - 1.f, 2.f * i, 0.0f});
   }
 
-  for (auto x = -2.f; x < 2.f; x += 1.f)
-    for (auto y = -2.f; y < 2.f; y += 1.f)
-    {
-      auto &node = scene.addVisualNode<PointLight>(0.4f * glm::vec3{1.f});
-      node.setPos(glm::vec3{x, y, 2});
-    }
+  auto &floor = scene.addVisualNode<Mesh>(assets, "floor.gltf/Floor");
 
   auto done = false;
   auto e = sdl::EventHandler{};
@@ -134,20 +132,20 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   {
     while (e.poll()) {}
     const auto now = SDL_GetTicks();
-    const auto carYOffset = now / 1'000.f;
+    const auto carYOffset = now / 250.f;
+    floor.setPos({0.0f, carYOffset, 0.0f});
 
-    canister.setRot(glm::vec3{0.0f, 0.0f, now / 300.f});
+    canister.setRot({0.0f, 0.0f, now / 300.f});
     scene.tick((now - dt0) / 1000.f);
     dt0 = now;
 
-    const auto r = 5.f + 3.f * sin(now / 12000.f);
-    render.setCamPos(glm::vec3{r * sin(-(now / 6000.f)), -r * cos(-(now / 6000.f)) + carYOffset, 1.8f});
-    render.setCamRot(glm::vec3{-0.3f, 0.0f, -(now / 6000.f)});
+    render.setCamPos({0.0f, carYOffset - 12.f, 2.3f});
+    render.setCamRot({0.0f, 0.0f, 0.0f});
     render.render(scene);
-    while (!tmpMesh.empty() && tmpMesh.front().get().getPos().y < carYOffset - 6.f)
+    while (!tmpNodes.empty() && tmpNodes.front().get().getPos().y < carYOffset - 24.f)
     {
-      scene.remove(tmpMesh.front());
-      tmpMesh.pop_front();
+      scene.remove(tmpNodes.front());
+      tmpNodes.pop_front();
     }
     auto t1 = SDL_GetTicks();
     ++cnt;
