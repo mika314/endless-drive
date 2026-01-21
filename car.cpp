@@ -18,7 +18,7 @@ Car::Car(BaseNode *parent, class Assets &assets)
   }
 }
 
-auto Car::tick(float) -> void
+auto Car::tick(float dt) -> void
 {
   const auto now = SDL_GetTicks();
   const auto carYOffset = desiredY();
@@ -26,7 +26,9 @@ auto Car::tick(float) -> void
   setScale({1.0f, 1.0f, 1.f + .1f * sin(now / 100.f)});
   auto laneOffset = 0.f;
   laneOffset = 2.6f * currentLane;
-  setPos({getRoadOffset(carYOffset) + laneOffset, carYOffset, 0.0f});
+  const auto desiredX = getRoadOffset(carYOffset) + laneOffset;
+  const auto curX = getPos().x;
+  setPos({curX + 40.f * dt * (desiredX - curX), carYOffset, 0.0f});
 }
 
 auto Car::desiredY() -> float
