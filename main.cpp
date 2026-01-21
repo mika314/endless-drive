@@ -1,4 +1,5 @@
 #include "assets.hpp"
+#include "canister.hpp"
 #include "car.hpp"
 #include "get-natives.hpp"
 #include "get-road-offset.hpp"
@@ -102,8 +103,21 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       switch (rand() % 3)
       {
       case 0: offset = 0.0f; break;
-      case 1: offset = -3.f; break;
-      case 2: offset = 3.f; break;
+      case 1: offset = -2.25f; break;
+      case 2: offset = 2.25f; break;
+      };
+      node.setPos({dx + offset, y, 0.0f});
+      tmpNodes.push_back(node);
+    }
+    else if (rand() % 2 == 0)
+    {
+      auto &node = scene.addNode<Canister>(assets);
+      auto offset = 0.0f;
+      switch (rand() % 3)
+      {
+      case 0: offset = 0.0f; break;
+      case 1: offset = -2.25f; break;
+      case 2: offset = 2.25f; break;
       };
       node.setPos({dx + offset, y, 0.0f});
       tmpNodes.push_back(node);
@@ -114,13 +128,6 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     addRoadMeshes(i);
 
   auto roadIdx = 100;
-
-  auto &canister = scene.addVisualNode<Mesh>(assets, "canister.gltf/SM_Canister");
-  {
-    auto i = 2;
-    const auto dx = 10.f * sinf(i * 0.1f) + 5.f * sinf(i * 0.2f);
-    canister.setPos({dx, 2.f * i, 0.0f});
-  }
 
   auto &floor = scene.addVisualNode<Mesh>(assets, "floor.gltf/Floor");
 
@@ -146,7 +153,6 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     const auto carYOffset = Car::desiredY();
     floor.setPos({0.0f, carYOffset, 0.0f});
 
-    canister.setRot({0.0f, 0.0f, now / 300.f});
     scene.tick((now - dt0) / 1000.f);
     dt0 = now;
 

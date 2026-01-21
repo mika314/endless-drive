@@ -2,7 +2,7 @@
 
 #include "mesh-node.hpp"
 
-class Car : public MeshNode
+class Car final : public MeshNode
 {
 public:
   Car(BaseNode *parent, class Assets &);
