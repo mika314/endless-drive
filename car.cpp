@@ -22,7 +22,7 @@ auto Car::tick(float) -> void
 {
   const auto now = SDL_GetTicks();
   const auto carYOffset = desiredY();
-  setRot({0.0f, 0.0f, 0.0f});
+  setRot({0.f, 0.f, -getRoadAngle(carYOffset)});
   setScale({1.0f, 1.0f, 1.f + .1f * sin(now / 100.f)});
   setPos({getRoadOffset(carYOffset), carYOffset, 0.0f});
 }
