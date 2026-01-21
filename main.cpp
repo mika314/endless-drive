@@ -47,6 +47,16 @@ public:
   ~BgfxInit() { bgfx::shutdown(); }
 };
 
+enum class ObstacleType { canister, tire };
+
+struct Obstacle
+{
+  ObstacleType type;
+  int x;
+  float y;
+  std::reference_wrapper<BaseVisualNode> node;
+};
+
 auto main(int /*argc*/, char ** /*argv*/) -> int
 {
   auto init = sdl::Init(SDL_INIT_VIDEO);
@@ -57,6 +67,11 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     "bgfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN};
 
   auto bgfxInit = BgfxInit{win, width, height};
+  bgfx::setDebug(BGFX_DEBUG_TEXT);
+
+  auto score = 0;
+  auto fuel = 100.f;
+  auto lives = 3;
 
   auto render = Render{win, width, height};
   auto assets = Assets{};
@@ -65,9 +80,10 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto &car = scene.addNode<Car>(assets);
 
   std::list<std::reference_wrapper<BaseVisualNode>> tmpNodes;
+  std::list<Obstacle> obstacles;
 
   auto addRoadMeshes = [&](const auto i) {
-    const auto y = 2 * i;
+    const auto y = 2.f * i;
     const auto dx = getRoadOffset(y);
     {
       auto &node = scene.addVisualNode<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
@@ -114,28 +130,18 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     if (rand() % 10 == 0)
     {
       auto &node = scene.addVisualNode<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
-      auto offset = 0.0f;
-      switch (rand() % 3)
-      {
-      case 0: offset = 0.0f; break;
-      case 1: offset = -2.6f; break;
-      case 2: offset = 2.6f; break;
-      };
-      node.setPos({dx + offset, y, 0.0f});
+      const auto x = rand() % 3 - 1;
+      node.setPos({dx + x * 2.6f, y, 0.0f});
       tmpNodes.push_back(node);
+      obstacles.push_back({ObstacleType::tire, x, y, node});
     }
     else if (rand() % 2 == 0)
     {
       auto &node = scene.addNode<Canister>(assets);
-      auto offset = 0.0f;
-      switch (rand() % 3)
-      {
-      case 0: offset = 0.0f; break;
-      case 1: offset = -2.6f; break;
-      case 2: offset = 2.6f; break;
-      };
-      node.setPos({dx + offset, y, 0.0f});
+      const auto x = rand() % 3 - 1;
+      node.setPos({dx + x * 2.6f, y, 0.0f});
       tmpNodes.push_back(node);
+      obstacles.push_back({ObstacleType::canister, x, y, node});
     }
   };
 
@@ -176,7 +182,43 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     const auto carYOffset = Car::desiredY();
     floor.setPos({0.0f, carYOffset, 0.0f});
 
+    fuel -= (now - dt0) / 1000.f * 5.0f;
+    if (fuel <= 0)
+    {
+      --lives;
+      fuel = 100.f;
+    }
+
+    if (lives <= 0)
+    {
+      done = true;
+    }
+
     scene.tick((now - dt0) / 1000.f);
+
+    while (!obstacles.empty() && obstacles.front().y < carYOffset - 4.4f / 2.f)
+      obstacles.pop_front();
+
+    while (!obstacles.empty())
+    {
+      auto &obstacle = obstacles.front();
+      if (obstacle.x == car.currentLane && std::abs(obstacle.y - carYOffset) < 4.4f / 2.f)
+      {
+        switch (obstacle.type)
+        {
+        case ObstacleType::canister:
+          score += 10;
+          fuel = std::min(100.f, fuel + 25.f);
+          break;
+        case ObstacleType::tire: --lives; break;
+        }
+        obstacle.node.get().isVisible = false;
+        obstacles.pop_front();
+      }
+      else
+        break;
+    }
+
     dt0 = now;
 
     render.setCamPos({0.0f, carYOffset - 12.f, 2.3f});
@@ -189,13 +231,23 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     }
     for (; roadIdx * 2 - 200 < carYOffset; ++roadIdx)
       addRoadMeshes(roadIdx);
+
+    bgfx::dbgTextClear();
+    bgfx::dbgTextPrintf(0, 1, 0x0f, "Score: %d", score);
+    bgfx::dbgTextPrintf(0, 2, 0x0f, "Fuel: %.0f", fuel);
+    bgfx::dbgTextPrintf(0, 3, 0x0f, "Lives: %d", lives);
+
     auto t1 = SDL_GetTicks();
     ++cnt;
-    if (t1 - t0 >= 10'000)
+    static float fps = 0.0f;
+    bgfx::dbgTextPrintf(0, 4, 0x0f, "FPS: %f", fps);
+    if (t1 - t0 >= 1'000)
     {
-      LOG("FPS:", cnt * 1000. / (t1 - t0));
+      fps = cnt * 1000. / (t1 - t0);
       cnt = 0;
       t0 = t1;
     }
+    bgfx::frame();
   }
+  LOG("Your score:", score);
 }

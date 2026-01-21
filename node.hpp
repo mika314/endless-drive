@@ -65,6 +65,7 @@ public:
   auto setScale(glm::vec3) -> void;
   auto setRot(glm::vec3) -> void;
   auto getTrans() const -> glm::mat4;
+  bool isVisible = true;
 
 private:
   glm::vec3 pos = {0.0f, 0.0f, 0.0f};
@@ -77,8 +78,18 @@ class VisualNodeRef : public BaseVisualNode
 {
 public:
   VisualNodeRef(BaseNode *parent, const T &aAsset) : BaseVisualNode(parent), asset(aAsset) {}
-  auto geomPass(class Render &render) const -> void final { asset.get().geomPass(render, getTrans()); }
-  auto lightPass(class Render &render) const -> void final { asset.get().lightPass(render, getTrans()); }
+  auto geomPass(class Render &render) const -> void final
+  {
+    if (!isVisible)
+      return;
+    asset.get().geomPass(render, getTrans());
+  }
+  auto lightPass(class Render &render) const -> void final
+  {
+    if (!isVisible)
+      return;
+    asset.get().lightPass(render, getTrans());
+  }
 
 private:
   std::reference_wrapper<const T> asset;
@@ -89,8 +100,18 @@ class VisualNode : public BaseVisualNode
 {
 public:
   VisualNode(BaseNode *parent, const T &aAsset) : BaseVisualNode(parent), asset(aAsset) {}
-  auto geomPass(class Render &render) const -> void final { asset.geomPass(render, getTrans()); }
-  auto lightPass(class Render &render) const -> void final { asset.lightPass(render, getTrans()); }
+  auto geomPass(class Render &render) const -> void final
+  {
+    if (!isVisible)
+      return;
+    asset.geomPass(render, getTrans());
+  }
+  auto lightPass(class Render &render) const -> void final
+  {
+    if (!isVisible)
+      return;
+    asset.lightPass(render, getTrans());
+  }
 
 private:
   T asset;

@@ -113,8 +113,6 @@ auto Render::render(const Scene &scene) -> void
     deferrd.combine();
     bgfx::submit(combineRenderPass, combine);
   }
-
-  bgfx::frame();
 }
 
 Render::~Render()
