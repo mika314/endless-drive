@@ -49,8 +49,8 @@ public:
 auto main(int /*argc*/, char ** /*argv*/) -> int
 {
   auto init = sdl::Init(SDL_INIT_VIDEO);
-  const auto width = 1280;
-  const auto height = 720;
+  const auto width = 1920;
+  const auto height = 1080;
 
   auto win = sdl::Window{
     "bgfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN};
@@ -64,8 +64,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   scene.addNode<Car>(assets);
 
   std::list<std::reference_wrapper<BaseVisualNode>> tmpNodes;
-  for (auto i = -10; i < 100; ++i)
-  {
+
+  auto addRoadMeshes = [&](const auto i) {
     const auto y = 2 * i;
     const auto dx = getRoadOffset(y);
     {
@@ -95,20 +95,31 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         tmpNodes.push_back(node);
       }
     }
-  }
+    if (rand() % 10 == 0)
+    {
+      auto &node = scene.addVisualNode<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
+      auto offset = 0.0f;
+      switch (rand() % 3)
+      {
+      case 0: offset = 0.0f; break;
+      case 1: offset = -3.f; break;
+      case 2: offset = 3.f; break;
+      };
+      node.setPos({dx + offset, y, 0.0f});
+      tmpNodes.push_back(node);
+    }
+  };
+
+  for (auto i = -10; i < 100; ++i)
+    addRoadMeshes(i);
+
+  auto roadIdx = 100;
 
   auto &canister = scene.addVisualNode<Mesh>(assets, "canister.gltf/SM_Canister");
   {
     auto i = 2;
     const auto dx = 10.f * sinf(i * 0.1f) + 5.f * sinf(i * 0.2f);
     canister.setPos({dx, 2.f * i, 0.0f});
-  }
-
-  {
-    auto &node = scene.addVisualNode<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
-    auto i = 3;
-    const auto dx = 10.f * sinf(i * 0.1f) + 5.f * sinf(i * 0.2f);
-    node.setPos({dx - 1.f, 2.f * i, 0.0f});
   }
 
   auto &floor = scene.addVisualNode<Mesh>(assets, "floor.gltf/Floor");
@@ -147,6 +158,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       scene.remove(tmpNodes.front());
       tmpNodes.pop_front();
     }
+    for (; roadIdx * 2 - 200 < carYOffset; ++roadIdx)
+      addRoadMeshes(roadIdx);
     auto t1 = SDL_GetTicks();
     ++cnt;
     if (t1 - t0 >= 10'000)
