@@ -25,7 +25,7 @@ auto Car::tick(float) -> void
   setRot({0.f, 0.f, -getRoadAngle(carYOffset)});
   setScale({1.0f, 1.0f, 1.f + .1f * sin(now / 100.f)});
   auto laneOffset = 0.f;
-  laneOffset = 2.25f * currentLane;
+  laneOffset = 2.6f * currentLane;
   setPos({getRoadOffset(carYOffset) + laneOffset, carYOffset, 0.0f});
 }
 

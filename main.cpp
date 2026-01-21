@@ -81,6 +81,21 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       node.setScale(glm::vec3{.5f});
       tmpNodes.push_back(node);
     }
+    if (i % 2 == 0)
+    {
+      {
+        auto &node = scene.addVisualNode<Mesh>(assets, "dash-lane.gltf/DashLane");
+        node.setPos({dx + 1.33f, y, 0.0f});
+        node.setRot({0.0f, 0.0f, -getRoadAngle(y)});
+        tmpNodes.push_back(node);
+      }
+      {
+        auto &node = scene.addVisualNode<Mesh>(assets, "dash-lane.gltf/DashLane");
+        node.setPos({dx - 1.33f, y, 0.0f});
+        node.setRot({0.0f, 0.0f, -getRoadAngle(y)});
+        tmpNodes.push_back(node);
+      }
+    }
     if (i % 5 == 0)
     {
       {
@@ -103,8 +118,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       switch (rand() % 3)
       {
       case 0: offset = 0.0f; break;
-      case 1: offset = -2.25f; break;
-      case 2: offset = 2.25f; break;
+      case 1: offset = -2.6f; break;
+      case 2: offset = 2.6f; break;
       };
       node.setPos({dx + offset, y, 0.0f});
       tmpNodes.push_back(node);
@@ -116,8 +131,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       switch (rand() % 3)
       {
       case 0: offset = 0.0f; break;
-      case 1: offset = -2.25f; break;
-      case 2: offset = 2.25f; break;
+      case 1: offset = -2.6f; break;
+      case 2: offset = 2.6f; break;
       };
       node.setPos({dx + offset, y, 0.0f});
       tmpNodes.push_back(node);

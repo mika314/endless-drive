@@ -33,6 +33,6 @@ $(DATA_DIR):
 
 $(DATA_DIR)/%.gltf: $(ASSETS_DIR)/%.blend $(EXPORT_SCRIPT) | $(DATA_DIR)
 	@echo "Exporting $< to $@"
-	/home/mika/bin/blender-4.4.1-linux-x64/blender -b $< -P $(EXPORT_SCRIPT) -- -o $@
+	/home/mika/bin/blender-5.0.1-linux-x64/blender -b $< -P $(EXPORT_SCRIPT) -- -o $@
 
 FORCE:
