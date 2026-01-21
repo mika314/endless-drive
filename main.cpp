@@ -143,7 +143,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   {
     while (e.poll()) {}
     const auto now = SDL_GetTicks();
-    const auto carYOffset = now / 250.f;
+    const auto carYOffset = Car::desiredY();
     floor.setPos({0.0f, carYOffset, 0.0f});
 
     canister.setRot({0.0f, 0.0f, now / 300.f});

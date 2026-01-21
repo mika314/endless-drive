@@ -7,4 +7,5 @@ class Car : public MeshNode
 public:
   Car(BaseNode *parent, class Assets &);
   auto tick(float) -> void final;
+  static auto desiredY() -> float;
 };

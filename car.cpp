@@ -21,8 +21,14 @@ Car::Car(BaseNode *parent, class Assets &assets)
 auto Car::tick(float) -> void
 {
   const auto now = SDL_GetTicks();
-  const auto carYOffset = now / 250.f;
+  const auto carYOffset = desiredY();
   setRot({0.0f, 0.0f, 0.0f});
   setScale({1.0f, 1.0f, 1.f + .1f * sin(now / 100.f)});
   setPos({getRoadOffset(carYOffset), carYOffset, 0.0f});
+}
+
+auto Car::desiredY() -> float
+{
+  const auto now = SDL_GetTicks();
+  return now / 125.f;
 }
