@@ -8,4 +8,6 @@ public:
   Car(BaseNode *parent, class Assets &);
   auto tick(float) -> void final;
   static auto desiredY() -> float;
+
+  int currentLane = 0;
 };

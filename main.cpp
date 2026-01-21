@@ -62,7 +62,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto assets = Assets{};
   auto scene = Scene{};
 
-  scene.addNode<Car>(assets);
+  auto &car = scene.addNode<Car>(assets);
 
   std::list<std::reference_wrapper<BaseVisualNode>> tmpNodes;
 
@@ -138,6 +138,14 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     switch (e.keysym.sym)
     {
     case SDLK_q: done = true; break;
+    case SDLK_LEFT:
+      if (car.currentLane > -1)
+        --car.currentLane;
+      break;
+    case SDLK_RIGHT:
+      if (car.currentLane < 1)
+        ++car.currentLane;
+      break;
     }
   };
 
