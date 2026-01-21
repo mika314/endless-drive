@@ -61,4 +61,18 @@ Material::Material(const std::string &path, class Assets &assets, class aiMateri
     roughness = r;
     LOG("roughness:", r);
   }
+
+  if (aiMat->GetTextureCount(aiTextureType_EMISSIVE) > 0)
+  {
+    auto str = aiString{};
+    aiMat->GetTexture(aiTextureType_EMISSIVE, 0, &str);
+    emission = &assets.get<Tex>(str.C_Str());
+  }
+  else
+  {
+    auto color = aiColor4D{0.0f, 0.0f, 0.0f, 0.0f};
+    aiMat->Get(AI_MATKEY_COLOR_EMISSIVE, color);
+    emission = glm::vec4(color.r, color.g, color.b, color.a);
+    LOG("emission:", color.r, color.g, color.b, color.a);
+  }
 }

@@ -150,6 +150,8 @@ Render::Deferrd::Deferrd(int w, int h)
       bgfx::createTexture2D(w, h, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT | flags)),
     t_normals(
       bgfx::createTexture2D(w, h, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT | flags)),
+    t_emission(
+      bgfx::createTexture2D(w, h, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT | flags)),
     t_depth(bgfx::createTexture2D(w, h, false, 1, depthBufTexFmt(), BGFX_TEXTURE_RT | flags)),
     gBuffer(bgfx::createFrameBuffer(
       gBufferAt.size(),
@@ -157,7 +159,8 @@ Render::Deferrd::Deferrd(int w, int h)
         gBufferAt[0].init(t_baseColor);
         gBufferAt[1].init(t_metallicRoughness);
         gBufferAt[2].init(t_normals);
-        gBufferAt[3].init(t_depth);
+        gBufferAt[3].init(t_emission);
+        gBufferAt[4].init(t_depth);
         return gBufferAt.data();
       }(),
       true)),
@@ -200,6 +203,7 @@ Render::Deferrd::~Deferrd()
   bgfx::destroy(t_lightBuffer);
   bgfx::destroy(gBuffer);
   bgfx::destroy(t_depth);
+  bgfx::destroy(t_emission);
   bgfx::destroy(t_normals);
   bgfx::destroy(t_metallicRoughness);
   bgfx::destroy(t_baseColor);
@@ -224,6 +228,7 @@ auto Render::Deferrd::combine() -> void
 {
   u_baseColor = t_baseColor;
   u_lightBuffer = t_lightBuffer;
+  u_emissionBuffer = t_emission;
   bgfx::setState(0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
   screenSpaceQuad(caps->originBottomLeft);
 }
@@ -268,6 +273,18 @@ auto Render::setMaterialAndRender(const Material *mat) -> void
       const auto tex = std::get<Tex *>(mat->roughness);
       assert(tex);
       u_roughnessTex = *tex;
+    }
+    if (std::holds_alternative<glm::vec4>(mat->emission))
+    {
+      tmpSettings.w = 0.0f;
+      u_emission = std::get<glm::vec4>(mat->emission);
+    }
+    else
+    {
+      tmpSettings.w = 1.f;
+      const auto tex = std::get<Tex *>(mat->emission);
+      assert(tex);
+      u_emissionTex = *tex;
     }
   }
   u_settings = tmpSettings;

@@ -12,4 +12,5 @@ public:
   std::variant<glm::vec4, class Tex *> baseColor;
   std::variant<float, class Tex *> metallic;
   std::variant<float, class Tex *> roughness;
+  std::variant<glm::vec4, class Tex *> emission;
 };

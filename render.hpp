@@ -26,10 +26,12 @@ private:
   Uni<Tex> u_baseColorTex = {"baseColorTex", 0};
   Uni<Tex> u_metallicTex = {"metallicTex", 1};
   Uni<Tex> u_roughnessTex = {"roughnessTex", 2};
+  Uni<Tex> u_emissionTex = {"emissionTex", 3};
   Uni<glm::vec4> u_settings = "settings";
   Uni<glm::vec4> u_baseColor = "baseColor";
   Uni<glm::vec4> u_metallic = "metallic";
   Uni<glm::vec4> u_roughness = "roughness";
+  Uni<glm::vec4> u_emission = "emission";
   Uni<glm::vec4> u_lightPos = {"lightPos", glm::vec4{-1.25f, 1.f, 2.f, 0.f}};
   Uni<glm::vec4> u_lightColor = {"lightColor", glm::vec4{1.f}};
   Uni<glm::mat4> u_lightTrans = "lightTrans";
@@ -49,8 +51,9 @@ private:
     bgfx::TextureHandle t_baseColor;
     bgfx::TextureHandle t_metallicRoughness;
     bgfx::TextureHandle t_normals;
+    bgfx::TextureHandle t_emission;
     bgfx::TextureHandle t_depth;
-    std::array<bgfx::Attachment, 4> gBufferAt;
+    std::array<bgfx::Attachment, 5> gBufferAt;
     bgfx::FrameBufferHandle gBuffer;
     bgfx::TextureHandle t_lightBuffer;
     bgfx::FrameBufferHandle lightBuffer;
@@ -59,6 +62,7 @@ private:
     Uni<Tex> u_depth = {"depth", 2};
     Uni<Tex> u_baseColor = {"baseColor", 0};
     Uni<Tex> u_lightBuffer = {"lightBuffer", 1};
+    Uni<Tex> u_emissionBuffer = {"emissionBuffer", 2};
     const bgfx::Caps *caps;
   } deferrd;
 
