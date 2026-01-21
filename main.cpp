@@ -59,6 +59,7 @@ struct Obstacle
 
 auto main(int /*argc*/, char ** /*argv*/) -> int
 {
+  srand(time(nullptr));
   auto init = sdl::Init(SDL_INIT_VIDEO);
   const auto width = 1920;
   const auto height = 1080;
@@ -82,6 +83,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   std::list<std::reference_wrapper<BaseVisualNode>> tmpNodes;
   std::list<Obstacle> obstacles;
 
+  int lastTire = 0;
+  int n = 0;
   auto addRoadMeshes = [&](const auto i) {
     const auto y = 2.f * i;
     const auto dx = getRoadOffset(y);
@@ -127,8 +130,13 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         tmpNodes.push_back(node);
       }
     }
-    if (rand() % 10 == 0)
+    if (rand() % 10 == 0 && (i > lastTire + 5 || n < 1))
     {
+      if (i <= lastTire + 5)
+        ++n;
+      else
+        n = 0;
+      lastTire = i;
       auto &node = scene.addVisualNode<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
       const auto x = rand() % 3 - 1;
       node.setPos({dx + x * 2.6f, y, 0.0f});
@@ -175,6 +183,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
   auto dt0 = t0;
 
+  auto lastY = 0;
+
   while (!done)
   {
     while (e.poll()) {}
@@ -182,7 +192,11 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     const auto carYOffset = Car::desiredY();
     floor.setPos({0.0f, carYOffset, 0.0f});
 
-    fuel -= (now - dt0) / 1000.f * 5.0f;
+    const auto dt = (now - dt0) / 1000.f;
+    dt0 = now;
+
+    fuel -= (carYOffset - lastY) * 0.025f;
+    lastY = carYOffset;
     if (fuel <= 0)
     {
       --lives;
@@ -190,11 +204,9 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     }
 
     if (lives <= 0)
-    {
       done = true;
-    }
 
-    scene.tick((now - dt0) / 1000.f);
+    scene.tick(dt);
 
     while (!obstacles.empty() && obstacles.front().y < carYOffset - 4.4f / 2.f)
       obstacles.pop_front();
@@ -208,7 +220,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         {
         case ObstacleType::canister:
           score += 10;
-          fuel = std::min(100.f, fuel + 25.f);
+          fuel = std::min(100.f, fuel + 1.f);
           break;
         case ObstacleType::tire: --lives; break;
         }
@@ -218,8 +230,6 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       else
         break;
     }
-
-    dt0 = now;
 
     render.setCamPos({0.0f, carYOffset - 12.f, 2.3f});
     render.setCamRot({0.0f, 0.0f, 0.0f});
