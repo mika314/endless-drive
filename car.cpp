@@ -22,13 +22,14 @@ auto Car::tick(float dt) -> void
 {
   const auto now = SDL_GetTicks();
   const auto carYOffset = desiredY();
-  setRot({0.f, 0.f, -getRoadAngle(carYOffset)});
-  setScale({1.0f, 1.0f, 1.f + .1f * sin(now / 100.f)});
+  setScale({1.0f, 1.0f, 1.f + .03f * sin(now / 100.f)});
   auto laneOffset = 0.f;
   laneOffset = 2.6f * currentLane;
   const auto desiredX = getRoadOffset(carYOffset) + laneOffset;
   const auto curX = getPos().x;
-  setPos({curX + 40.f * dt * (desiredX - curX), carYOffset, 0.0f});
+  const auto dx = 10.f * dt * (desiredX - curX);
+  setPos({curX + dx, carYOffset, 0.0f});
+  setRot({0.f, 0.f, -getRoadAngle(carYOffset) - 2.f * dx});
 }
 
 auto Car::desiredY() -> float
