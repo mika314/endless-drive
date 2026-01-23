@@ -8,9 +8,13 @@ VERTEX_BINS := $(patsubst %-vs.sc,$(DATA_DIR)/%-vs.bin,$(VERTEX_SHADERS))
 FRAGMENT_BINS := $(patsubst %-fs.sc,$(DATA_DIR)/%-fs.bin,$(FRAGMENT_SHADERS))
 BLEND_FILES := $(wildcard $(ASSETS_DIR)/*.blend)
 GLTF_FILES := $(patsubst $(ASSETS_DIR)/%.blend,$(DATA_DIR)/%.gltf,$(BLEND_FILES))
+FONT_VERTEX_SHADERS := $(wildcard *-fontvs.sc)
+FONT_FRAGMENT_SHADERS := $(wildcard *-fontfs.sc)
+FONT_VERTEX_BINS := $(patsubst %-fontvs.sc,$(DATA_DIR)/%-fontvs.bin,$(FONT_VERTEX_SHADERS))
+FONT_FRAGMENT_BINS := $(patsubst %-fontfs.sc,$(DATA_DIR)/%-fontfs.bin,$(FONT_FRAGMENT_SHADERS))
 
 
-all: FORCE $(SHADERC) $(VERTEX_BINS) $(FRAGMENT_BINS) $(GLTF_FILES)
+all: FORCE $(SHADERC) $(VERTEX_BINS) $(FRAGMENT_BINS) $(GLTF_FILES) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS)
 	coddle debug
 
 $(SHADERC):
@@ -20,13 +24,19 @@ $(SHADERC):
 	cp bgfx/GENie/bin/linux/genie bgfx/bx/tools/bin/linux/genie
 	$(MAKE) -j$$(nproc) -C bgfx/bgfx linux-clang-release64
 
-shaders: $(VERTEX_BINS) $(FRAGMENT_BINS)
+shaders: $(VERTEX_BINS) $(FRAGMENT_BINS) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS)
 
 $(DATA_DIR)/%-vs.bin: %-vs.sc varying.def.sc | $(DATA_DIR)
 	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform linux --profile 120 --varyingdef varying.def.sc
 
 $(DATA_DIR)/%-fs.bin: %-fs.sc varying.def.sc | $(DATA_DIR)
 	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform linux --profile 120 --varyingdef varying.def.sc
+
+$(DATA_DIR)/%-fontvs.bin: %-fontvs.sc font-varying.def.sc | $(DATA_DIR)
+	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform linux --profile 120 --varyingdef font-varying.def.sc
+
+$(DATA_DIR)/%-fontfs.bin: %-fontfs.sc font-varying.def.sc | $(DATA_DIR)
+	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform linux --profile 120 --varyingdef font-varying.def.sc
 
 $(DATA_DIR):
 	mkdir -p $(DATA_DIR)

@@ -1,6 +1,7 @@
 #include "assets.hpp"
 #include "canister.hpp"
 #include "car.hpp"
+#include "font-manager.hpp"
 #include "get-natives.hpp"
 #include "get-road-offset.hpp"
 #include "mesh.hpp"
@@ -9,7 +10,10 @@
 #include "scene.hpp"
 #include "spotlight.hpp"
 #include "street-light.hpp"
+#include "text-buffer-manager.hpp"
 #include <bgfx/platform.h>
+#include <bx/math.h>
+#include <fstream>
 #include <list>
 #include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>
@@ -56,6 +60,29 @@ struct Obstacle
   float y;
   std::reference_wrapper<BaseVisualNode> node;
 };
+
+static TrueTypeHandle loadTtf(FontManager &_fm, const char *_filePath)
+{
+  auto file = std::ifstream{_filePath};
+  if (!file)
+    return BGFX_INVALID_HANDLE;
+
+  auto buffer = std::stringstream{};
+  buffer << file.rdbuf();
+  const auto content = buffer.str();
+
+  auto size = content.size();
+  auto data = content.data();
+
+  if (NULL != data)
+  {
+    TrueTypeHandle handle = _fm.createTtf((uint8_t *)data, size);
+    return handle;
+  }
+
+  TrueTypeHandle invalid = BGFX_INVALID_HANDLE;
+  return invalid;
+}
 
 auto main(int /*argc*/, char ** /*argv*/) -> int
 {
@@ -180,10 +207,27 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
   auto t0 = SDL_GetTicks();
   auto cnt = 0;
-
   auto dt0 = t0;
-
   auto lastY = 0;
+
+  auto fontManager = FontManager{};
+  auto textBufferManager = TextBufferManager(&fontManager);
+  auto fontFile = loadTtf(fontManager, "assets/chp-fire.ttf");
+  auto font = fontManager.createFontByPixelSize(fontFile, 0, 32);
+  auto font2 = fontManager.createFontByPixelSize(fontFile, 0, 64);
+  fontManager.preloadGlyph(font, L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ. 0123456789\n");
+  fontManager.preloadGlyph(font2, L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ. 0123456789\n");
+  fontManager.destroyTtf(fontFile);
+
+  auto staticText = textBufferManager.createTextBuffer(FONT_TYPE_ALPHA, BufferType::Static);
+  textBufferManager.setPenPosition(staticText, 24.0f, 100.0f);
+  textBufferManager.appendText(staticText, font, L"100 The quick brown fox jumps over the lazy dog\n");
+  textBufferManager.setPenPosition(staticText, 24.0f, 200.0f);
+  textBufferManager.appendText(staticText, font, L"200 Testing testing");
+  textBufferManager.setPenPosition(staticText, 24.0f, 400.0f);
+  textBufferManager.appendText(staticText, font, L"400 Testing testing");
+  textBufferManager.setPenPosition(staticText, 24.0f, 800.0f);
+  textBufferManager.appendText(staticText, font2, L"800 Testing testing");
 
   while (!done)
   {
@@ -247,6 +291,24 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     bgfx::dbgTextPrintf(0, 2, 0x0f, "Fuel: %.0f", fuel);
     bgfx::dbgTextPrintf(0, 3, 0x0f, "Lives: %d", lives);
 
+    const bx::Vec3 at = {0.0f, 0.0f, 0.0f};
+    const bx::Vec3 eye = {0.0f, 0.0f, -1.0f};
+
+    float view[16];
+    bx::mtxLookAt(view, eye, at);
+
+    // Setup a top-left ortho matrix for screen space drawing.
+    const bgfx::Caps *caps = bgfx::getCaps();
+    {
+      float ortho[16];
+      bx::mtxOrtho(
+        ortho, 0.0f, float(width), float(height), 0.0f, 0.0f, 100.0f, 0.0f, caps->homogeneousDepth);
+      bgfx::setViewTransform(3, view, ortho);
+      bgfx::setViewRect(3, 0, 0, uint16_t(width), uint16_t(height));
+    }
+
+    textBufferManager.submitTextBuffer(staticText, 3);
+
     auto t1 = SDL_GetTicks();
     ++cnt;
     static float fps = 0.0f;
@@ -260,4 +322,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     bgfx::frame();
   }
   LOG("Your score:", score);
+  fontManager.destroyFont(font);
+  fontManager.destroyFont(font2);
+  textBufferManager.destroyTextBuffer(staticText);
 }
