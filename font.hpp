@@ -11,14 +11,10 @@ class Font final : public BaseAsset
 public:
   Font(const std::string &path, class Assets &);
   Font(const Font &) = delete;
-  auto uiPass(class Render &,
-              glm::vec3 color,
-              glm::vec2 pos,
-              float rot,
-              float size,
-              const std::string &text) -> void;
+  Font(Font &&);
 
 private:
   std::string path;
-  std::unordered_map<int, std::reference_wrapper<Tex &>> atlas;
 };
+
+// TODO-Mika need to be implemented

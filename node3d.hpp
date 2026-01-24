@@ -1,7 +1,9 @@
 #pragma once
 #include "node.hpp"
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
 
-class BaseNode3D : public BaseNode
+class BaseNode3d : public BaseNode
 {
 public:
   using BaseNode::BaseNode;
@@ -21,10 +23,10 @@ private:
 };
 
 template <typename T>
-class Node3DRef : public BaseNode3D
+class Node3dRef : public BaseNode3d
 {
 public:
-  Node3DRef(BaseNode *parent, const T &aAsset) : BaseNode3D(parent), asset(aAsset) {}
+  Node3dRef(BaseNode *parent, const T &aAsset) : BaseNode3d(parent), asset(aAsset) {}
   auto geomPass(class Render &render) const -> void final
   {
     if (!isVisible)
@@ -43,10 +45,12 @@ private:
 };
 
 template <typename T>
-class Node3D : public BaseNode3D
+class Node3d : public BaseNode3d
 {
 public:
-  Node3D(BaseNode *parent, const T &aAsset) : BaseNode3D(parent), asset(aAsset) {}
+  Node3d(BaseNode *parent, const T &aAsset) : BaseNode3d(parent), asset(aAsset) {}
+  // TODO-Mika change the constructor so that would construct T in place
+
   auto geomPass(class Render &render) const -> void final
   {
     if (!isVisible)

@@ -1,4 +1,5 @@
 #include "node.hpp"
+#include <algorithm>
 
 BaseNode::BaseNode(BaseNode *aParent) : parent(aParent) {}
 
@@ -42,4 +43,3 @@ auto BaseNode::tickInternal(float dt) -> void
     node->tick(dt);
   tick(dt);
 }
-

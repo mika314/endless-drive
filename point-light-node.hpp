@@ -1,6 +1,6 @@
 #pragma once
 
-#include "node.hpp"
+#include "node3d.hpp"
 #include "point-light.hpp"
 
-using PointLightNode = Node3D<PointLight>;
+using PointLightNode = Node3d<PointLight>;

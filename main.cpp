@@ -2,8 +2,10 @@
 #include "canister.hpp"
 #include "car.hpp"
 #include "font-manager.hpp"
+#include "font.hpp"
 #include "get-natives.hpp"
 #include "get-road-offset.hpp"
+#include "label-node.hpp"
 #include "mesh.hpp"
 #include "point-light.hpp"
 #include "render.hpp"
@@ -58,7 +60,7 @@ struct Obstacle
   ObstacleType type;
   int x;
   float y;
-  std::reference_wrapper<BaseNode3D> node;
+  std::reference_wrapper<BaseNode3d> node;
 };
 
 static TrueTypeHandle loadTtf(FontManager &_fm, const char *_filePath)
@@ -107,7 +109,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
   auto &car = scene.addNode<Car>(assets);
 
-  std::list<std::reference_wrapper<BaseNode3D>> tmpNodes;
+  std::list<std::reference_wrapper<BaseNode3d>> tmpNodes;
   std::list<Obstacle> obstacles;
 
   int lastTire = 0;
@@ -116,13 +118,13 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     const auto y = 2.f * i;
     const auto dx = getRoadOffset(y);
     {
-      auto &node = scene.addNode3D<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
+      auto &node = scene.addNode3d<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
       node.setPos({dx + 4.f, y, 0.0f});
       node.setScale(glm::vec3{.5f});
       tmpNodes.push_back(node);
     }
     {
-      auto &node = scene.addNode3D<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
+      auto &node = scene.addNode3d<Mesh>(assets, "traffic-cone.gltf/SM_Cone01");
       node.setPos({dx - 4.f, y, 0.0f});
       node.setScale(glm::vec3{.5f});
       tmpNodes.push_back(node);
@@ -130,13 +132,13 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     if (i % 2 == 0)
     {
       {
-        auto &node = scene.addNode3D<Mesh>(assets, "dash-lane.gltf/DashLane");
+        auto &node = scene.addNode3d<Mesh>(assets, "dash-lane.gltf/DashLane");
         node.setPos({dx + 1.33f, y, 0.0f});
         node.setRot({0.0f, 0.0f, -getRoadAngle(y)});
         tmpNodes.push_back(node);
       }
       {
-        auto &node = scene.addNode3D<Mesh>(assets, "dash-lane.gltf/DashLane");
+        auto &node = scene.addNode3d<Mesh>(assets, "dash-lane.gltf/DashLane");
         node.setPos({dx - 1.33f, y, 0.0f});
         node.setRot({0.0f, 0.0f, -getRoadAngle(y)});
         tmpNodes.push_back(node);
@@ -164,7 +166,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       else
         n = 0;
       lastTire = i;
-      auto &node = scene.addNode3D<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
+      auto &node = scene.addNode3d<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
       const auto x = rand() % 3 - 1;
       node.setPos({dx + x * 2.6f, y, 0.0f});
       tmpNodes.push_back(node);
@@ -185,7 +187,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
   auto roadIdx = 100;
 
-  auto &floor = scene.addNode3D<Mesh>(assets, "floor.gltf/Floor");
+  auto &floor = scene.addNode3d<Mesh>(assets, "floor.gltf/Floor");
 
   auto done = false;
   auto e = sdl::EventHandler{};
@@ -285,6 +287,9 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     }
     for (; roadIdx * 2 - 200 < carYOffset; ++roadIdx)
       addRoadMeshes(roadIdx);
+
+    auto &label = scene.addNode<LabelNode>(
+      Label{"Hello", assets.get<Font>("chp-fire.ttf"), glm::vec3{1.f, 1.f, 1.f}});
 
     bgfx::dbgTextClear();
     bgfx::dbgTextPrintf(0, 1, 0x0f, "Score: %d", score);

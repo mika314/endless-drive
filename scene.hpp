@@ -5,15 +5,15 @@ class Scene
 {
 public:
   template <typename T, typename... Args>
-  auto addNode3D(Args &&...args) -> Node3D<T> &
+  auto addNode3d(Args &&...args) -> Node3d<T> &
   {
-    return rootNode.addNode3D<T>(std::forward<Args>(args)...);
+    return rootNode.addNode3d<T>(std::forward<Args>(args)...);
   }
 
   template <typename T, typename... Args>
-  auto addNode3D(class Assets &assets, Args &&...args) -> Node3DRef<T> &
+  auto addNode3d(class Assets &assets, Args &&...args) -> Node3dRef<T> &
   {
-    return rootNode.addNode3D<T>(assets, std::forward<Args>(args)...);
+    return rootNode.addNode3d<T>(assets, std::forward<Args>(args)...);
   }
 
   template <typename T, typename... Args>

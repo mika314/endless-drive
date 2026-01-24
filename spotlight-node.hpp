@@ -3,4 +3,4 @@
 #include "node.hpp"
 #include "spotlight.hpp"
 
-using SpotlightNode = Node3D<Spotlight>;
+using SpotlightNode = Node3d<Spotlight>;
