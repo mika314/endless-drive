@@ -9,11 +9,11 @@ Car::Car(BaseNode *parent, class Assets &assets)
   : MeshNode(parent, assets.get<Mesh>("fancy-car.gltf/SM_vehCar_vehicle06_LOD"))
 {
   {
-    auto &tmpNode = addVisualNode<Spotlight>(0.4f * glm::vec3{1.f}, .4f);
+    auto &tmpNode = addNode3D<Spotlight>(0.4f * glm::vec3{1.f}, .4f);
     tmpNode.setPos(glm::vec3{.596434f, 2.1f, .704822f});
   }
   {
-    auto &tmpNode = addVisualNode<Spotlight>(0.4f * glm::vec3{1.f}, .4f);
+    auto &tmpNode = addNode3D<Spotlight>(0.4f * glm::vec3{1.f}, .4f);
     tmpNode.setPos(glm::vec3{-.596434f, 2.1f, .704822f});
   }
 }

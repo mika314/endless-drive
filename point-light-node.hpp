@@ -3,4 +3,4 @@
 #include "node.hpp"
 #include "point-light.hpp"
 
-using PointLightNode = VisualNode<PointLight>;
+using PointLightNode = Node3D<PointLight>;
