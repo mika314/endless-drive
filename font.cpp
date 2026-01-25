@@ -1,4 +1,63 @@
 #include "font.hpp"
+#include "assets.hpp"
+#include <bgfx/bgfx.h>
+#include <fstream>
+#include <sstream>
 
-Font::Font(const std::string &aPath, class Assets &) : path(aPath) {}
-Font::Font(Font &&v) : path(std::move(v.path)) {}
+static TrueTypeHandle loadTtf(FontManager &_fm, const std::string &_filePath)
+{
+  auto file = std::ifstream{_filePath};
+  if (!file)
+    return BGFX_INVALID_HANDLE;
+
+  auto buffer = std::stringstream{};
+  buffer << file.rdbuf();
+  const auto content = buffer.str();
+
+  auto size = content.size();
+  auto data = content.data();
+
+  if (NULL != data)
+  {
+    TrueTypeHandle handle = _fm.createTtf((uint8_t *)data, size);
+    return handle;
+  }
+
+  TrueTypeHandle invalid = BGFX_INVALID_HANDLE;
+  return invalid;
+}
+
+Font::Font(const std::string &aPath, class Assets &assets)
+  : path(aPath), fontManager(assets.fontManager), fontFile(loadTtf(fontManager, "data/" + path))
+{
+}
+
+Font::Font(Font &&v)
+  : path(std::move(v.path)),
+    fontManager(v.fontManager),
+    fontFile(v.fontFile),
+    sizedFonts(std::move(v.sizedFonts))
+{
+  v.fontFile.idx = bgfx::kInvalidHandle;
+  v.sizedFonts = {};
+}
+
+Font::~Font()
+{
+  if (fontFile.idx != bgfx::kInvalidHandle)
+    fontManager.get().destroyTtf(fontFile);
+  for (auto &e : sizedFonts)
+    fontManager.get().destroyFont(e.second);
+}
+
+auto Font::getSizedFont(int size) -> FontHandle
+{
+  auto it = sizedFonts.find(size);
+  if (it == std::end(sizedFonts))
+  {
+    auto tmp = sizedFonts.emplace(size, fontManager.get().createFontByPixelSize(fontFile, 0, size));
+    assert(tmp.second);
+    it = tmp.first;
+  }
+  return it->second;
+}

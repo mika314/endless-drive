@@ -63,29 +63,6 @@ struct Obstacle
   std::reference_wrapper<BaseNode3d> node;
 };
 
-static TrueTypeHandle loadTtf(FontManager &_fm, const char *_filePath)
-{
-  auto file = std::ifstream{_filePath};
-  if (!file)
-    return BGFX_INVALID_HANDLE;
-
-  auto buffer = std::stringstream{};
-  buffer << file.rdbuf();
-  const auto content = buffer.str();
-
-  auto size = content.size();
-  auto data = content.data();
-
-  if (NULL != data)
-  {
-    TrueTypeHandle handle = _fm.createTtf((uint8_t *)data, size);
-    return handle;
-  }
-
-  TrueTypeHandle invalid = BGFX_INVALID_HANDLE;
-  return invalid;
-}
-
 auto main(int /*argc*/, char ** /*argv*/) -> int
 {
   srand(time(nullptr));
@@ -103,8 +80,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto fuel = 100.f;
   auto lives = 3;
 
-  auto render = Render{win, width, height};
   auto assets = Assets{};
+  auto render = Render{win, width, height, assets.fontManager};
   auto scene = Scene{};
 
   auto &car = scene.addNode<Car>(assets);
@@ -207,29 +184,26 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     }
   };
 
+  auto &scoreLb = scene.addNode<LabelNode>(Label{.text = "Score:",
+                                                 .font = assets.get<Font>("chp-fire.ttf"),
+                                                 .color = glm::vec3{0.f, 0.f, 1.f},
+                                                 .size = 100});
+  scoreLb.setPos(glm::vec2{width - 500, height - 400});
+  auto &fuelLb = scene.addNode<LabelNode>(Label{.text = "Fuel:",
+                                                .font = assets.get<Font>("chp-fire.ttf"),
+                                                .color = glm::vec3{0.f, 1.f, 0.f},
+                                                .size = 100});
+  fuelLb.setPos(glm::vec2{width - 500, height - 300});
+  auto &livesLb = scene.addNode<LabelNode>(Label{.text = "Lives:",
+                                                 .font = assets.get<Font>("chp-fire.ttf"),
+                                                 .color = glm::vec3{1.f, 0.f, 0.f},
+                                                 .size = 100});
+  livesLb.setPos(glm::vec2{width - 500, height - 200});
+
   auto t0 = SDL_GetTicks();
   auto cnt = 0;
   auto dt0 = t0;
   auto lastY = 0;
-
-  auto fontManager = FontManager{};
-  auto textBufferManager = TextBufferManager(&fontManager);
-  auto fontFile = loadTtf(fontManager, "assets/chp-fire.ttf");
-  auto font = fontManager.createFontByPixelSize(fontFile, 0, 32);
-  auto font2 = fontManager.createFontByPixelSize(fontFile, 0, 64);
-  fontManager.preloadGlyph(font, L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ. 0123456789\n");
-  fontManager.preloadGlyph(font2, L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ. 0123456789\n");
-  fontManager.destroyTtf(fontFile);
-
-  auto staticText = textBufferManager.createTextBuffer(FONT_TYPE_ALPHA, BufferType::Static);
-  textBufferManager.setPenPosition(staticText, 24.0f, 100.0f);
-  textBufferManager.appendText(staticText, font, L"100 The quick brown fox jumps over the lazy dog\n");
-  textBufferManager.setPenPosition(staticText, 24.0f, 200.0f);
-  textBufferManager.appendText(staticText, font, L"200 Testing testing");
-  textBufferManager.setPenPosition(staticText, 24.0f, 400.0f);
-  textBufferManager.appendText(staticText, font, L"400 Testing testing");
-  textBufferManager.setPenPosition(staticText, 24.0f, 800.0f);
-  textBufferManager.appendText(staticText, font2, L"800 Testing testing");
 
   while (!done)
   {
@@ -288,13 +262,11 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     for (; roadIdx * 2 - 200 < carYOffset; ++roadIdx)
       addRoadMeshes(roadIdx);
 
-    auto &label = scene.addNode<LabelNode>(
-      Label{"Hello", assets.get<Font>("chp-fire.ttf"), glm::vec3{1.f, 1.f, 1.f}});
+    scoreLb.text = "Score: " + std::to_string(score);
+    fuelLb.text = "Fuel: " + std::to_string(static_cast<int>(fuel));
+    livesLb.text = "Lives: " + std::to_string(lives);
 
     bgfx::dbgTextClear();
-    bgfx::dbgTextPrintf(0, 1, 0x0f, "Score: %d", score);
-    bgfx::dbgTextPrintf(0, 2, 0x0f, "Fuel: %.0f", fuel);
-    bgfx::dbgTextPrintf(0, 3, 0x0f, "Lives: %d", lives);
 
     const bx::Vec3 at = {0.0f, 0.0f, 0.0f};
     const bx::Vec3 eye = {0.0f, 0.0f, -1.0f};
@@ -312,8 +284,6 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       bgfx::setViewRect(3, 0, 0, uint16_t(width), uint16_t(height));
     }
 
-    textBufferManager.submitTextBuffer(staticText, 3);
-
     auto t1 = SDL_GetTicks();
     ++cnt;
     static float fps = 0.0f;
@@ -327,7 +297,4 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     bgfx::frame();
   }
   LOG("Your score:", score);
-  fontManager.destroyFont(font);
-  fontManager.destroyFont(font2);
-  textBufferManager.destroyTextBuffer(staticText);
 }

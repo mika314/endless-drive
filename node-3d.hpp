@@ -45,25 +45,24 @@ private:
 };
 
 template <typename T>
-class Node3d : public BaseNode3d
+class Node3d : public BaseNode3d, public T
 {
 public:
-  Node3d(BaseNode *parent, const T &aAsset) : BaseNode3d(parent), asset(aAsset) {}
-  // TODO-Mika change the constructor so that would construct T in place
+  template <typename... Args>
+  Node3d(BaseNode *parent, Args &&...args) : BaseNode3d(parent), T(std::forward<Args>(args)...)
+  {
+  }
 
   auto geomPass(class Render &render) const -> void final
   {
     if (!isVisible)
       return;
-    asset.geomPass(render, getTrans());
+    T::geomPass(render, getTrans());
   }
   auto lightPass(class Render &render) const -> void final
   {
     if (!isVisible)
       return;
-    asset.lightPass(render, getTrans());
+    T::lightPass(render, getTrans());
   }
-
-private:
-  T asset;
 };

@@ -22,8 +22,9 @@ public:
     return rootNode.addNode<T>(std::forward<Args>(args)...);
   }
 
-  auto render(class Render &) const -> void;
   auto remove(BaseNode &) -> void;
+  auto pass3d(class Render &) const -> void;
+  auto uiPass(class Render &) const -> void;
   auto tick(float dt) -> void;
 
 private:

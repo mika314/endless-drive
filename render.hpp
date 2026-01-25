@@ -1,4 +1,6 @@
 #pragma once
+#include "font-manager.hpp"
+#include "text-buffer-manager.hpp"
 #include "uni.hpp"
 #include <bgfx/bgfx.h>
 #include <sdlpp/sdlpp.hpp>
@@ -6,7 +8,7 @@
 class Render
 {
 public:
-  Render(sdl::Window &, int w, int h);
+  Render(sdl::Window &, int w, int h, FontManager &);
   ~Render();
   auto render(const class Scene &) -> void;
   auto setMaterialAndRender(const class Material *) -> void;
@@ -15,10 +17,21 @@ public:
   auto setCamPos(glm::vec3) -> void;
   auto setCamRot(glm::vec3) -> void;
 
+  struct TextIn
+  {
+    const std::string &text;
+    const FontHandle &font;
+    glm::vec3 color;
+    glm::mat3 trans;
+  };
+  auto operator()(const TextIn &) -> void;
+
 private:
   sdl::Window &win;
   int w;
   int h;
+  TextBufferManager textBufferManager;
+  TextBufferHandle textBuffer;
   glm::vec3 camPos = {0.f, -5.f, 1.8f};
   glm::vec3 camRot = {-0.3f, 0.0f, 0.0f};
   Uni<glm::vec4> u_camPos = {"camPos"};

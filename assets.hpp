@@ -1,5 +1,6 @@
 #pragma once
 #include "base-asset.hpp"
+#include "font-manager.hpp"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -16,6 +17,8 @@ public:
     auto tmp = assets.emplace(path, std::make_unique<T>(path, *this, std::forward<Args>(args)...));
     return static_cast<T &>(*tmp.first->second);
   }
+
+  FontManager fontManager;
 
 private:
   std::unordered_map<std::string, std::unique_ptr<BaseAsset>> assets;

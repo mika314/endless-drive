@@ -3,7 +3,7 @@
 #include <glm/mat3x3.hpp>
 #include <glm/vec2.hpp>
 
-class BaseNode2d : public BaseNode
+class BaseNodeUi : public BaseNode
 {
 public:
   using BaseNode::BaseNode;
@@ -23,10 +23,10 @@ private:
 };
 
 template <typename T>
-class Node2dRef : public BaseNode2d
+class NodeUiRef : public BaseNodeUi
 {
 public:
-  Node2dRef(BaseNode *parent, const T &aAsset) : BaseNode2d(parent), asset(aAsset) {}
+  NodeUiRef(BaseNode *parent, const T &aAsset) : BaseNodeUi(parent), asset(aAsset) {}
   auto uiPass(class Render &render) const -> void final
   {
     if (!isVisible)
@@ -39,18 +39,17 @@ private:
 };
 
 template <typename T>
-class Node2d : public BaseNode2d
+class NodeUi : public BaseNodeUi, public T
 {
 public:
-  Node2d(BaseNode *parent, const T &aAsset) : BaseNode2d(parent), asset(aAsset) {}
-  // TODO-Mika change the constructor so that would construct T in place
+  template <typename... Args>
+  NodeUi(BaseNode *parent, Args &&...args) : BaseNodeUi(parent), T(std::forward<Args>(args)...)
+  {
+  }
   auto uiPass(class Render &render) const -> void final
   {
     if (!isVisible)
       return;
-    asset.uiPass(render, getTrans());
+    T::uiPass(render, getTrans());
   }
-
-private:
-  T asset;
 };

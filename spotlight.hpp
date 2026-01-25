@@ -7,6 +7,8 @@ class Spotlight
 public:
   glm::vec3 color;
   float angle;
-  auto geomPass(class Render &, glm::mat4) const -> void;
-  auto lightPass(class Render &, glm::mat4) const -> void;
+
+protected:
+  auto geomPass(class Render &, glm::mat4 trans) const -> void;
+  auto lightPass(class Render &, glm::mat4 trans) const -> void;
 };

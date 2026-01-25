@@ -69,10 +69,12 @@ namespace
   }
 } // namespace
 
-Render::Render(sdl::Window &aWin, int aW, int aH)
+Render::Render(sdl::Window &aWin, int aW, int aH, FontManager &fontManager)
   : win(aWin),
     w(aW),
     h(aH),
+    textBufferManager(&fontManager),
+    textBuffer(textBufferManager.createTextBuffer(FONT_TYPE_ALPHA, BufferType::Transient)),
     deferrd(w, h),
     geom(loadProgram("geom-vs", "geom-fs")),
     pointLight(loadProgram("point-light-vs", "point-light-fs")),
@@ -107,12 +109,16 @@ auto Render::render(const Scene &scene) -> void
 
   u_camPos = glm::vec4{camPos, 1.f};
 
-  scene.render(*this);
+  scene.pass3d(*this);
 
   { // combine render pass
     deferrd.combine();
     bgfx::submit(combineRenderPass, combine);
   }
+
+  textBufferManager.clearTextBuffer(textBuffer);
+  scene.uiPass(*this);
+  textBufferManager.submitTextBuffer(textBuffer, 3);
 }
 
 Render::~Render()
@@ -121,6 +127,7 @@ Render::~Render()
   bgfx::destroy(spotlight);
   bgfx::destroy(pointLight);
   bgfx::destroy(geom);
+  textBufferManager.destroyTextBuffer(textBuffer);
 }
 
 // TextureHandle bgfx::createTexture2D(
@@ -315,4 +322,15 @@ auto Render::setCamPos(glm::vec3 v) -> void
 auto Render::setCamRot(glm::vec3 v) -> void
 {
   camRot = v;
+}
+
+auto Render::operator()(const TextIn &v) -> void
+{
+  auto pos = v.trans[2];
+  textBufferManager.setTextColor(textBuffer,
+                                 (static_cast<uint32_t>(v.color.r * 0xff) << 24) |
+                                   (static_cast<uint32_t>(v.color.g * 0xff) << 16) |
+                                   (static_cast<uint32_t>(v.color.b * 0xff) << 8) | 0xff);
+  textBufferManager.setPenPosition(textBuffer, pos.x, pos.y);
+  textBufferManager.appendText(textBuffer, v.font, v.text.c_str());
 }

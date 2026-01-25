@@ -43,3 +43,10 @@ auto BaseNode::tickInternal(float dt) -> void
     node->tick(dt);
   tick(dt);
 }
+
+auto BaseNode::uiPassInternal(Render &render) const -> void
+{
+  for (const auto &node : nodes)
+    node->uiPass(render);
+  uiPass(render);
+}

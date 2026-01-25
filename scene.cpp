@@ -1,6 +1,6 @@
 #include "scene.hpp"
 
-auto Scene::render(class Render &render) const -> void
+auto Scene::pass3d(class Render &render) const -> void
 {
   rootNode.geomPassInternal(render);
   rootNode.lightPassInternal(render);
@@ -14,4 +14,9 @@ auto Scene::remove(BaseNode &n) -> void
 auto Scene::tick(float dt) -> void
 {
   rootNode.tickInternal(dt);
+}
+
+auto Scene::uiPass(class Render &render) const -> void
+{
+  rootNode.uiPassInternal(render);
 }

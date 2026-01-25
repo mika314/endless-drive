@@ -6,6 +6,8 @@ class PointLight
 {
 public:
   glm::vec3 color;
-  auto geomPass(class Render &, glm::mat4) const -> void;
-  auto lightPass(class Render &, glm::mat4) const -> void;
+
+protected:
+  auto geomPass(class Render &, glm::mat4 trans) const -> void;
+  auto lightPass(class Render &, glm::mat4 trans) const -> void;
 };

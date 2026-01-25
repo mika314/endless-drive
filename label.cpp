@@ -1,7 +1,10 @@
 #include "label.hpp"
+#include "font.hpp"
+#include "render.hpp"
 #include <log/log.hpp>
 
-auto Label::uiPass(class Render &, glm::mat3) const -> void
+auto Label::uiPass(class Render &render, glm::mat3 trans) const -> void
 {
-  LOG("TODO-Mika implement Label::uiPass()");
+  const auto sizedFont = font.get().getSizedFont(size);
+  render(Render::TextIn{.text = text, .font = sizedFont, .color = color, .trans = trans});
 }

@@ -1,5 +1,5 @@
 #pragma once
 #include "label.hpp"
-#include "node2d.hpp"
+#include "node-ui.hpp"
 
-using LabelNode = Node2d<Label>;
+using LabelNode = NodeUi<Label>;

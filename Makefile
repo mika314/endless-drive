@@ -12,9 +12,10 @@ FONT_VERTEX_SHADERS := $(wildcard *-fontvs.sc)
 FONT_FRAGMENT_SHADERS := $(wildcard *-fontfs.sc)
 FONT_VERTEX_BINS := $(patsubst %-fontvs.sc,$(DATA_DIR)/%-fontvs.bin,$(FONT_VERTEX_SHADERS))
 FONT_FRAGMENT_BINS := $(patsubst %-fontfs.sc,$(DATA_DIR)/%-fontfs.bin,$(FONT_FRAGMENT_SHADERS))
+ASSETS_FONTS := $(wildcard $(ASSETS_DIR)/*.ttf)
+DATA_FONTS := $(patsubst $(ASSETS_DIR)/%,$(DATA_DIR)/%,$(ASSETS_FONTS))
 
-
-all: FORCE $(SHADERC) $(VERTEX_BINS) $(FRAGMENT_BINS) $(GLTF_FILES) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS)
+all: FORCE $(SHADERC) $(VERTEX_BINS) $(FRAGMENT_BINS) $(GLTF_FILES) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS) $(DATA_FONTS)
 	coddle debug
 
 $(SHADERC):
@@ -38,11 +39,14 @@ $(DATA_DIR)/%-fontvs.bin: %-fontvs.sc font-varying.def.sc | $(DATA_DIR)
 $(DATA_DIR)/%-fontfs.bin: %-fontfs.sc font-varying.def.sc | $(DATA_DIR)
 	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform linux --profile 120 --varyingdef font-varying.def.sc
 
-$(DATA_DIR):
-	mkdir -p $(DATA_DIR)
+$(DATA_DIR)/%: $(ASSETS_DIR)/% | $(DATA_DIR)
+	cp $< $@
 
 $(DATA_DIR)/%.gltf: $(ASSETS_DIR)/%.blend $(EXPORT_SCRIPT) | $(DATA_DIR)
 	@echo "Exporting $< to $@"
 	/home/mika/bin/blender-5.0.1-linux-x64/blender -b $< -P $(EXPORT_SCRIPT) -- -o $@
+
+$(DATA_DIR):
+	mkdir -p $(DATA_DIR)
 
 FORCE:
