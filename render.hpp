@@ -8,19 +8,21 @@
 class Render
 {
 public:
-  Render(sdl::Window &, int w, int h, FontManager &);
+  Render(sdl::Window &, int w, int h);
   ~Render();
   auto render(const class Scene &) -> void;
+  auto setCamPos(glm::vec3) -> void;
+  auto setCamRot(glm::vec3) -> void;
+  auto setFontAtlasTexture(bgfx::TextureHandle) -> void;
   auto setMaterialAndRender(const class Material *) -> void;
   auto setPointLightAndRender(glm::vec3 pos, glm::vec3 color) -> void;
   auto setSpotlightAndRender(glm::mat4 trans, glm::vec3 color, float angle) -> void;
-  auto setCamPos(glm::vec3) -> void;
-  auto setCamRot(glm::vec3) -> void;
 
   struct TextIn
   {
     const std::string &text;
-    const FontHandle &font;
+    const Font &font;
+    float size;
     glm::vec3 color;
     glm::mat3 trans;
   };
@@ -49,6 +51,7 @@ private:
   Uni<glm::vec4> u_lightColor = {"lightColor", glm::vec4{1.f}};
   Uni<glm::mat4> u_lightTrans = "lightTrans";
   Uni<glm::vec4> u_lightAngle = {"lightAngle", glm::vec4{.4f}};
+  Uni<Tex> s_texColor = {"s_texColor", 0};
 
   class Deferrd
   {

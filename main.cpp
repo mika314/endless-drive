@@ -81,7 +81,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto lives = 3;
 
   auto assets = Assets{};
-  auto render = Render{win, width, height, assets.fontManager};
+  auto render = Render{win, width, height};
   auto scene = Scene{};
 
   auto &car = scene.addNode<Car>(assets);

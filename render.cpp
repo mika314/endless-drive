@@ -69,11 +69,10 @@ namespace
   }
 } // namespace
 
-Render::Render(sdl::Window &aWin, int aW, int aH, FontManager &fontManager)
+Render::Render(sdl::Window &aWin, int aW, int aH)
   : win(aWin),
     w(aW),
     h(aH),
-    textBufferManager(&fontManager),
     textBuffer(textBufferManager.createTextBuffer(FONT_TYPE_ALPHA, BufferType::Transient)),
     deferrd(w, h),
     geom(loadProgram("geom-vs", "geom-fs")),
@@ -332,5 +331,10 @@ auto Render::operator()(const TextIn &v) -> void
                                    (static_cast<uint32_t>(v.color.g * 0xff) << 16) |
                                    (static_cast<uint32_t>(v.color.b * 0xff) << 8) | 0xff);
   textBufferManager.setPenPosition(textBuffer, pos.x, pos.y);
-  textBufferManager.appendText(textBuffer, v.font, v.text.c_str());
+  textBufferManager.appendText(textBuffer, v.font, v.size, v.text.c_str());
+}
+
+auto Render::setFontAtlasTexture(bgfx::TextureHandle h) -> void
+{
+  s_texColor = h;
 }

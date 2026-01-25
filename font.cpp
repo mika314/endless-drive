@@ -50,7 +50,7 @@ Font::~Font()
     fontManager.get().destroyFont(e.second);
 }
 
-auto Font::getSizedFont(int size) -> FontHandle
+auto Font::getSizedFont(int size) const -> FontHandle
 {
   auto it = sizedFonts.find(size);
   if (it == std::end(sizedFonts))
@@ -60,4 +60,29 @@ auto Font::getSizedFont(int size) -> FontHandle
     it = tmp.first;
   }
   return it->second;
+}
+
+auto Font::getGlyphInfo(FontHandle h, CodePoint cp) const -> const GlyphInfo *
+{
+  return fontManager.get().getGlyphInfo(h, cp);
+}
+
+auto Font::getFontInfo(FontHandle h) const -> const FontInfo &
+{
+  return fontManager.get().getFontInfo(h);
+}
+
+auto Font::getKerning(FontHandle h, CodePoint prev, CodePoint cur) const -> float
+{
+  return fontManager.get().getKerning(h, prev, cur);
+}
+
+auto Font::getBlackGlyph() const -> const GlyphInfo &
+{
+  return fontManager.get().getBlackGlyph();
+}
+
+auto Font::getAtlas() const -> const Atlas *
+{
+  return fontManager.get().getAtlas();
 }

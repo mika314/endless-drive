@@ -4,11 +4,14 @@
  */
 
 #include "text-buffer-manager.hpp"
+#include "code-point.hpp"
 #include "cube-atlas.hpp"
+#include "font.hpp"
 #include "load-program.hpp"
 #include "utf8.hpp"
 #include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
+#include <bx/string.h>
 #include <stddef.h> // offsetof
 #include <wchar.h>  // wcslen
 
@@ -17,9 +20,7 @@
 class TextBuffer
 {
 public:
-  /// TextBuffer is bound to a fontManager for glyph retrieval
-  /// @remark the ownership of the manager is not taken
-  TextBuffer(FontManager *_fontManager);
+  TextBuffer();
   ~TextBuffer();
 
   uint32_t getOutlineColor() { return m_outlineColor; }
@@ -75,15 +76,11 @@ public:
 
   /// Append an ASCII/utf-8 string to the buffer using current pen
   /// position and color.
-  void appendText(FontHandle _fontHandle, const char *_string, const char *_end = NULL);
+  void appendText(const Font &, int size, const char *_string, const char *_end = NULL);
 
   /// Append a wide char unicode string to the buffer using current pen
   /// position and color.
-  void appendText(FontHandle _fontHandle, const wchar_t *_string, const wchar_t *_end = NULL);
-
-  /// Append a whole face of the atlas cube, mostly used for debugging
-  /// and visualizing atlas.
-  void appendAtlasFace(uint16_t _faceIndex);
+  void appendText(const Font &, int size, const wchar_t *_string, const wchar_t *_end = NULL);
 
   /// Clear the text buffer and reset its state (pen/color)
   void clearTextBuffer();
@@ -111,7 +108,7 @@ public:
   TextRectangle getRectangle() const { return m_rectangle; }
 
 private:
-  void appendGlyph(FontHandle _handle, CodePoint _codePoint, bool shadow);
+  void appendGlyph(const Font &, int size, CodePoint _codePoint, bool shadow);
   void verticalCenterLastLine(float _txtDecalY, float _top, float _bottom);
 
   static uint32_t toABGR(uint32_t _rgba)
@@ -176,7 +173,6 @@ private:
   CodePoint m_previousCodePoint;
 
   TextRectangle m_rectangle;
-  FontManager *m_fontManager;
 
   TextVertex *m_vertexBuffer;
   uint16_t *m_indexBuffer;
@@ -187,7 +183,7 @@ private:
   uint16_t m_vertexCount;
 };
 
-TextBuffer::TextBuffer(FontManager *_fontManager)
+TextBuffer::TextBuffer()
   : m_styleFlags(STYLE_NORMAL),
     m_textColor(UINT32_MAX),
     m_backgroundColor(UINT32_MAX),
@@ -206,7 +202,6 @@ TextBuffer::TextBuffer(FontManager *_fontManager)
     m_lineDescender(0),
     m_lineGap(0),
     m_previousCodePoint(0),
-    m_fontManager(_fontManager),
     m_vertexBuffer(new TextVertex[MAX_BUFFERED_CHARACTERS * 4]),
     m_indexBuffer(new uint16_t[MAX_BUFFERED_CHARACTERS * 6]),
     m_styleBuffer(new uint8_t[MAX_BUFFERED_CHARACTERS * 4]),
@@ -227,7 +222,7 @@ TextBuffer::~TextBuffer()
   delete[] m_styleBuffer;
 }
 
-void TextBuffer::appendText(FontHandle _fontHandle, const char *_string, const char *_end)
+void TextBuffer::appendText(const Font &font, int size, const char *_string, const char *_end)
 {
   if (m_vertexCount == 0)
   {
@@ -252,14 +247,14 @@ void TextBuffer::appendText(FontHandle _fontHandle, const char *_string, const c
   {
     if (utf8_decode(&state, (uint32_t *)&codepoint, *_string) == UTF8_ACCEPT)
     {
-      appendGlyph(_fontHandle, codepoint, false);
+      appendGlyph(font, size, codepoint, false);
     }
   }
 
   BX_ASSERT(state == UTF8_ACCEPT, "The string is not well-formed");
 }
 
-void TextBuffer::appendText(FontHandle _fontHandle, const wchar_t *_string, const wchar_t *_end)
+void TextBuffer::appendText(const Font &font, int size, const wchar_t *_string, const wchar_t *_end)
 {
   if (m_vertexCount == 0)
   {
@@ -280,41 +275,8 @@ void TextBuffer::appendText(FontHandle _fontHandle, const wchar_t *_string, cons
   for (const wchar_t *_current = _string; _current < _end; ++_current)
   {
     uint32_t _codePoint = *_current;
-    appendGlyph(_fontHandle, _codePoint, false);
+    appendGlyph(font, size, _codePoint, false);
   }
-}
-
-void TextBuffer::appendAtlasFace(uint16_t _faceIndex)
-{
-  if (m_vertexCount / 4 >= MAX_BUFFERED_CHARACTERS)
-  {
-    return;
-  }
-
-  float x0 = m_penX;
-  float y0 = m_penY;
-  float x1 = x0 + (float)m_fontManager->getAtlas()->getTextureSize();
-  float y1 = y0 + (float)m_fontManager->getAtlas()->getTextureSize();
-
-  m_fontManager->getAtlas()->packFaceLayerUV(_faceIndex,
-                                             (uint8_t *)m_vertexBuffer,
-                                             sizeof(TextVertex) * m_vertexCount +
-                                               offsetof(TextVertex, u),
-                                             sizeof(TextVertex));
-
-  setVertex(m_vertexCount + 0, x0, y0, m_backgroundColor);
-  setVertex(m_vertexCount + 1, x0, y1, m_backgroundColor);
-  setVertex(m_vertexCount + 2, x1, y1, m_backgroundColor);
-  setVertex(m_vertexCount + 3, x1, y0, m_backgroundColor);
-
-  m_indexBuffer[m_indexCount + 0] = m_vertexCount + 0;
-  m_indexBuffer[m_indexCount + 1] = m_vertexCount + 1;
-  m_indexBuffer[m_indexCount + 2] = m_vertexCount + 2;
-  m_indexBuffer[m_indexCount + 3] = m_vertexCount + 0;
-  m_indexBuffer[m_indexCount + 4] = m_vertexCount + 2;
-  m_indexBuffer[m_indexCount + 5] = m_vertexCount + 3;
-  m_vertexCount += 4;
-  m_indexCount += 6;
 }
 
 void TextBuffer::clearTextBuffer()
@@ -335,18 +297,20 @@ void TextBuffer::clearTextBuffer()
   m_rectangle.height = 0;
 }
 
-void TextBuffer::appendGlyph(FontHandle _handle, CodePoint _codePoint, bool shadow)
+void TextBuffer::appendGlyph(const Font &font, int size, CodePoint _codePoint, bool shadow)
 {
   if (_codePoint == L'\t')
   {
     for (uint32_t ii = 0; ii < 4; ++ii)
     {
-      appendGlyph(_handle, L' ', shadow);
+      appendGlyph(font, size, L' ', shadow);
     }
     return;
   }
 
-  const GlyphInfo *glyph = m_fontManager->getGlyphInfo(_handle, _codePoint);
+  const auto _handle = font.getSizedFont(size);
+
+  const auto glyph = font.getGlyphInfo(_handle, _codePoint);
   BX_WARN(NULL != glyph, "Glyph not found (font handle %d, code point %d)", _handle.idx, _codePoint);
   if (NULL == glyph)
   {
@@ -360,41 +324,41 @@ void TextBuffer::appendGlyph(FontHandle _handle, CodePoint _codePoint, bool shad
     return;
   }
 
-  const FontInfo &font = m_fontManager->getFontInfo(_handle);
+  const FontInfo &fontInfo = font.getFontInfo(_handle);
 
   if (_codePoint == L'\n')
   {
     m_penX = m_originX;
     m_penY += m_lineGap + m_lineAscender - m_lineDescender;
-    m_lineGap = font.lineGap;
-    m_lineDescender = font.descender;
-    m_lineAscender = font.ascender;
+    m_lineGap = fontInfo.lineGap;
+    m_lineDescender = fontInfo.descender;
+    m_lineAscender = fontInfo.ascender;
     m_lineStartIndex = m_vertexCount;
     m_previousCodePoint = 0;
     return;
   }
 
   // is there a change of font size that require the text on the left to be centered again ?
-  if (font.ascender > m_lineAscender || (font.descender < m_lineDescender))
+  if (fontInfo.ascender > m_lineAscender || (fontInfo.descender < m_lineDescender))
   {
-    if (font.descender < m_lineDescender)
+    if (fontInfo.descender < m_lineDescender)
     {
-      m_lineDescender = font.descender;
-      m_lineGap = font.lineGap;
+      m_lineDescender = fontInfo.descender;
+      m_lineGap = fontInfo.lineGap;
     }
 
-    float txtDecals = (font.ascender - m_lineAscender);
-    m_lineAscender = font.ascender;
-    m_lineGap = font.lineGap;
+    float txtDecals = (fontInfo.ascender - m_lineAscender);
+    m_lineAscender = fontInfo.ascender;
+    m_lineGap = fontInfo.lineGap;
     verticalCenterLastLine(
       (txtDecals), (m_penY - m_lineAscender), (m_penY + m_lineAscender - m_lineDescender + m_lineGap));
   }
 
-  float kerning = m_fontManager->getKerning(_handle, m_previousCodePoint, _codePoint);
+  float kerning = font.getKerning(_handle, m_previousCodePoint, _codePoint);
   m_penX += kerning;
 
-  const GlyphInfo &blackGlyph = m_fontManager->getBlackGlyph();
-  const Atlas *atlas = m_fontManager->getAtlas();
+  const GlyphInfo &blackGlyph = font.getBlackGlyph();
+  const Atlas *atlas = font.getAtlas();
   const AtlasRegion &atlasRegion = atlas->getRegion(glyph->regionIndex);
 
   if (shadow)
@@ -483,7 +447,7 @@ void TextBuffer::appendGlyph(FontHandle _handle, CodePoint _codePoint, bool shad
     float x0 = (m_penX - kerning);
     float y0 = (m_penY + m_lineAscender - m_lineDescender * 0.5f);
     float x1 = ((float)x0 + (glyph->advance_x));
-    float y1 = y0 + font.underlineThickness;
+    float y1 = y0 + fontInfo.underlineThickness;
 
     atlas->packUV(blackGlyph.regionIndex,
                   (uint8_t *)m_vertexBuffer,
@@ -510,12 +474,12 @@ void TextBuffer::appendGlyph(FontHandle _handle, CodePoint _codePoint, bool shad
     float x0 = (m_penX - kerning);
     float y0 = (m_penY);
     float x1 = ((float)x0 + (glyph->advance_x));
-    float y1 = y0 + font.underlineThickness;
+    float y1 = y0 + fontInfo.underlineThickness;
 
-    m_fontManager->getAtlas()->packUV(blackGlyph.regionIndex,
-                                      (uint8_t *)m_vertexBuffer,
-                                      sizeof(TextVertex) * m_vertexCount + offsetof(TextVertex, u),
-                                      sizeof(TextVertex));
+    atlas->packUV(blackGlyph.regionIndex,
+                  (uint8_t *)m_vertexBuffer,
+                  sizeof(TextVertex) * m_vertexCount + offsetof(TextVertex, u),
+                  sizeof(TextVertex));
 
     setVertex(m_vertexCount + 0, x0, y0, m_overlineColor, STYLE_OVERLINE);
     setVertex(m_vertexCount + 1, x0, y1, m_overlineColor, STYLE_OVERLINE);
@@ -535,9 +499,9 @@ void TextBuffer::appendGlyph(FontHandle _handle, CodePoint _codePoint, bool shad
   if (m_styleFlags & STYLE_STRIKE_THROUGH && m_strikeThroughColor & 0xFF000000)
   {
     float x0 = (m_penX - kerning);
-    float y0 = (m_penY + 0.666667f * font.ascender);
+    float y0 = (m_penY + 0.666667f * fontInfo.ascender);
     float x1 = ((float)x0 + (glyph->advance_x));
-    float y1 = y0 + font.underlineThickness;
+    float y1 = y0 + fontInfo.underlineThickness;
 
     atlas->packUV(blackGlyph.regionIndex,
                   (uint8_t *)m_vertexBuffer,
@@ -572,7 +536,7 @@ void TextBuffer::appendGlyph(FontHandle _handle, CodePoint _codePoint, bool shad
     float glyphWidth = glyph->width * glyphScale;
     float glyphHeight = glyph->height * glyphScale;
     float x0 = m_penX + (glyph->offset_x);
-    float y0 = (m_penY + (font.ascender + -font.descender - glyphHeight) / 2);
+    float y0 = (m_penY + (fontInfo.ascender + -fontInfo.descender - glyphHeight) / 2);
     float x1 = (x0 + glyphWidth);
     float y1 = (y0 + glyphHeight);
 
@@ -650,7 +614,7 @@ void TextBuffer::verticalCenterLastLine(float _dy, float _top, float _bottom)
   }
 }
 
-TextBufferManager::TextBufferManager(FontManager *_fontManager) : m_fontManager(_fontManager)
+TextBufferManager::TextBufferManager()
 {
   m_textBuffers = new BufferCache[MAX_TEXT_BUFFER_COUNT];
   m_basicProgram = loadProgram("font-basic-fontvs", "font-basic-fontfs");
@@ -664,7 +628,6 @@ TextBufferManager::TextBufferManager(FontManager *_fontManager) : m_fontManager(
     .add(bgfx::Attrib::Color1, 4, bgfx::AttribType::Uint8, true)
     .end();
 
-  s_texColor = bgfx::createUniform("s_texColor", bgfx::UniformType::Sampler);
   u_dropShadowColor = bgfx::createUniform("u_dropShadowColor", bgfx::UniformType::Vec4);
   u_params = bgfx::createUniform("u_params", bgfx::UniformType::Vec4);
 }
@@ -678,7 +641,6 @@ TextBufferManager::~TextBufferManager()
   bgfx::destroy(u_params);
 
   bgfx::destroy(u_dropShadowColor);
-  bgfx::destroy(s_texColor);
 
   bgfx::destroy(m_basicProgram);
   bgfx::destroy(m_distanceProgram);
@@ -695,7 +657,7 @@ TextBufferHandle TextBufferManager::createTextBuffer(uint32_t _type, BufferType:
   uint16_t textIdx = m_textBufferHandles.alloc();
   BufferCache &bc = m_textBuffers[textIdx];
 
-  bc.textBuffer = new TextBuffer(m_fontManager);
+  bc.textBuffer = new TextBuffer;
   bc.fontType = _type;
   bc.bufferType = _bufferType;
   bc.indexBufferHandleIdx = bgfx::kInvalidHandle;
@@ -761,7 +723,6 @@ void TextBufferManager::submitTextBuffer(TextBufferHandle _handle, bgfx::ViewId 
     return;
   }
 
-  bgfx::setTexture(0, s_texColor, m_fontManager->getAtlas()->getTextureHandle());
 
   bgfx::ProgramHandle program = BGFX_INVALID_HANDLE;
   switch (bc.fontType)
@@ -930,30 +891,25 @@ void TextBufferManager::setPenPosition(TextBufferHandle _handle, float _x, float
 }
 
 void TextBufferManager::appendText(TextBufferHandle _handle,
-                                   FontHandle _fontHandle,
+                                   const Font &font,
+                                   int size,
                                    const char *_string,
                                    const char *_end)
 {
   BX_ASSERT(isValid(_handle), "Invalid handle used");
   BufferCache &bc = m_textBuffers[_handle.idx];
-  bc.textBuffer->appendText(_fontHandle, _string, _end);
+  bc.textBuffer->appendText(font, size, _string, _end);
 }
 
 void TextBufferManager::appendText(TextBufferHandle _handle,
-                                   FontHandle _fontHandle,
+                                   const Font &font,
+                                   int size,
                                    const wchar_t *_string,
                                    const wchar_t *_end)
 {
   BX_ASSERT(isValid(_handle), "Invalid handle used");
   BufferCache &bc = m_textBuffers[_handle.idx];
-  bc.textBuffer->appendText(_fontHandle, _string, _end);
-}
-
-void TextBufferManager::appendAtlasFace(TextBufferHandle _handle, uint16_t _faceIndex)
-{
-  BX_ASSERT(isValid(_handle), "Invalid handle used");
-  BufferCache &bc = m_textBuffers[_handle.idx];
-  bc.textBuffer->appendAtlasFace(_faceIndex);
+  bc.textBuffer->appendText(font, size, _string, _end);
 }
 
 void TextBufferManager::clearTextBuffer(TextBufferHandle _handle)

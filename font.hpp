@@ -14,11 +14,16 @@ public:
   Font(const Font &) = delete;
   Font(Font &&);
   ~Font();
-  auto getSizedFont(int size) -> FontHandle;
+  auto getSizedFont(int size) const -> FontHandle;
+  auto getGlyphInfo(FontHandle, CodePoint) const -> const GlyphInfo *;
+  auto getFontInfo(FontHandle) const -> const FontInfo &;
+  auto getKerning(FontHandle, CodePoint prev, CodePoint cur) const -> float;
+  auto getBlackGlyph() const -> const GlyphInfo &;
+  auto getAtlas() const -> const Atlas *;
 
 private:
   std::string path;
   std::reference_wrapper<FontManager> fontManager;
   TrueTypeHandle fontFile;
-  std::unordered_map<int, FontHandle> sizedFonts;
+  mutable std::unordered_map<int, FontHandle> sizedFonts;
 };

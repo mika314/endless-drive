@@ -6,6 +6,7 @@
 #ifndef FONT_MANAGER_H_HEADER_GUARD
 #define FONT_MANAGER_H_HEADER_GUARD
 
+#include "code-point.hpp"
 #include <bgfx/bgfx.h>
 #include <bx/handlealloc.h>
 #include <bx/string.h>
@@ -73,9 +74,6 @@ struct FontInfo
 //              |         +-------------------------+----------------- ymin
 //              |                                   |
 //              |------------- advance_x ---------->|
-
-/// Unicode value of a character
-typedef int32_t CodePoint;
 
 /// A structure that describe a glyph.
 struct GlyphInfo
