@@ -1,4 +1,5 @@
 #pragma once
+#include "cube-atlas.hpp"
 #include "font-manager.hpp"
 #include "text-buffer-manager.hpp"
 #include "uni.hpp"
@@ -13,7 +14,6 @@ public:
   auto render(const class Scene &) -> void;
   auto setCamPos(glm::vec3) -> void;
   auto setCamRot(glm::vec3) -> void;
-  auto setFontAtlasTexture(bgfx::TextureHandle) -> void;
   auto setMaterialAndRender(const class Material *) -> void;
   auto setPointLightAndRender(glm::vec3 pos, glm::vec3 color) -> void;
   auto setSpotlightAndRender(glm::mat4 trans, glm::vec3 color, float angle) -> void;
@@ -32,6 +32,7 @@ private:
   sdl::Window &win;
   int w;
   int h;
+  Atlas atlas;
   TextBufferManager textBufferManager;
   TextBufferHandle textBuffer;
   glm::vec3 camPos = {0.f, -5.f, 1.8f};
@@ -86,4 +87,5 @@ private:
   bgfx::ProgramHandle pointLight;
   bgfx::ProgramHandle spotlight;
   bgfx::ProgramHandle combine;
+  GlyphInfo blackGlyph;
 };

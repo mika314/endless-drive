@@ -7,5 +7,4 @@
 auto Label::uiPass(class Render &render, glm::mat3 trans) const -> void
 {
   render(Render::TextIn{.text = text, .font = font, .size = size, .color = color, .trans = trans});
-  render.setFontAtlasTexture(font.get().getAtlas()->getTextureHandle());
 }

@@ -546,3 +546,13 @@ void Atlas::packUV(const AtlasRegion &_region,
     break;
   }
 }
+
+auto Atlas::getBlackGlyphRegionIndex() const -> uint16_t
+{
+  return blackGlyphRegionIndex;
+}
+
+auto Atlas::setBlackGlyphRegionIndex(uint16_t v) -> void
+{
+  blackGlyphRegionIndex = v;
+}

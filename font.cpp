@@ -62,9 +62,9 @@ auto Font::getSizedFont(int size) const -> FontHandle
   return it->second;
 }
 
-auto Font::getGlyphInfo(FontHandle h, CodePoint cp) const -> const GlyphInfo *
+auto Font::getGlyphInfo(Atlas &atlas, FontHandle h, CodePoint cp) const -> const GlyphInfo *
 {
-  return fontManager.get().getGlyphInfo(h, cp);
+  return fontManager.get().getGlyphInfo(atlas, h, cp);
 }
 
 auto Font::getFontInfo(FontHandle h) const -> const FontInfo &
@@ -75,14 +75,4 @@ auto Font::getFontInfo(FontHandle h) const -> const FontInfo &
 auto Font::getKerning(FontHandle h, CodePoint prev, CodePoint cur) const -> float
 {
   return fontManager.get().getKerning(h, prev, cur);
-}
-
-auto Font::getBlackGlyph() const -> const GlyphInfo &
-{
-  return fontManager.get().getBlackGlyph();
-}
-
-auto Font::getAtlas() const -> const Atlas *
-{
-  return fontManager.get().getAtlas();
 }

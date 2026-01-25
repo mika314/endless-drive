@@ -35,6 +35,7 @@ struct TextRectangle
   float width, height;
 };
 
+class Atlas;
 class TextBuffer;
 class TextBufferManager
 {
@@ -64,14 +65,16 @@ public:
   void setPenPosition(TextBufferHandle _handle, float _x, float _y);
 
   /// Append an ASCII/utf-8 string to the buffer using current pen position and color.
-  void appendText(TextBufferHandle _handle,
+  void appendText(Atlas &,
+                  TextBufferHandle _handle,
                   const class Font &,
                   int size,
                   const char *_string,
                   const char *_end = NULL);
 
   /// Append a wide char unicode string to the buffer using current pen position and color.
-  void appendText(TextBufferHandle _handle,
+  void appendText(Atlas &,
+                  TextBufferHandle _handle,
                   const Font &,
                   int size,
                   const wchar_t *_string,

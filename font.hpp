@@ -15,11 +15,9 @@ public:
   Font(Font &&);
   ~Font();
   auto getSizedFont(int size) const -> FontHandle;
-  auto getGlyphInfo(FontHandle, CodePoint) const -> const GlyphInfo *;
+  auto getGlyphInfo(class Atlas &, FontHandle, CodePoint) const -> const GlyphInfo *;
   auto getFontInfo(FontHandle) const -> const FontInfo &;
   auto getKerning(FontHandle, CodePoint prev, CodePoint cur) const -> float;
-  auto getBlackGlyph() const -> const GlyphInfo &;
-  auto getAtlas() const -> const Atlas *;
 
 private:
   std::string path;

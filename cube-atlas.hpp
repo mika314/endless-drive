@@ -3,8 +3,7 @@
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
-#ifndef CUBE_ATLAS_H_HEADER_GUARD
-#define CUBE_ATLAS_H_HEADER_GUARD
+#pragma once
 
 /// Inspired from texture-atlas from freetype-gl (http://code.google.com/p/freetype-gl/)
 /// by Nicolas Rougier (Nicolas.Rougier@inria.fr)
@@ -119,6 +118,9 @@ public:
   /// retrieve the mirrored texture buffer (to serialize it)
   const uint8_t *getTextureBuffer() const { return m_textureBuffer; }
 
+  auto getBlackGlyphRegionIndex() const -> uint16_t;
+  auto setBlackGlyphRegionIndex(uint16_t) -> void;
+
 private:
   struct PackedLayer;
   PackedLayer *m_layers;
@@ -134,6 +136,5 @@ private:
 
   uint16_t m_regionCount;
   uint16_t m_maxRegionCount;
+  uint16_t blackGlyphRegionIndex;
 };
-
-#endif // CUBE_ATLAS_H_HEADER_GUARD

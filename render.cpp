@@ -73,6 +73,7 @@ Render::Render(sdl::Window &aWin, int aW, int aH)
   : win(aWin),
     w(aW),
     h(aH),
+    atlas(512),
     textBuffer(textBufferManager.createTextBuffer(FONT_TYPE_ALPHA, BufferType::Transient)),
     deferrd(w, h),
     geom(loadProgram("geom-vs", "geom-fs")),
@@ -80,6 +81,17 @@ Render::Render(sdl::Window &aWin, int aW, int aH)
     spotlight(loadProgram("spotlight-vs", "spotlight-fs")),
     combine(loadProgram("combine-vs", "combine-fs"))
 {
+  const uint32_t W = 3;
+  // Create filler rectangle
+  uint8_t buffer[W * W * 4];
+  bx::memSet(buffer, 255, W * W * 4);
+
+  blackGlyph.width = W;
+  blackGlyph.height = W;
+
+  /// make sure the black glyph doesn't bleed by using a one pixel inner outline
+  blackGlyph.regionIndex = atlas.addRegion(W, W, buffer, AtlasRegion::TYPE_GRAY, 1);
+  atlas.setBlackGlyphRegionIndex(blackGlyph.regionIndex);
 }
 
 auto Render::render(const Scene &scene) -> void
@@ -117,6 +129,7 @@ auto Render::render(const Scene &scene) -> void
 
   textBufferManager.clearTextBuffer(textBuffer);
   scene.uiPass(*this);
+  s_texColor = atlas.getTextureHandle();
   textBufferManager.submitTextBuffer(textBuffer, 3);
 }
 
@@ -331,10 +344,6 @@ auto Render::operator()(const TextIn &v) -> void
                                    (static_cast<uint32_t>(v.color.g * 0xff) << 16) |
                                    (static_cast<uint32_t>(v.color.b * 0xff) << 8) | 0xff);
   textBufferManager.setPenPosition(textBuffer, pos.x, pos.y);
-  textBufferManager.appendText(textBuffer, v.font, v.size, v.text.c_str());
+  textBufferManager.appendText(atlas, textBuffer, v.font, v.size, v.text.c_str());
 }
 
-auto Render::setFontAtlasTexture(bgfx::TextureHandle h) -> void
-{
-  s_texColor = h;
-}

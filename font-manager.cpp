@@ -151,13 +151,7 @@ struct FontManager::CachedFont
 
 #define MAX_FONT_BUFFER_SIZE (512 * 512 * 4)
 
-FontManager::FontManager(Atlas *_atlas) : m_ownAtlas(false), m_atlas(_atlas)
-{
-  init();
-}
-
-FontManager::FontManager(uint16_t _textureSideWidth)
-  : m_ownAtlas(true), m_atlas(new Atlas(_textureSideWidth))
+FontManager::FontManager()
 {
   init();
 }
@@ -167,17 +161,6 @@ void FontManager::init()
   m_cachedFiles = new CachedFile[MAX_OPENED_FILES];
   m_cachedFonts = new CachedFont[MAX_OPENED_FONT];
   m_buffer = new uint8_t[MAX_FONT_BUFFER_SIZE];
-
-  const uint32_t W = 3;
-  // Create filler rectangle
-  uint8_t buffer[W * W * 4];
-  bx::memSet(buffer, 255, W * W * 4);
-
-  m_blackGlyph.width = W;
-  m_blackGlyph.height = W;
-
-  /// make sure the black glyph doesn't bleed by using a one pixel inner outline
-  m_blackGlyph.regionIndex = m_atlas->addRegion(W, W, buffer, AtlasRegion::TYPE_GRAY, 1);
 }
 
 FontManager::~FontManager()
@@ -191,11 +174,6 @@ FontManager::~FontManager()
   delete[] m_cachedFiles;
 
   delete[] m_buffer;
-
-  if (m_ownAtlas)
-  {
-    delete m_atlas;
-  }
 }
 
 TrueTypeHandle FontManager::createTtf(const uint8_t *_buffer, uint32_t _size)
@@ -301,7 +279,7 @@ void FontManager::destroyFont(FontHandle _handle)
   m_fontHandles.free(_handle.idx);
 }
 
-bool FontManager::preloadGlyph(FontHandle _handle, const wchar_t *_string)
+bool FontManager::preloadGlyph(class Atlas &atlas, FontHandle _handle, const wchar_t *_string)
 {
   BX_ASSERT(isValid(_handle), "Invalid handle used");
   CachedFont &font = m_cachedFonts[_handle.idx];
@@ -314,7 +292,7 @@ bool FontManager::preloadGlyph(FontHandle _handle, const wchar_t *_string)
   for (uint32_t ii = 0, end = (uint32_t)wcslen(_string); ii < end; ++ii)
   {
     CodePoint codePoint = _string[ii];
-    if (!preloadGlyph(_handle, codePoint))
+    if (!preloadGlyph(atlas, _handle, codePoint))
     {
       return false;
     }
@@ -323,7 +301,7 @@ bool FontManager::preloadGlyph(FontHandle _handle, const wchar_t *_string)
   return true;
 }
 
-bool FontManager::preloadGlyph(FontHandle _handle, CodePoint _codePoint)
+bool FontManager::preloadGlyph(Atlas &atlas, FontHandle _handle, CodePoint _codePoint)
 {
   BX_ASSERT(isValid(_handle), "Invalid handle used");
   CachedFont &font = m_cachedFonts[_handle.idx];
@@ -346,7 +324,7 @@ bool FontManager::preloadGlyph(FontHandle _handle, CodePoint _codePoint)
     default: BX_ASSERT(false, "TextureType not supported yet");
     }
 
-    if (!addBitmap(glyphInfo, m_buffer))
+    if (!addBitmap(atlas, glyphInfo, m_buffer))
     {
       return false;
     }
@@ -362,9 +340,9 @@ bool FontManager::preloadGlyph(FontHandle _handle, CodePoint _codePoint)
     return true;
   }
 
-  if (isValid(font.masterFontHandle) && preloadGlyph(font.masterFontHandle, _codePoint))
+  if (isValid(font.masterFontHandle) && preloadGlyph(atlas, font.masterFontHandle, _codePoint))
   {
-    const GlyphInfo *glyph = getGlyphInfo(font.masterFontHandle, _codePoint);
+    const GlyphInfo *glyph = getGlyphInfo(atlas, font.masterFontHandle, _codePoint);
 
     GlyphInfo glyphInfo = *glyph;
     glyphInfo.advance_x = (glyphInfo.advance_x * fontInfo.scale);
@@ -379,59 +357,6 @@ bool FontManager::preloadGlyph(FontHandle _handle, CodePoint _codePoint)
   }
 
   return false;
-}
-
-bool FontManager::addGlyphBitmap(FontHandle _handle,
-                                 CodePoint _codePoint,
-                                 uint16_t _width,
-                                 uint16_t _height,
-                                 uint16_t _pitch,
-                                 float extraScale,
-                                 const uint8_t *_bitmapBuffer,
-                                 float glyphOffsetX,
-                                 float glyphOffsetY)
-{
-  BX_ASSERT(isValid(_handle), "Invalid handle used");
-  CachedFont &font = m_cachedFonts[_handle.idx];
-
-  GlyphHashMap::iterator iter = font.cachedGlyphs.find(_codePoint);
-  if (iter != font.cachedGlyphs.end())
-  {
-    return true;
-  }
-
-  GlyphInfo glyphInfo;
-
-  float glyphScale = extraScale;
-  glyphInfo.offset_x = glyphOffsetX * glyphScale;
-  glyphInfo.offset_y = glyphOffsetY * glyphScale;
-  glyphInfo.width = (float)_width;
-  glyphInfo.height = (float)_height;
-  glyphInfo.advance_x = (float)_width * glyphScale;
-  glyphInfo.advance_y = (float)_height * glyphScale;
-  glyphInfo.bitmapScale = glyphScale;
-
-  uint32_t dstPitch = _width * 4;
-
-  uint8_t *dst = m_buffer;
-  const uint8_t *src = _bitmapBuffer;
-  uint32_t srcPitch = _pitch;
-
-  for (int32_t ii = 0; ii < _height; ++ii)
-  {
-    bx::memCopy(dst, src, dstPitch);
-
-    dst += dstPitch;
-    src += srcPitch;
-  }
-
-  glyphInfo.regionIndex = m_atlas->addRegion((uint16_t)bx::ceil(glyphInfo.width),
-                                             (uint16_t)bx::ceil(glyphInfo.height),
-                                             m_buffer,
-                                             AtlasRegion::TYPE_BGRA8);
-
-  font.cachedGlyphs[_codePoint] = glyphInfo;
-  return true;
 }
 
 const FontInfo &FontManager::getFontInfo(FontHandle _handle) const
@@ -457,14 +382,14 @@ float FontManager::getKerning(FontHandle _handle, CodePoint _prevCodePoint, Code
   }
 }
 
-const GlyphInfo *FontManager::getGlyphInfo(FontHandle _handle, CodePoint _codePoint)
+const GlyphInfo *FontManager::getGlyphInfo(Atlas &atlas, FontHandle _handle, CodePoint _codePoint)
 {
   const GlyphHashMap &cachedGlyphs = m_cachedFonts[_handle.idx].cachedGlyphs;
   GlyphHashMap::const_iterator it = cachedGlyphs.find(_codePoint);
 
   if (it == cachedGlyphs.end())
   {
-    if (!preloadGlyph(_handle, _codePoint))
+    if (!preloadGlyph(atlas, _handle, _codePoint))
     {
       return NULL;
     }
@@ -476,11 +401,11 @@ const GlyphInfo *FontManager::getGlyphInfo(FontHandle _handle, CodePoint _codePo
   return &it->second;
 }
 
-bool FontManager::addBitmap(GlyphInfo &_glyphInfo, const uint8_t *_data)
+bool FontManager::addBitmap(Atlas &atlas, GlyphInfo &_glyphInfo, const uint8_t *_data)
 {
-  _glyphInfo.regionIndex = m_atlas->addRegion((uint16_t)bx::ceil(_glyphInfo.width),
-                                              (uint16_t)bx::ceil(_glyphInfo.height),
-                                              _data,
-                                              AtlasRegion::TYPE_GRAY);
+  _glyphInfo.regionIndex = atlas.addRegion((uint16_t)bx::ceil(_glyphInfo.width),
+                                           (uint16_t)bx::ceil(_glyphInfo.height),
+                                           _data,
+                                           AtlasRegion::TYPE_GRAY);
   return true;
 }
