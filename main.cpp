@@ -1,7 +1,6 @@
 #include "assets.hpp"
 #include "canister.hpp"
 #include "car.hpp"
-#include "font-manager.hpp"
 #include "font.hpp"
 #include "get-natives.hpp"
 #include "get-road-offset.hpp"
@@ -12,7 +11,6 @@
 #include "scene.hpp"
 #include "spotlight.hpp"
 #include "street-light.hpp"
-#include "text-buffer-manager.hpp"
 #include <bgfx/platform.h>
 #include <fstream>
 #include <list>
@@ -79,8 +77,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto fuel = 100.f;
   auto lives = 3;
 
-  auto assets = Assets{};
   auto render = Render{win, width, height};
+  auto assets = Assets{};
   auto scene = Scene{nullptr};
 
   auto &car = scene.addNode<Car>(assets);
