@@ -118,7 +118,6 @@ auto Mesh::geomPass(class Render &render, glm::mat4 trans) const -> void
   for (const auto &part : parts)
   {
     bgfx::setTransform(&trans);
-
     bgfx::setIndexBuffer(part.ibh);
     bgfx::setVertexBuffer(0, part.vbh);
     render.setMaterialAndRender(part.material);

@@ -5,16 +5,15 @@
 #include "font.hpp"
 #include "get-natives.hpp"
 #include "get-road-offset.hpp"
+#include "img-node.hpp"
 #include "label-node.hpp"
 #include "mesh.hpp"
-#include "point-light.hpp"
 #include "render.hpp"
 #include "scene.hpp"
 #include "spotlight.hpp"
 #include "street-light.hpp"
 #include "text-buffer-manager.hpp"
 #include <bgfx/platform.h>
-#include <bx/math.h>
 #include <fstream>
 #include <list>
 #include <log/log.hpp>
@@ -82,7 +81,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
   auto assets = Assets{};
   auto render = Render{win, width, height};
-  auto scene = Scene{};
+  auto scene = Scene{nullptr};
 
   auto &car = scene.addNode<Car>(assets);
 
@@ -187,18 +186,23 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto &scoreLb = scene.addNode<LabelNode>(Label{.text = "Score:",
                                                  .font = assets.get<Font>("chp-fire.ttf"),
                                                  .color = glm::vec3{0.f, 0.f, 1.f},
-                                                 .size = 100});
+                                                 .sz = 100});
   scoreLb.setPos(glm::vec2{width - 500, height - 400});
   auto &fuelLb = scene.addNode<LabelNode>(Label{.text = "Fuel:",
                                                 .font = assets.get<Font>("chp-fire.ttf"),
                                                 .color = glm::vec3{0.f, 1.f, 0.f},
-                                                .size = 100});
+                                                .sz = 100});
   fuelLb.setPos(glm::vec2{width - 500, height - 300});
-  auto &livesLb = scene.addNode<LabelNode>(Label{.text = "Lives:",
-                                                 .font = assets.get<Font>("chp-fire.ttf"),
-                                                 .color = glm::vec3{1.f, 0.f, 0.f},
-                                                 .size = 100});
-  livesLb.setPos(glm::vec2{width - 500, height - 200});
+
+  auto livesIco = std::vector<std::reference_wrapper<ImgNode>>{};
+  for (auto i = 0; i < lives; ++i)
+  {
+    auto &liveIco = livesIco
+                      .emplace_back(scene.addNode<ImgNode>(
+                        Img{.tex = assets.get<Tex>("heart-ico.png"), .sz = glm::vec2{100.f, 100.f}}))
+                      .get();
+    liveIco.setPos(glm::vec2{width - 500.f + i * 100.f, height - 200.f});
+  }
 
   auto t0 = SDL_GetTicks();
   auto cnt = 0;
@@ -219,14 +223,20 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     lastY = carYOffset;
     if (fuel <= 0)
     {
-      --lives;
       fuel = 100.f;
+      --lives;
+      if (!livesIco.empty())
+      {
+        auto &live = livesIco.back();
+        scene.remove(live);
+        livesIco.pop_back();
+      }
     }
 
     if (lives <= 0)
       done = true;
 
-    scene.tick(dt);
+    scene.tickInternal(dt);
 
     while (!obstacles.empty() && obstacles.front().y < carYOffset - 4.4f / 2.f)
       obstacles.pop_front();
@@ -242,7 +252,15 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
           score += 10;
           fuel = std::min(100.f, fuel + 1.f);
           break;
-        case ObstacleType::tire: --lives; break;
+        case ObstacleType::tire:
+          --lives;
+          if (!livesIco.empty())
+          {
+            auto &live = livesIco.back();
+            scene.remove(live);
+            livesIco.pop_back();
+          }
+          break;
         }
         obstacle.node.get().isVisible = false;
         obstacles.pop_front();
@@ -264,25 +282,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
     scoreLb.text = "Score: " + std::to_string(score);
     fuelLb.text = "Fuel: " + std::to_string(static_cast<int>(fuel));
-    livesLb.text = "Lives: " + std::to_string(lives);
 
     bgfx::dbgTextClear();
-
-    const bx::Vec3 at = {0.0f, 0.0f, 0.0f};
-    const bx::Vec3 eye = {0.0f, 0.0f, -1.0f};
-
-    float view[16];
-    bx::mtxLookAt(view, eye, at);
-
-    // Setup a top-left ortho matrix for screen space drawing.
-    const bgfx::Caps *caps = bgfx::getCaps();
-    {
-      float ortho[16];
-      bx::mtxOrtho(
-        ortho, 0.0f, float(width), float(height), 0.0f, 0.0f, 100.0f, 0.0f, caps->homogeneousDepth);
-      bgfx::setViewTransform(3, view, ortho);
-      bgfx::setViewRect(3, 0, 0, uint16_t(width), uint16_t(height));
-    }
 
     auto t1 = SDL_GetTicks();
     ++cnt;

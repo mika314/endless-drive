@@ -103,11 +103,4 @@ private:
   bgfx::UniformHandle u_dropShadowColor;
   bgfx::UniformHandle u_params;
   bgfx::ProgramHandle m_basicProgram;
-  bgfx::ProgramHandle m_distanceProgram;
-  bgfx::ProgramHandle m_distanceSubpixelProgram;
-  bgfx::ProgramHandle m_distanceOutlineProgram;
-  bgfx::ProgramHandle m_distanceOutlineImageProgram;
-  bgfx::ProgramHandle m_distanceDropShadowProgram;
-  bgfx::ProgramHandle m_distanceDropShadowImageProgram;
-  bgfx::ProgramHandle m_distanceOutlineDropShadowImageProgram;
 };

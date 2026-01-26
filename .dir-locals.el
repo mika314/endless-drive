@@ -9,6 +9,5 @@
                                               ))
               (flycheck-clang-definitions . (
                                              "BX_CONFIG_DEBUG=1"
-                                             "GLM_ENABLE_EXPERIMENTAL"
                                              ))
               )))

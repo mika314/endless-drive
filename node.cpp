@@ -1,5 +1,6 @@
 #include "node.hpp"
 #include <algorithm>
+#include <log/log.hpp>
 
 BaseNode::BaseNode(BaseNode *aParent) : parent(aParent) {}
 
@@ -23,7 +24,10 @@ auto BaseNode::remove(BaseNode &n) -> void
   auto it =
     std::find_if(std::begin(p->nodes), std::end(p->nodes), [&](const auto &x) { return x.get() == &n; });
   if (it == std::end(p->nodes))
+  {
+    LOG("Could not remove the node", &n);
     return;
+  }
   p->nodes.erase(it);
 }
 
@@ -47,6 +51,6 @@ auto BaseNode::tickInternal(float dt) -> void
 auto BaseNode::uiPassInternal(Render &render) const -> void
 {
   for (const auto &node : nodes)
-    node->uiPass(render);
+    node->uiPassInternal(render);
   uiPass(render);
 }

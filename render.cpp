@@ -4,6 +4,7 @@
 #include "material.hpp"
 #include "scene.hpp"
 #include "tex.hpp"
+#include <bx/math.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
@@ -12,6 +13,7 @@
 static const auto geomRenderPass = 0;
 static const auto lightRenderPass = 1;
 static const auto combineRenderPass = 2;
+static const auto uiRenderPass = 3;
 
 namespace
 {
@@ -79,7 +81,8 @@ Render::Render(sdl::Window &aWin, int aW, int aH)
     geom(loadProgram("geom-vs", "geom-fs")),
     pointLight(loadProgram("point-light-vs", "point-light-fs")),
     spotlight(loadProgram("spotlight-vs", "spotlight-fs")),
-    combine(loadProgram("combine-vs", "combine-fs"))
+    combine(loadProgram("combine-vs", "combine-fs")),
+    imgProg(loadProgram("img-uivs", "img-uifs"))
 {
   const uint32_t W = 3;
   // Create filler rectangle
@@ -120,17 +123,31 @@ auto Render::render(const Scene &scene) -> void
 
   u_camPos = glm::vec4{camPos, 1.f};
 
-  scene.pass3d(*this);
+  scene.geomPassInternal(*this);
+  scene.lightPassInternal(*this);
 
   { // combine render pass
     deferrd.combine();
     bgfx::submit(combineRenderPass, combine);
   }
 
+  // UI Pass setup
+  bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+  {
+    const auto uiView = glm::lookAt(glm::vec3(0.0f, 0.0f, 1.0f),  // Camera is at (0,0,1)
+                                    glm::vec3(0.0f, 0.0f, 0.0f),  // Looks at (0,0,0)
+                                    glm::vec3(0.0f, 1.0f, 0.0f)); // Up is (0,1,0)
+    const auto uiProj =
+      glm::ortho(0.0f, 1.f * w, 1.f * h, 0.0f, 0.0f, 100.0f); // 0,w,h,0 for top-left origin
+    bgfx::setViewTransform(uiRenderPass, &uiView, &uiProj);
+    bgfx::setViewRect(uiRenderPass, 0, 0, w, h);
+    bgfx::setViewClear(uiRenderPass, BGFX_CLEAR_NONE);
+  }
+
   textBufferManager.clearTextBuffer(textBuffer);
-  scene.uiPass(*this);
+  scene.uiPassInternal(*this);
   s_texColor = atlas.getTextureHandle();
-  textBufferManager.submitTextBuffer(textBuffer, 3);
+  textBufferManager.submitTextBuffer(textBuffer, uiRenderPass);
 }
 
 Render::~Render()
@@ -139,7 +156,47 @@ Render::~Render()
   bgfx::destroy(spotlight);
   bgfx::destroy(pointLight);
   bgfx::destroy(geom);
+  bgfx::destroy(imgProg);
   textBufferManager.destroyTextBuffer(textBuffer);
+}
+
+auto Render::operator()(const ImgIn &v) -> void
+{
+  if (bgfx::getAvailTransientVertexBuffer(4, PosTexCoord0Vertex::ms_layout) == 0 ||
+      bgfx::getAvailTransientIndexBuffer(6) == 0) // 2 triangles, 3 indices each = 6 indices
+  {
+    return;
+  }
+
+  bgfx::TransientVertexBuffer vb;
+  bgfx::allocTransientVertexBuffer(&vb, 4, PosTexCoord0Vertex::ms_layout);
+  PosTexCoord0Vertex *vertex = (PosTexCoord0Vertex *)vb.data;
+
+  bgfx::TransientIndexBuffer ib;
+  bgfx::allocTransientIndexBuffer(&ib, 6);
+  uint16_t *indices = (uint16_t *)ib.data;
+
+  // Quad vertices
+  vertex[0] = {glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec2{0.0f, 0.0f}}; // Top-left
+  vertex[1] = {glm::vec3{1.f, 0.0f, 0.0f}, glm::vec2{1.0f, 0.0f}};  // Top-right
+  vertex[2] = {glm::vec3{1.f, 1.f, 0.0f}, glm::vec2{1.0f, 1.0f}};   // Bottom-right
+  vertex[3] = {glm::vec3{0.0f, 1.f, 0.0f}, glm::vec2{0.0f, 1.0f}};  // Bottom-left
+
+  // Indices for two triangles forming a quad
+  indices[0] = 0;
+  indices[1] = 1;
+  indices[2] = 2;
+
+  indices[3] = 0;
+  indices[4] = 2;
+  indices[5] = 3;
+
+  u_imgTex = v.tex;
+
+  bgfx::setVertexBuffer(0, &vb);
+  bgfx::setIndexBuffer(&ib);
+  bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+  bgfx::submit(uiRenderPass, imgProg);
 }
 
 // TextureHandle bgfx::createTexture2D(
@@ -338,12 +395,11 @@ auto Render::setCamRot(glm::vec3 v) -> void
 
 auto Render::operator()(const TextIn &v) -> void
 {
-  auto pos = v.trans[2];
+  const auto pos = v.trans[3];
   textBufferManager.setTextColor(textBuffer,
                                  (static_cast<uint32_t>(v.color.r * 0xff) << 24) |
                                    (static_cast<uint32_t>(v.color.g * 0xff) << 16) |
                                    (static_cast<uint32_t>(v.color.b * 0xff) << 8) | 0xff);
   textBufferManager.setPenPosition(textBuffer, pos.x, pos.y);
-  textBufferManager.appendText(atlas, textBuffer, v.font, v.size, v.text.c_str());
+  textBufferManager.appendText(atlas, textBuffer, v.font, v.sz, v.text.c_str());
 }
-

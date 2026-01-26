@@ -12,6 +12,7 @@
 #include <bgfx/bgfx.h>
 #include <bgfx/embedded_shader.h>
 #include <bx/string.h>
+#include <glm/mat4x4.hpp>
 #include <stddef.h> // offsetof
 #include <wchar.h>  // wcslen
 
@@ -624,7 +625,7 @@ void TextBuffer::verticalCenterLastLine(float _dy, float _top, float _bottom)
 TextBufferManager::TextBufferManager()
 {
   m_textBuffers = new BufferCache[MAX_TEXT_BUFFER_COUNT];
-  m_basicProgram = loadProgram("font-basic-fontvs", "font-basic-fontfs");
+  m_basicProgram = loadProgram("font-basic-uivs", "font-basic-uifs");
 
   m_vertexLayout.begin()
     .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
@@ -650,13 +651,6 @@ TextBufferManager::~TextBufferManager()
   bgfx::destroy(u_dropShadowColor);
 
   bgfx::destroy(m_basicProgram);
-  bgfx::destroy(m_distanceProgram);
-  bgfx::destroy(m_distanceSubpixelProgram);
-  bgfx::destroy(m_distanceOutlineProgram);
-  bgfx::destroy(m_distanceOutlineImageProgram);
-  bgfx::destroy(m_distanceDropShadowProgram);
-  bgfx::destroy(m_distanceDropShadowImageProgram);
-  bgfx::destroy(m_distanceOutlineDropShadowImageProgram);
 }
 
 TextBufferHandle TextBufferManager::createTextBuffer(uint32_t _type, BufferType::Enum _bufferType)

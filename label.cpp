@@ -4,7 +4,7 @@
 #include "render.hpp"
 #include <log/log.hpp>
 
-auto Label::uiPass(class Render &render, glm::mat3 trans) const -> void
+auto Label::uiPass(class Render &render, glm::mat4 trans) const -> void
 {
-  render(Render::TextIn{.text = text, .font = font, .size = size, .color = color, .trans = trans});
+  render(Render::TextIn{.text = text, .font = font, .sz = sz, .color = color, .trans = trans});
 }

@@ -1,6 +1,6 @@
 #pragma once
 #include "node.hpp"
-#include <glm/mat3x3.hpp>
+#include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 
 class BaseNodeUi : public BaseNode
@@ -10,7 +10,7 @@ public:
   auto getPos() const -> glm::vec2;
   auto getScale() const -> glm::vec2;
   auto getRot() const -> float;
-  auto getTrans() const -> glm::mat3;
+  auto getTrans() const -> glm::mat4;
   auto setPos(glm::vec2) -> void;
   auto setScale(glm::vec2) -> void;
   auto setRot(float) -> void;

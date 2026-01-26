@@ -1,5 +1,6 @@
 #include "node-ui.hpp"
-#include <glm/gtx/matrix_transform_2d.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/vec3.hpp>
 
 auto BaseNodeUi::getPos() const -> glm::vec2
 {
@@ -30,8 +31,12 @@ auto BaseNodeUi::setRot(float v) -> void
   rot = v;
 }
 
-auto BaseNodeUi::getTrans() const -> glm::mat3
+auto BaseNodeUi::getTrans() const -> glm::mat4
 {
   const auto p = dynamic_cast<const BaseNodeUi *>(getParent());
-  return glm::scale(glm::rotate(glm::translate(p ? p->getTrans() : glm::mat3(1.0f), pos), rot), scale);
+  return glm::scale(
+    glm::rotate(glm::translate(p ? p->getTrans() : glm::mat4(1.0f), glm::vec3{pos, 0.0f}),
+                rot,
+                glm::vec3{0.0f, 0.0f, 1.f}),
+    glm::vec3{scale, 1.f});
 }

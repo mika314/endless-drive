@@ -1,6 +1,7 @@
 #pragma once
 #include "cube-atlas.hpp"
 #include "font-manager.hpp"
+#include "scene.hpp"
 #include "text-buffer-manager.hpp"
 #include "uni.hpp"
 #include <bgfx/bgfx.h>
@@ -11,7 +12,7 @@ class Render
 public:
   Render(sdl::Window &, int w, int h);
   ~Render();
-  auto render(const class Scene &) -> void;
+  auto render(const Scene &) -> void;
   auto setCamPos(glm::vec3) -> void;
   auto setCamRot(glm::vec3) -> void;
   auto setMaterialAndRender(const class Material *) -> void;
@@ -22,11 +23,17 @@ public:
   {
     const std::string &text;
     const Font &font;
-    float size;
+    float sz;
     glm::vec3 color;
-    glm::mat3 trans;
+    glm::mat4 trans;
   };
   auto operator()(const TextIn &) -> void;
+
+  struct ImgIn
+  {
+    const Tex &tex;
+  };
+  auto operator()(const ImgIn &) -> void;
 
 private:
   sdl::Window &win;
@@ -53,6 +60,7 @@ private:
   Uni<glm::mat4> u_lightTrans = "lightTrans";
   Uni<glm::vec4> u_lightAngle = {"lightAngle", glm::vec4{.4f}};
   Uni<Tex> s_texColor = {"s_texColor", 0};
+  Uni<Tex> u_imgTex = {"imgTex", 0};
 
   class Deferrd
   {
@@ -87,5 +95,6 @@ private:
   bgfx::ProgramHandle pointLight;
   bgfx::ProgramHandle spotlight;
   bgfx::ProgramHandle combine;
+  bgfx::ProgramHandle imgProg;
   GlyphInfo blackGlyph;
 };
