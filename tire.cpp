@@ -1,18 +1,18 @@
-#include "canister.hpp"
+#include "tire.hpp"
+#include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>
 
-Canister::Canister(BaseNode *parent, class Assets &assets)
-  : Obstacle(parent, assets.get<Mesh>("canister.gltf/SM_Canister"))
+Tire::Tire(BaseNode *parent, class Assets &assets)
+  : Obstacle(parent, assets.get<Mesh>("tires-bunch.gltf/SM_TiresBunch_02"))
 {
 }
 
-auto Canister::tick(float dt) -> void
+auto Tire::tick(float dt) -> void
 {
   const auto now = SDL_GetTicks();
-  setRot({0.0f, 0.0f, now / 300.f});
-
   if (isHit)
   {
+    setRot({0.0f, now / 500.f, now / 300.f});
     auto p = getPos();
     p += vel * dt;
     vel += glm::vec3(0.0f, -25.f, -9.8f) * dt;
@@ -20,7 +20,7 @@ auto Canister::tick(float dt) -> void
   }
 }
 
-auto Canister::onHit() -> void
+auto Tire::onHit() -> void
 {
   isHit = true;
   const auto now = 0.001f * SDL_GetTicks();

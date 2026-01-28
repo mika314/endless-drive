@@ -56,3 +56,8 @@ $(DATA_DIR):
 	mkdir -p $(DATA_DIR)
 
 FORCE:
+
+clean:
+	rm -rf .coddle
+	rm -rf data
+	rm -rf bgfx/bgfx/.build

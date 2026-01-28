@@ -1,12 +1,12 @@
-#include "canister.hpp"
+#include "coin.hpp"
+#include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>
 
-Canister::Canister(BaseNode *parent, class Assets &assets)
-  : Obstacle(parent, assets.get<Mesh>("canister.gltf/SM_Canister"))
+Coin::Coin(BaseNode *parent, class Assets &assets) : Obstacle(parent, assets.get<Mesh>("coin.gltf/Coin"))
 {
 }
 
-auto Canister::tick(float dt) -> void
+auto Coin::tick(float dt) -> void
 {
   const auto now = SDL_GetTicks();
   setRot({0.0f, 0.0f, now / 300.f});
@@ -20,7 +20,7 @@ auto Canister::tick(float dt) -> void
   }
 }
 
-auto Canister::onHit() -> void
+auto Coin::onHit() -> void
 {
   isHit = true;
   const auto now = 0.001f * SDL_GetTicks();

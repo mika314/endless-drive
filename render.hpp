@@ -85,7 +85,7 @@ private:
     Uni<Tex> u_normals = {"normals", 0};
     Uni<Tex> u_metallicRoughness = {"metallicRoughness", 1};
     Uni<Tex> u_depth = {"depth", 2};
-    Uni<Tex> u_baseColor = {"baseColor", 0};
+    Uni<Tex> u_baseColor = {"deferrdBaseColor", 0};
     Uni<Tex> u_lightBuffer = {"lightBuffer", 1};
     Uni<Tex> u_emissionBuffer = {"emissionBuffer", 2};
     const bgfx::Caps *caps;

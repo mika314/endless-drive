@@ -3,10 +3,10 @@
 #include "obstacle.hpp"
 #include <glm/vec3.hpp>
 
-class Canister final : public Obstacle
+class Coin final : public Obstacle
 {
 public:
-  Canister(BaseNode *parent, class Assets &);
+  Coin(BaseNode *parent, class Assets &);
   auto tick(float) -> void final;
   auto onHit() -> void final;
 

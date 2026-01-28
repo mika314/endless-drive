@@ -1,6 +1,7 @@
 #include "assets.hpp"
 #include "canister.hpp"
 #include "car.hpp"
+#include "coin.hpp"
 #include "font.hpp"
 #include "get-natives.hpp"
 #include "get-road-offset.hpp"
@@ -11,6 +12,7 @@
 #include "scene.hpp"
 #include "spotlight.hpp"
 #include "street-light.hpp"
+#include "tire.hpp"
 #include <bgfx/platform.h>
 #include <fstream>
 #include <list>
@@ -52,14 +54,6 @@ public:
 
 enum class ObstacleType { canister, tire };
 
-struct Obstacle
-{
-  ObstacleType type;
-  int x;
-  float y;
-  std::reference_wrapper<BaseNode3d> node;
-};
-
 auto main(int /*argc*/, char ** /*argv*/) -> int
 {
   srand(time(nullptr));
@@ -84,10 +78,10 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto &car = scene.addNode<Car>(assets);
 
   std::list<std::reference_wrapper<BaseNode3d>> tmpNodes;
-  std::list<Obstacle> obstacles;
+  std::list<std::reference_wrapper<Obstacle>> obstacles;
 
-  int lastTire = 0;
-  int n = 0;
+  int lastTire = 50;
+  int n = 1;
   auto addRoadMeshes = [&](const auto i) {
     const auto y = 2.f * i;
     const auto dx = getRoadOffset(y);
@@ -140,19 +134,36 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       else
         n = 0;
       lastTire = i;
-      auto &node = scene.addNode3d<Mesh>(assets, "tires-bunch.gltf/SM_TiresBunch_02");
+      auto &node = scene.addNode<Tire>(assets);
       const auto x = rand() % 3 - 1;
       node.setPos({dx + x * 2.6f, y, 0.0f});
+      node.x = x;
+      node.y = y;
       tmpNodes.push_back(node);
-      obstacles.push_back({ObstacleType::tire, x, y, node});
+      obstacles.push_back(node);
     }
     else if (rand() % 2 == 0)
     {
-      auto &node = scene.addNode<Canister>(assets);
-      const auto x = rand() % 3 - 1;
-      node.setPos({dx + x * 2.6f, y, 0.0f});
-      tmpNodes.push_back(node);
-      obstacles.push_back({ObstacleType::canister, x, y, node});
+      if (rand() % 20 == 0)
+      {
+        auto &node = scene.addNode<Canister>(assets);
+        const auto x = rand() % 3 - 1;
+        node.setPos({dx + x * 2.6f, y, 0.0f});
+        node.x = x;
+        node.y = y;
+        tmpNodes.push_back(node);
+        obstacles.push_back(node);
+      }
+      else
+      {
+        auto &node = scene.addNode<Coin>(assets);
+        const auto x = rand() % 3 - 1;
+        node.setPos({dx + x * 2.6f, y, 0.0f});
+        node.x = x;
+        node.y = y;
+        tmpNodes.push_back(node);
+        obstacles.push_back(node);
+      }
     }
   };
 
@@ -185,21 +196,22 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
                                                  .font = assets.get<Font>("chp-fire.ttf"),
                                                  .color = glm::vec3{0.f, 0.f, 1.f},
                                                  .sz = 100});
-  scoreLb.setPos(glm::vec2{width - 500, height - 400});
+  scoreLb.setPos(glm::vec2{width - 500.f, 150.f});
   auto &fuelLb = scene.addNode<LabelNode>(Label{.text = "Fuel:",
                                                 .font = assets.get<Font>("chp-fire.ttf"),
                                                 .color = glm::vec3{0.f, 1.f, 0.f},
                                                 .sz = 100});
-  fuelLb.setPos(glm::vec2{width - 500, height - 300});
+  fuelLb.setPos(glm::vec2{width - 500.f, 250.f});
 
   auto livesIco = std::vector<std::reference_wrapper<ImgNode>>{};
   for (auto i = 0; i < lives; ++i)
   {
     auto &liveIco = livesIco
-                      .emplace_back(scene.addNode<ImgNode>(
-                        Img{.tex = assets.get<Tex>("heart-ico.png"), .sz = glm::vec2{100.f, 100.f}}))
+                      .emplace_back(scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("heart-ico.png"),
+                                                               .sz = glm::vec2{100.f, 100.f},
+                                                               .pivot = glm::vec2{.5f, 0.5f}}))
                       .get();
-    liveIco.setPos(glm::vec2{width - 500.f + i * 100.f, height - 200.f});
+    liveIco.setPos(glm::vec2{width - 500.f + i * 100.f, 100.f});
   }
 
   auto t0 = SDL_GetTicks();
@@ -230,27 +242,28 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         livesIco.pop_back();
       }
     }
+    for (auto &live : livesIco)
+      live.get().setScale(glm::vec3{1.f + .1f * sinf(now * .02f)});
 
     if (lives <= 0)
       done = true;
 
     scene.tickInternal(dt);
 
-    while (!obstacles.empty() && obstacles.front().y < carYOffset - 4.4f / 2.f)
+    while (!obstacles.empty() && obstacles.front().get().y < carYOffset - 4.4f / 2.f)
       obstacles.pop_front();
 
     while (!obstacles.empty())
     {
       auto &obstacle = obstacles.front();
-      if (obstacle.x == car.currentLane && std::abs(obstacle.y - carYOffset) < 4.4f / 2.f)
+      if (obstacle.get().x == car.currentLane && std::abs(obstacle.get().y - carYOffset) < 4.4f / 2.f)
       {
-        switch (obstacle.type)
-        {
-        case ObstacleType::canister:
+        if (dynamic_cast<Canister *>(&obstacle.get()))
+          fuel = std::min(100.f, fuel + 10.f);
+        if (dynamic_cast<Coin *>(&obstacle.get()))
           score += 10;
-          fuel = std::min(100.f, fuel + 1.f);
-          break;
-        case ObstacleType::tire:
+        else if (dynamic_cast<Tire *>(&obstacle.get()))
+        {
           --lives;
           if (!livesIco.empty())
           {
@@ -258,9 +271,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
             scene.remove(live);
             livesIco.pop_back();
           }
-          break;
         }
-        obstacle.node.get().isVisible = false;
+        obstacle.get().onHit();
         obstacles.pop_front();
       }
       else

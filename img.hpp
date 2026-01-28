@@ -9,6 +9,7 @@ class Img
 public:
   std::reference_wrapper<Tex> tex;
   glm::vec2 sz;
+  glm::vec2 pivot;
 
 protected:
   auto uiPass(class Render &, glm::mat4) const -> void;

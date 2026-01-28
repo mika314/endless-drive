@@ -1,12 +1,11 @@
 #pragma once
 
 #include "obstacle.hpp"
-#include <glm/vec3.hpp>
 
-class Canister final : public Obstacle
+class Tire : public Obstacle
 {
 public:
-  Canister(BaseNode *parent, class Assets &);
+  Tire(BaseNode *parent, class Assets &);
   auto tick(float) -> void final;
   auto onHit() -> void final;
 

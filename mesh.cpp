@@ -10,13 +10,13 @@
 
 Mesh::Mesh(const std::string &path, Assets &assets)
 {
+  LOG(this, "Mesh::ctor", path);
   auto [lFilePath, lMeshName] = [&]() {
     auto idx = path.rfind('/');
     return std::pair{path.substr(0, idx), path.substr(idx + 1)};
   }();
   meshName = std::move(lMeshName);
   filePath = std::move(lFilePath);
-  LOG(this, "Mesh", filePath, meshName);
   Assimp::Importer import;
   const aiScene *scene = import.ReadFile("data/" + filePath, aiProcess_Triangulate | aiProcess_FlipUVs);
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
