@@ -7,6 +7,7 @@
 #include "get-road-offset.hpp"
 #include "img-node.hpp"
 #include "label-node.hpp"
+#include "live.hpp"
 #include "mesh.hpp"
 #include "render.hpp"
 #include "scene.hpp"
@@ -154,6 +155,16 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         tmpNodes.push_back(node);
         obstacles.push_back(node);
       }
+      else if (rand() % 100 == 0)
+      {
+        auto &node = scene.addNode<Live>(assets);
+        const auto x = rand() % 3 - 1;
+        node.setPos({dx + x * 2.6f, y, 0.0f});
+        node.x = x;
+        node.y = y;
+        tmpNodes.push_back(node);
+        obstacles.push_back(node);
+      }
       else
       {
         auto &node = scene.addNode<Coin>(assets);
@@ -260,7 +271,18 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       {
         if (dynamic_cast<Canister *>(&obstacle.get()))
           fuel = std::min(100.f, fuel + 10.f);
-        if (dynamic_cast<Coin *>(&obstacle.get()))
+        else if (dynamic_cast<Live *>(&obstacle.get()))
+        {
+          ++lives;
+          auto &liveIco =
+            livesIco
+              .emplace_back(scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("heart-ico.png"),
+                                                       .sz = glm::vec2{100.f, 100.f},
+                                                       .pivot = glm::vec2{.5f, 0.5f}}))
+              .get();
+          liveIco.setPos(glm::vec2{width - 500.f + (livesIco.size() - 1) * 100.f, 100.f});
+        }
+        else if (dynamic_cast<Coin *>(&obstacle.get()))
           score += 10;
         else if (dynamic_cast<Tire *>(&obstacle.get()))
         {

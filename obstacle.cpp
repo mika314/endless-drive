@@ -1,14 +1,15 @@
-#include "coin.hpp"
+#include "live.hpp"
 #include <sdlpp/sdlpp.hpp>
 
-Coin::Coin(BaseNode *parent, class Assets &assets) : Obstacle(parent, assets.get<Mesh>("coin.gltf/Coin"))
+Live::Live(BaseNode *parent, class Assets &assets) : Obstacle(parent, assets.get<Mesh>("live.gltf/Live"))
 {
 }
 
-auto Coin::tick(float dt) -> void
+auto Live::tick(float dt) -> void
 {
   const auto now = SDL_GetTicks();
-  setRot({0.0f, 0.0f, now / 300.f});
+  setRot({0.0f, 0.0f, now / 150.f});
+  setScale(glm::vec3{1.f} * (1.f + .2f * sinf(now * .02f)));
 
   if (isHit)
   {
@@ -19,7 +20,7 @@ auto Coin::tick(float dt) -> void
   }
 }
 
-auto Coin::onHit() -> void
+auto Live::onHit() -> void
 {
   isHit = true;
   const auto now = 0.001f * SDL_GetTicks();
