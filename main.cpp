@@ -208,11 +208,6 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
                                                  .color = glm::vec3{0.f, 0.f, 1.f},
                                                  .sz = 100});
   scoreLb.setPos(glm::vec2{width - 500.f, 150.f});
-  auto &fuelLb = scene.addNode<LabelNode>(Label{.text = "Fuel:",
-                                                .font = assets.get<Font>("chp-fire.ttf"),
-                                                .color = glm::vec3{0.f, 1.f, 0.f},
-                                                .sz = 100});
-  fuelLb.setPos(glm::vec2{width - 500.f, 250.f});
 
   auto livesIco = std::vector<std::reference_wrapper<ImgNode>>{};
   for (auto i = 0; i < lives; ++i)
@@ -224,6 +219,17 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
                       .get();
     liveIco.setPos(glm::vec2{width - 500.f + i * 100.f, 100.f});
   }
+
+  {
+    auto &fuelGaugeIco = scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("fuel-gauge.png"),
+                                                    .sz = glm::vec2{200.f, 100.f},
+                                                    .pivot = glm::vec2{.5f, 1.f}});
+    fuelGaugeIco.setPos(glm::vec2{width - 400.f, 350.f});
+  }
+  auto &fuelGaugeNiddleIco = scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("fuel-gauge-niddle.png"),
+                                                        .sz = glm::vec2{25.f, 100.f},
+                                                        .pivot = glm::vec2{.5f, 1.f}});
+  fuelGaugeNiddleIco.setPos(glm::vec2{width - 400.f, 350.f});
 
   auto t0 = SDL_GetTicks();
   auto cnt = 0;
@@ -313,7 +319,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       addRoadMeshes(roadIdx);
 
     scoreLb.text = "Score: " + std::to_string(score);
-    fuelLb.text = "Fuel: " + std::to_string(static_cast<int>(fuel));
+    fuelGaugeNiddleIco.setRot(2.f * fuel / 100.f - 1.f);
 
     bgfx::dbgTextClear();
 
