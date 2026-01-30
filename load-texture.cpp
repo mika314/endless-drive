@@ -3,6 +3,8 @@
 #include <bx/allocator.h>
 #include <cstring>
 #include <fstream>
+#include <log/log.hpp>
+#include <sdlpp/sdlpp.hpp>
 #include <sstream>
 
 static auto imageReleaseCb(void * /*ptr*/, void *userData) -> void
@@ -15,18 +17,24 @@ auto loadTexture(const char *fileName, uint64_t flags) -> bgfx::TextureHandle
 {
   bgfx::TextureHandle handle = BGFX_INVALID_HANDLE;
 
+  // const auto t0 = SDL_GetTicks();
+
   auto file = std::ifstream{fileName};
   if (!file)
     return BGFX_INVALID_HANDLE;
+  auto content = std::vector<std::byte>{};
+  content.resize(std::filesystem::file_size(fileName));
+  file.read(reinterpret_cast<char *>(content.data()), content.size());
 
-  auto buffer = std::stringstream{};
-  buffer << file.rdbuf();
-  const auto content = buffer.str();
   static auto allocator = bx::DefaultAllocator{};
 
   auto imageContainer = bimg::imageParse(&allocator, content.data(), content.size());
   if (!imageContainer)
     return BGFX_INVALID_HANDLE;
+
+  // const auto t1 = SDL_GetTicks();
+
+  // LOG("image parsing time:", t1 - t0);
 
   const auto mem =
     bgfx::makeRef(imageContainer->m_data, imageContainer->m_size, imageReleaseCb, imageContainer);
@@ -61,6 +69,8 @@ auto loadTexture(const char *fileName, uint64_t flags) -> bgfx::TextureHandle
 
   if (bgfx::isValid(handle))
     bgfx::setName(handle, fileName, strlen(fileName));
+
+  // LOG("uploading texture to GPU:", SDL_GetTicks() - t1);
 
   return handle;
 }

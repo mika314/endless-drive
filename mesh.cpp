@@ -10,7 +10,7 @@
 
 Mesh::Mesh(const std::string &path, Assets &assets)
 {
-  LOG(this, "Mesh::ctor", path);
+  // LOG(this, "Loading mesh", path);
   auto [lFilePath, lMeshName] = [&]() {
     auto idx = path.rfind('/');
     return std::pair{path.substr(0, idx), path.substr(idx + 1)};
@@ -18,7 +18,13 @@ Mesh::Mesh(const std::string &path, Assets &assets)
   meshName = std::move(lMeshName);
   filePath = std::move(lFilePath);
   Assimp::Importer import;
+
+  // const auto t0 = SDL_GetTicks();
+
   const aiScene *scene = import.ReadFile("data/" + filePath, aiProcess_Triangulate | aiProcess_FlipUVs);
+
+  // LOG("mesh load time:", SDL_GetTicks() - t0);
+
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
   {
     LOG("ERROR::ASSIMP::", import.GetErrorString());
@@ -71,7 +77,7 @@ auto Mesh::processNode(Assets &assets, const aiNode *node, const aiScene *scene)
           return true;
         }())
       continue;
-    LOG(this, "Mesh is found:", aiMeshName);
+    // LOG(this, "Mesh is found:", aiMeshName);
     processMesh(assets, mesh, scene);
   }
   for (unsigned int i = 0; i < node->mNumChildren; i++)
@@ -104,7 +110,7 @@ auto Mesh::processMesh(Assets &assets, const aiMesh *mesh, const aiScene *scene)
     aiMaterial *aiMat = scene->mMaterials[mesh->mMaterialIndex];
     aiString name;
     aiMat->Get(AI_MATKEY_NAME, name);
-    LOG(this, "Material:", name.C_Str());
+    // LOG(this, "Material:", name.C_Str());
     part.material = &assets.get<Material>(filePath + "/" + name.C_Str(), aiMat);
   }
   part.vbh = bgfx::createVertexBuffer(

@@ -5,9 +5,9 @@
 
 Tex::Tex(const std::string &path, class Assets &)
   : h(loadTexture(
-      ("data/" + path).c_str())) // TODO-Mika Not sure if hardcoding the data directory is okay.
+      ("data/" + path + ".dds").c_str())) // TODO-Mika Not sure if hardcoding the data directory is okay.
 {
-  LOG("Loading texture:", path);
+  // LOG("Loading texture:", path);
   if (!isValid(h))
     LOG("Texture loading error");
 }

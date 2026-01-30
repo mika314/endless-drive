@@ -75,7 +75,7 @@ static bgfx::ShaderHandle loadShader(const char *_name)
 
 auto loadProgram(const char *_vsName, const char *_fsName) -> bgfx::ProgramHandle
 {
-  LOG("Loading shaders. Vertex shader:", _vsName, "fragment shader:", _fsName);
+  // LOG("Loading shaders. Vertex shader:", _vsName, "fragment shader:", _fsName);
   bgfx::ShaderHandle vsh = loadShader(_vsName);
   bgfx::ShaderHandle fsh = BGFX_INVALID_HANDLE;
   if (NULL != _fsName)

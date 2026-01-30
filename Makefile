@@ -1,4 +1,5 @@
 SHADERC := bgfx/bgfx/.build/linux64_clang/bin/shadercRelease
+TEXTUREC := bgfx/bgfx/.build/linux64_clang/bin/texturecRelease
 DATA_DIR := data
 ASSETS_DIR := assets
 EXPORT_SCRIPT := tools/export-gltf.py
@@ -14,10 +15,11 @@ FONT_VERTEX_BINS := $(patsubst %-uivs.sc,$(DATA_DIR)/%-uivs.bin,$(FONT_VERTEX_SH
 FONT_FRAGMENT_BINS := $(patsubst %-uifs.sc,$(DATA_DIR)/%-uifs.bin,$(FONT_FRAGMENT_SHADERS))
 ASSETS_FONTS := $(wildcard $(ASSETS_DIR)/*.ttf)
 DATA_FONTS := $(patsubst $(ASSETS_DIR)/%,$(DATA_DIR)/%,$(ASSETS_FONTS))
-GIMP_FILES := $(wildcard $(ASSETS_DIR)/*.xcf)
-PNG_FILES := $(patsubst $(ASSETS_DIR)/%.xcf,$(DATA_DIR)/%.png,$(GIMP_FILES))
 
-all: FORCE $(SHADERC) $(VERTEX_BINS) $(FRAGMENT_BINS) $(GLTF_FILES) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS) $(DATA_FONTS) $(PNG_FILES)
+GIMP_FILES := $(wildcard $(ASSETS_DIR)/*.xcf)
+DDS_FROM_XCF := $(patsubst $(ASSETS_DIR)/%.xcf,$(DATA_DIR)/%.dds,$(GIMP_FILES))
+
+all: FORCE $(SHADERC) $(VERTEX_BINS) $(FRAGMENT_BINS) $(GLTF_FILES) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS) $(DATA_FONTS) $(DDS_FROM_XCF)
 	coddle debug
 
 $(SHADERC):
@@ -44,13 +46,21 @@ $(DATA_DIR)/%-uifs.bin: %-uifs.sc ui-varying.def.sc | $(DATA_DIR)
 $(DATA_DIR)/%: $(ASSETS_DIR)/% | $(DATA_DIR)
 	cp $< $@
 
-$(DATA_DIR)/%.gltf: $(ASSETS_DIR)/%.blend $(EXPORT_SCRIPT) | $(DATA_DIR)
+$(DATA_DIR)/%.gltf: $(ASSETS_DIR)/%.blend $(EXPORT_SCRIPT) | $(DATA_DIR) $(TEXTUREC)
 	@echo "Exporting $< to $@"
-	/home/mika/bin/blender-5.0.1-linux-x64/blender -b $< -P $(EXPORT_SCRIPT) -- -o $@
+	$(eval BLEND_TEMP_DIR := $(shell mktemp -d --tmpdir=.))
+	/home/mika/bin/blender-5.0.1-linux-x64/blender -b $< -P $(EXPORT_SCRIPT) -- -o $(BLEND_TEMP_DIR)/$(notdir $*).gltf
+	find $(BLEND_TEMP_DIR) -name "*.png" -exec sh -c '$(TEXTUREC) -f "$$1" -o "$(DATA_DIR)/$$(basename "$$1" .png).dds" -t BC3' _ {} \;
+	find $(BLEND_TEMP_DIR) -type f -not -name "*.png" -exec cp {} $(DATA_DIR) \;
+	mv $(BLEND_TEMP_DIR)/$(notdir $*).gltf $@
+	rm -rf $(BLEND_TEMP_DIR)
 
-$(DATA_DIR)/%.png: $(ASSETS_DIR)/%.xcf $(EXPORT_SCRIPT) | $(DATA_DIR)
+
+$(DATA_DIR)/%.dds: $(ASSETS_DIR)/%.xcf | $(DATA_DIR) $(TEXTUREC)
 	@echo "Exporting $< to $@"
-	gimp -i -b '(let* ((image (car (gimp-file-load RUN-NONINTERACTIVE "$<" "$<"))) (layer (car (gimp-image-merge-visible-layers image CLIP-TO-IMAGE)))) (gimp-file-save RUN-NONINTERACTIVE image layer "$@" "$@") (gimp-quit 0))'
+	gimp -i -b '(let* ((image (car (gimp-file-load RUN-NONINTERACTIVE "$<" "$<"))) (layer (car (gimp-image-merge-visible-layers image CLIP-TO-IMAGE)))) (gimp-file-save RUN-NONINTERACTIVE image layer "$(@:.dds=.png)" "$(@:.dds=.png)") (gimp-quit 0))'
+	$(TEXTUREC) -f "$(@:.dds=.png)" -o $@ -t BC3
+	rm "$(@:.dds=.png)"
 
 $(DATA_DIR):
 	mkdir -p $(DATA_DIR)
@@ -61,3 +71,4 @@ clean:
 	rm -rf .coddle
 	rm -rf data
 	rm -rf bgfx/bgfx/.build
+	rm -rf .tmp-*

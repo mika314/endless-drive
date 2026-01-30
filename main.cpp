@@ -59,11 +59,11 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 {
   srand(time(nullptr));
   auto init = sdl::Init(SDL_INIT_VIDEO);
+  const auto startLoadingTime = SDL_GetTicks();
   const auto width = 1920;
   const auto height = 1080;
 
-  auto win = sdl::Window{
-    "bgfx", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN};
+  auto win = sdl::Window{"bgfx", 1920, 0, width, height, SDL_WINDOW_SHOWN};
 
   auto bgfxInit = BgfxInit{win, width, height};
   bgfx::setDebug(BGFX_DEBUG_TEXT);
@@ -213,7 +213,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   for (auto i = 0; i < lives; ++i)
   {
     auto &liveIco = livesIco
-                      .emplace_back(scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("heart-ico.png"),
+                      .emplace_back(scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("heart-ico"),
                                                                .sz = glm::vec2{100.f, 100.f},
                                                                .pivot = glm::vec2{.5f, 0.5f}}))
                       .get();
@@ -221,17 +221,18 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   }
 
   {
-    auto &fuelGaugeIco = scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("fuel-gauge.png"),
+    auto &fuelGaugeIco = scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("fuel-gauge"),
                                                     .sz = glm::vec2{200.f, 100.f},
                                                     .pivot = glm::vec2{.5f, 1.f}});
     fuelGaugeIco.setPos(glm::vec2{width - 400.f, 350.f});
   }
-  auto &fuelGaugeNiddleIco = scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("fuel-gauge-niddle.png"),
+  auto &fuelGaugeNiddleIco = scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("fuel-gauge-niddle"),
                                                         .sz = glm::vec2{25.f, 100.f},
                                                         .pivot = glm::vec2{.5f, 1.f}});
   fuelGaugeNiddleIco.setPos(glm::vec2{width - 400.f, 350.f});
 
   auto t0 = SDL_GetTicks();
+  LOG("assets loading time:", t0 - startLoadingTime);
   auto cnt = 0;
   auto dt0 = t0;
   auto lastY = 0;
@@ -280,12 +281,11 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         else if (dynamic_cast<Live *>(&obstacle.get()))
         {
           ++lives;
-          auto &liveIco =
-            livesIco
-              .emplace_back(scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("heart-ico.png"),
-                                                       .sz = glm::vec2{100.f, 100.f},
-                                                       .pivot = glm::vec2{.5f, 0.5f}}))
-              .get();
+          auto &liveIco = livesIco
+                            .emplace_back(scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("heart-ico"),
+                                                                     .sz = glm::vec2{100.f, 100.f},
+                                                                     .pivot = glm::vec2{.5f, 0.5f}}))
+                            .get();
           liveIco.setPos(glm::vec2{width - 500.f + (livesIco.size() - 1) * 100.f, 100.f});
         }
         else if (dynamic_cast<Coin *>(&obstacle.get()))
