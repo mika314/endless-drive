@@ -302,7 +302,10 @@ auto Render::Deferrd::combine() -> void
 {
   u_baseColor = t_baseColor;
   u_lightBuffer = t_lightBuffer;
+  u_depth = t_depth;
   u_emissionBuffer = t_emission;
+  u_normalsCombine = t_normals;
+  u_ambient.arm();
   bgfx::setState(0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
   screenSpaceQuad(caps->originBottomLeft);
 }

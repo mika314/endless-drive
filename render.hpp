@@ -87,7 +87,9 @@ private:
     Uni<Tex> u_depth = {"depth", 2};
     Uni<Tex> u_baseColor = {"deferrdBaseColor", 0};
     Uni<Tex> u_lightBuffer = {"lightBuffer", 1};
-    Uni<Tex> u_emissionBuffer = {"emissionBuffer", 2};
+    Uni<Tex> u_emissionBuffer = {"emissionBuffer", 3};
+    Uni<glm::vec4> u_ambient = {"ambient", glm::vec4{1.f}};
+    Uni<Tex> u_normalsCombine = {"normalsCombine", 4};
     const bgfx::Caps *caps;
   } deferrd;
 

@@ -63,7 +63,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   const auto width = 1920;
   const auto height = 1080;
 
-  auto win = sdl::Window{"bgfx", 1920, 0, width, height, SDL_WINDOW_SHOWN};
+  auto win = sdl::Window{"bgfx", 0, 0, width, height, SDL_WINDOW_SHOWN};
 
   auto bgfxInit = BgfxInit{win, width, height};
   bgfx::setDebug(BGFX_DEBUG_TEXT);
