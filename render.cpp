@@ -100,25 +100,23 @@ Render::Render(sdl::Window &aWin, int aW, int aH)
 auto Render::render(const Scene &scene) -> void
 {
   deferrd.geom();
+
+  const auto tmpCamPos = camPos;
+  const auto rotationMatrix =
+    glm::rotate(glm::mat4{1.0f}, camRot.z, glm::vec3{0.0f, 0.0f, 1.0f}) * // Yaw around Z
+    glm::rotate(glm::mat4{1.0f}, camRot.x, glm::vec3{1.0f, 0.0f, 0.0f}) * // Pitch around X
+    glm::rotate(glm::mat4{1.0f}, camRot.y, glm::vec3{0.0f, 1.0f, 0.0f});  // Roll around Y
+  const auto forwardDir = glm::vec3(rotationMatrix * glm::vec4{0.0f, 1.0f, 0.0f, 0.0f});
+  const auto view =
+    glm::lookAt(tmpCamPos, tmpCamPos + forwardDir, glm::vec3(0.0f, 0.0f, 1.0f) /* Z-up */);
+
+  glm::mat4 proj = glm::perspective(glm::radians(60.0f), 1.f * w / h, 0.1f, 100.0f);
+  const auto viewProj = proj * view;
+  auto mtx = glm::inverse(viewProj);
+
   {
-    const auto tmpCamPos = camPos;
-
-    // Build rotation matrix: Yaw (Z) * Pitch (X) * Roll (Y)
-    const auto rotationMatrix =
-      glm::rotate(glm::mat4{1.0f}, camRot.z, glm::vec3{0.0f, 0.0f, 1.0f}) * // Yaw around Z
-      glm::rotate(glm::mat4{1.0f}, camRot.x, glm::vec3{1.0f, 0.0f, 0.0f}) * // Pitch around X
-      glm::rotate(glm::mat4{1.0f}, camRot.y, glm::vec3{0.0f, 1.0f, 0.0f});  // Roll around Y
-
-    // Apply rotation to forward vector (Y-forward)
-    const auto forwardDir = glm::vec3(rotationMatrix * glm::vec4{0.0f, 1.0f, 0.0f, 0.0f});
-
-    const auto view =
-      glm::lookAt(tmpCamPos, tmpCamPos + forwardDir, glm::vec3(0.0f, 0.0f, 1.0f) /* Z-up */);
-
-    glm::mat4 proj = glm::perspective(glm::radians(60.0f), 1.f * w / h, 0.1f, 100.0f);
     bgfx::setViewTransform(geomRenderPass, &view, &proj);
-    const auto viewProj = proj * view;
-    u_mtx = glm::inverse(viewProj);
+    u_mtx = mtx;
   }
 
   u_camPos = glm::vec4{camPos, 1.f};
@@ -128,6 +126,8 @@ auto Render::render(const Scene &scene) -> void
 
   { // combine render pass
     deferrd.combine();
+    u_projViewCombine = viewProj;
+    u_mtx = mtx;
     bgfx::submit(combineRenderPass, combine);
   }
 
@@ -305,7 +305,7 @@ auto Render::Deferrd::combine() -> void
   u_depth = t_depth;
   u_emissionBuffer = t_emission;
   u_normalsCombine = t_normals;
-  u_ambient.arm();
+  u_ambient = glm::vec4{.5f};
   bgfx::setState(0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
   screenSpaceQuad(caps->originBottomLeft);
 }

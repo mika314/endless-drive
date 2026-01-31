@@ -46,6 +46,7 @@ private:
   glm::vec3 camRot = {-0.3f, 0.0f, 0.0f};
   Uni<glm::vec4> u_camPos = {"camPos"};
   Uni<glm::mat4x4> u_mtx = "mtx";
+  Uni<glm::mat4x4> u_projViewCombine = "projViewCombine";
   Uni<Tex> u_baseColorTex = {"baseColorTex", 0};
   Uni<Tex> u_metallicTex = {"metallicTex", 1};
   Uni<Tex> u_roughnessTex = {"roughnessTex", 2};
@@ -88,7 +89,7 @@ private:
     Uni<Tex> u_baseColor = {"deferrdBaseColor", 0};
     Uni<Tex> u_lightBuffer = {"lightBuffer", 1};
     Uni<Tex> u_emissionBuffer = {"emissionBuffer", 3};
-    Uni<glm::vec4> u_ambient = {"ambient", glm::vec4{1.f}};
+    Uni<glm::vec4> u_ambient = {"ambient", glm::vec4{0.0f}};
     Uni<Tex> u_normalsCombine = {"normalsCombine", 4};
     const bgfx::Caps *caps;
   } deferrd;

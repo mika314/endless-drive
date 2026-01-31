@@ -8,7 +8,7 @@ uniform vec4 lightAngle;
 SAMPLER2D(normals, 0);
 SAMPLER2D(metallicRoughness, 1);
 SAMPLER2D(depth, 2);
-const float PI = 3.14159265359;
+const float PI = 3.141592654;
 float distributionGGX(vec3 N, vec3 H, float roughness)
 {
   float a2 = roughness * roughness * roughness * roughness;

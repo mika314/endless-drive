@@ -8,47 +8,12 @@ SAMPLER2D(depth, 2);
 SAMPLER2D(emissionBuffer, 3);
 SAMPLER2D(normalsCombine, 4);
 uniform vec4 ambient;
+uniform mat4 mtx;
+uniform mat4 projViewCombine;
 
-#define KERNEL_SIZE 64
-const float u_ssaoRadius = 0.005;
-const float u_ssaoBias = 0.;
-
-vec3 get_ssao_kernel_sample(int index)
-{
-  if (index == 0)
-    return vec3(0.057390, 0.449755, 0.891285);
-  if (index == 1)
-    return vec3(0.407981, -0.669666, 0.620023);
-  if (index == 2)
-    return vec3(-0.354148, -0.916892, 0.198305);
-  if (index == 3)
-    return vec3(0.850785, 0.490714, 0.187313);
-  if (index == 4)
-    return vec3(-0.061765, 0.655883, 0.752391);
-  if (index == 5)
-    return vec3(0.126487, 0.985955, 0.113038);
-  if (index == 6)
-    return vec3(0.672023, 0.738153, 0.024222);
-  if (index == 7)
-    return vec3(-0.957591, 0.287232, 0.043743);
-  if (index == 8)
-    return vec3(0.128704, 0.991666, 0.007609);
-  if (index == 9)
-    return vec3(-0.930965, 0.364955, 0.008436);
-  if (index == 10)
-    return vec3(-0.435728, -0.899732, 0.015099);
-  if (index == 11)
-    return vec3(0.984021, -0.174154, 0.038166);
-  if (index == 12)
-    return vec3(0.793744, -0.608035, 0.038507);
-  if (index == 13)
-    return vec3(-0.028905, -0.999201, 0.027042);
-  if (index == 14)
-    return vec3(-0.640951, 0.767475, 0.004453);
-  if (index == 15)
-    return vec3(0.999863, -0.016599, 0.000302);
-  return vec3(0.0, 0.0, 0.0);
-}
+#define KERNEL_SIZE 8
+const float u_ssaoRadius = .125f;
+const float bias = 0.01f;
 
 vec3 decodeNormalUint(vec4 _encodedNormal)
 {
@@ -63,6 +28,34 @@ uint PCGHash()
   uint state = rng_state;
   uint word = ((state >> ((state >> 28U) + 4U)) ^ state) * 277803737U;
   return (word >> 22U) ^ word;
+}
+
+vec3 getOffset(vec3 N)
+{
+  float u = PCGHash() / float(0xffffffffU);
+  float v = PCGHash() / float(0xffffffffU);
+  float w = PCGHash() / float(0xffffffffU);
+  float r = u_ssaoRadius * pow(u, 1. / 3.);
+  float phi = 2 * 3.141592654f * v;
+  float theta = acos(w);
+
+  // 1. Create a helper vector to find a tangent
+  // We use an arbitrary axis that isn't the normal
+  vec3 helper = abs(N.z) < 0.999 ? vec3(0, 0, 1) : vec3(1, 0, 0);
+  vec3 T = normalize(cross(helper, N));
+  vec3 B = cross(N, T);
+
+  // 2. This IS your matrix.
+  // It maps the 'Z-up' hemisphere to your 'Normal-up' hemisphere.
+  mat3 transitionMatrix = mat3(T, B, N);
+
+  // 3. Calculate the local offset in "Normal-Space"
+  // Using your specific variables
+  float sinTheta = sin(theta);
+  vec3 localOffset = vec3(r * sinTheta * cos(phi), r * sinTheta * sin(phi), r * cos(theta) + bias);
+
+  // 4. Multiply Matrix by Local Offset to get World/View Space Offset
+  return transitionMatrix * localOffset;
 }
 
 float toClipSpaceDepth(float _depthTextureZ)
@@ -80,6 +73,13 @@ float getDepth(vec2 uv)
   return toClipSpaceDepth(deviceDepth);
 }
 
+vec3 clipToWorld(mat4 _invViewProj, vec3 _clipPos)
+{
+  vec4 wpos = mul(_invViewProj, vec4(_clipPos, 1.0));
+  return wpos.xyz / wpos.w;
+}
+
+
 void main()
 {
   rng_state = uint(v_uv.y * 5000.f * 5000.f + v_uv.x * 5000.f);
@@ -89,60 +89,41 @@ void main()
   vec4 emission = texture2D(emissionBuffer, v_uv);
 
   float occlusion = 0.0;
-  float z = getDepth(v_uv);
+
+  // Reconstruct world position from depth
+  float deviceDepth = texture2D(depth, v_uv).x;
+  float depth = toClipSpaceDepth(deviceDepth);
+
+  vec3 clip = vec3(v_uv * 2.0 - 1.0, depth);
+#if !BGFX_SHADER_LANGUAGE_GLSL
+  clip.y = -clip.y;
+#endif
+  vec3 worldPos = clipToWorld(mtx, clip);
+
+  vec4 screenOffseted;
+  vec3 worldSpaceOffset;
   for (int i = 0; i < KERNEL_SIZE; ++i)
   {
-    vec2 offset =
-      vec2(PCGHash() / float(0xFFFFFFFFU) - .5, PCGHash() / float(0xFFFFFFFFU) - .5) * u_ssaoRadius;
-    if (z < getDepth(v_uv + offset))
-      ++occlusion;
-  }
+    worldSpaceOffset = getOffset(decodeNormalUint(texture2D(normalsCombine, v_uv)));
+    vec3 worldOffseted = worldPos + worldSpaceOffset;
+    screenOffseted = projViewCombine * vec4(worldOffseted, 1.f);
+    screenOffseted = vec4(screenOffseted.xyz / screenOffseted.w, 1.f);
 
-  occlusion /= KERNEL_SIZE;
+    float dz = screenOffseted.z - getDepth((screenOffseted.xy + 1.0) / 2.0);
+    float intensity = smoothstep(0.0f, 0.0001f, dz) * (1.0f - smoothstep(0.0010f, 0.0025f, dz));
+    occlusion += intensity;
+  }
+  occlusion = 1.f - occlusion / KERNEL_SIZE;
+
+  // gl_FragColor =
+  //   .5f * (projViewCombine * vec4(vec3(decodeNormalUint(texture2D(normalsCombine, v_uv))), 0.0f) +
+  //          vec4(1.f, 1.f, 1.f, 0.0f));
+
+  // gl_FragColor = vec4(v_uv, 0.f, 1.f);
+
+  // gl_FragColor = vec4(vec3(occlusion), 1.f);
+
+  // gl_FragColor = (screenOffseted + 1.0) / 2.0;
 
   gl_FragColor = base * (light + ambient * occlusion) + emission;
-
-  /*
-
-
-
-
-    vec3 normal_world = decodeNormalUint(texture2D(normalsCombine, v_uv));
-
-    float z = getDepth(v_uv);
-    vec4 clip_pos = vec4(v_uv.x * 2.0 - 1.0, (1.0 - v_uv.y) * 2.0 - 1.0, z, 1.0);
-    vec4 view_pos_h = mul(u_invProj, clip_pos);
-    vec3 view_pos = view_pos_h.xyz / view_pos_h.w;
-
-    vec3 view_normal = normalize(mul(u_view, vec4(normal_world, 0.0)).xyz);
-
-    vec3 random_vec = normalize(
-      vec3(PCGHash() / float(0xFFFFFFFFU) * 2.0 - 1.0, PCGHash() / float(0xFFFFFFFFU) * 2.0 - 1.0, 0.0));
-    vec3 tangent = normalize(random_vec - view_normal * dot(random_vec, view_normal));
-    vec3 bitangent = cross(view_normal, tangent);
-    mat3 tbn = mat3(tangent, bitangent, view_normal);
-
-    float occlusion = 0.0;
-    for (int i = 0; i < KERNEL_SIZE; ++i)
-    {
-      vec3 sample_pos_tangent = get_ssao_kernel_sample(i);
-      vec3 sample_pos_view = tbn * sample_pos_tangent;
-      sample_pos_view = view_pos + sample_pos_view * u_ssaoRadius;
-
-      vec4 offset = vec4(sample_pos_view, 1.0);
-      offset = mul(u_proj, offset);
-      offset.xyz /= offset.w;
-      offset.xy = offset.xy * 0.5 + 0.5;
-
-      float sample_depth = getDepth(offset.xy);
-
-      float range_check = smoothstep(0.0, 1.0, u_ssaoRadius / abs(view_pos.z - sample_depth));
-      occlusion += (sample_depth >= sample_pos_view.z + u_ssaoBias ? 1.0 : 0.0) * range_check;
-    }
-
-    occlusion = 1.0 - (occlusion / float(KERNEL_SIZE));
-
-    // gl_FragColor = base * (light + ambient * occlusion) + emission;
-    gl_FragColor = vec4(1.) * occlusion;
-  */
 }

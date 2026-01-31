@@ -70,7 +70,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
   auto score = 0;
   auto fuel = 100.f;
-  auto lives = 3;
+  auto lives = 3000000;
 
   auto render = Render{win, width, height};
   auto assets = Assets{};
@@ -118,13 +118,13 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       {
         auto &node = scene.addNode<StreetLight>(assets);
         node.setPos({dx + 5.f, y, 0.0f});
-        node.setRot({0.0f, 0.0f, -3.1415926f / 2});
+        node.setRot({0.0f, 0.0f, -3.141592654f / 2});
         tmpNodes.push_back(node);
       }
       {
         auto &node = scene.addNode<StreetLight>(assets);
         node.setPos({dx - 5.f, y, 0.0f});
-        node.setRot({0.0f, 0.0f, 3.1415926f / 2});
+        node.setRot({0.0f, 0.0f, 3.141592654f / 2});
         tmpNodes.push_back(node);
       }
     }
@@ -210,7 +210,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   scoreLb.setPos(glm::vec2{width - 500.f, 150.f});
 
   auto livesIco = std::vector<std::reference_wrapper<ImgNode>>{};
-  for (auto i = 0; i < lives; ++i)
+  for (auto i = 0; i < std::min(lives, 10); ++i)
   {
     auto &liveIco = livesIco
                       .emplace_back(scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("heart-ico"),
