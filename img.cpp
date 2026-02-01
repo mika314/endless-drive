@@ -7,6 +7,5 @@
 auto Img::uiPass(Render &render, glm::mat4 trans) const -> void
 {
   const auto tmpTrans = glm::translate(glm::scale(trans, glm::vec3{sz, 1.f}), glm::vec3{-pivot, 0.0f});
-  bgfx::setTransform(&tmpTrans);
-  render(Render::ImgIn{.tex = tex});
+  render(Render::ImgIn{.trans = tmpTrans, .tex = tex});
 }

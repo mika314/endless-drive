@@ -19,8 +19,7 @@ public:
   auto geomPassInternal(Render &render) const -> void;
   auto getParent() -> BaseNode *;
   auto getParent() const -> const BaseNode *;
-  auto lightPassInternal(Render &render) const -> void;
-  auto uiPassInternal(Render &render) const -> void;
+  auto prepareRenderData(Render &render) const -> void;
   auto remove(BaseNode &) -> void;
   auto tickInternal(float dt) -> void;
   virtual auto geomPass(Render & /*render*/) const -> void {}

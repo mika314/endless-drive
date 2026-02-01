@@ -4,7 +4,7 @@ $input v_uv
 
 uniform mat4 mtx;
 uniform vec4 camPos;
-uniform vec4 lightPos;
+uniform mat4 lightTrans;
 uniform vec4 lightColor;
 
 SAMPLER2D(normals, 0);
@@ -100,9 +100,9 @@ void main()
   vec3 Lo = vec3(0.0);
 
   // calculate per-light radiance
-  vec3 L = normalize(lightPos.xyz - worldPos);
+  vec3 L = normalize(lightTrans[3].xyz - worldPos);
   vec3 H = normalize(V + L);
-  float distance = length(lightPos.xyz - worldPos);
+  float distance = length(lightTrans[3].xyz - worldPos);
   float attenuation = 1.0 / (distance * distance);
   vec3 radiance = lightColor.rgb * attenuation;
 

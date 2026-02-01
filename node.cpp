@@ -4,18 +4,13 @@
 
 BaseNode::BaseNode(BaseNode *aParent) : parent(aParent) {}
 
-auto BaseNode::geomPassInternal(Render &render) const -> void
+auto BaseNode::prepareRenderData(Render &render) const -> void
 {
   for (const auto &node : nodes)
-    node->geomPassInternal(render);
+    node->prepareRenderData(render);
   geomPass(render);
-}
-
-auto BaseNode::lightPassInternal(Render &render) const -> void
-{
-  for (const auto &node : nodes)
-    node->lightPassInternal(render);
   lightPass(render);
+  uiPass(render);
 }
 
 auto BaseNode::remove(BaseNode &n) -> void
@@ -46,11 +41,4 @@ auto BaseNode::tickInternal(float dt) -> void
   for (const auto &node : nodes)
     node->tick(dt);
   tick(dt);
-}
-
-auto BaseNode::uiPassInternal(Render &render) const -> void
-{
-  for (const auto &node : nodes)
-    node->uiPassInternal(render);
-  uiPass(render);
 }

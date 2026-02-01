@@ -8,37 +8,10 @@
 #include <sdlpp/sdlpp.hpp>
 #include <unordered_map>
 
-// Helper to combine hashes
-inline void hash_combine(std::size_t &seed, std::size_t v)
+inline void hashCombine(std::size_t &seed, std::size_t v)
 {
   seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
-
-struct RenderKeyHasher
-{
-  std::size_t operator()(
-    const std::tuple<bgfx::VertexBufferHandle, bgfx::IndexBufferHandle, const class Material *> &key)
-    const
-  {
-    std::size_t seed = 0;
-    hash_combine(seed, std::hash<uint16_t>{}(std::get<0>(key).idx));
-    hash_combine(seed, std::hash<uint16_t>{}(std::get<1>(key).idx));
-    hash_combine(seed, std::hash<const Material *>{}(std::get<2>(key)));
-    return seed;
-  }
-};
-
-struct RenderKeyEqual
-{
-  bool operator()(
-    const std::tuple<bgfx::VertexBufferHandle, bgfx::IndexBufferHandle, const class Material *> &lhs,
-    const std::tuple<bgfx::VertexBufferHandle, bgfx::IndexBufferHandle, const class Material *> &rhs)
-    const
-  {
-    return std::get<0>(lhs).idx == std::get<0>(rhs).idx &&
-           std::get<1>(lhs).idx == std::get<1>(rhs).idx && std::get<2>(lhs) == std::get<2>(rhs);
-  }
-};
 
 class Render
 {
@@ -57,12 +30,24 @@ public:
     glm::mat4 trans;
   };
   auto operator()(const MeshIn &) -> void;
-  auto setPointLightAndRender(glm::vec3 pos, glm::vec3 color) -> void;
-  auto setSpotlightAndRender(glm::mat4 trans, glm::vec3 color, float angle) -> void;
+
+  struct PointLightIn
+  {
+    glm::mat4 trans;
+    glm::vec3 color;
+  };
+  auto operator()(const PointLightIn &) -> void;
+  struct SpotlightIn
+  {
+    glm::mat4 trans;
+    glm::vec3 color;
+    float angle;
+  };
+  auto operator()(const SpotlightIn &) -> void;
 
   struct TextIn
   {
-    const std::string &text;
+    std::string text;
     const Font &font;
     float sz;
     glm::vec3 color;
@@ -72,6 +57,7 @@ public:
 
   struct ImgIn
   {
+    glm::mat4 trans;
     const Tex &tex;
   };
   auto operator()(const ImgIn &) -> void;
@@ -135,14 +121,42 @@ private:
   } deferrd;
 
   bgfx::ProgramHandle geom;
+  bgfx::ProgramHandle geomInstanced;
   bgfx::ProgramHandle pointLight;
   bgfx::ProgramHandle spotlight;
   bgfx::ProgramHandle combine;
   bgfx::ProgramHandle imgProg;
   GlyphInfo blackGlyph;
-  std::unordered_map<std::tuple<bgfx::VertexBufferHandle, bgfx::IndexBufferHandle, const Material *>,
-                     std::vector<glm::mat4>,
-                     RenderKeyHasher,
-                     RenderKeyEqual>
-    prerenderData;
+  struct MeshKey
+  {
+    bgfx::VertexBufferHandle vbh;
+    bgfx::IndexBufferHandle ibh;
+    const Material *mat;
+    auto operator==(const MeshKey &o) const -> bool
+    {
+      return vbh.idx == o.vbh.idx && ibh.idx == o.ibh.idx && mat == o.mat;
+    }
+  };
+  struct MeshKeyHasher
+  {
+    std::size_t operator()(const MeshKey &key) const
+    {
+      std::size_t seed = 0;
+      hashCombine(seed, std::hash<uint16_t>{}(key.vbh.idx));
+      hashCombine(seed, std::hash<uint16_t>{}(key.ibh.idx));
+      hashCombine(seed, std::hash<const Material *>{}(key.mat));
+      return seed;
+    }
+  };
+  std::unordered_map<MeshKey, std::vector<glm::mat4>, MeshKeyHasher> geomRenderData;
+
+  struct Light
+  {
+    glm::mat4 trans;
+    glm::vec3 color;
+    float angle;
+    bgfx::ProgramHandle prog;
+  };
+  std::vector<Light> lightRenderData;
+  std::vector<std::function<auto()->void>> uiRenderData;
 };

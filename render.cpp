@@ -78,6 +78,7 @@ Render::Render(int aW, int aH)
     textBuffer(textBufferManager.createTextBuffer(FONT_TYPE_ALPHA, BufferType::Transient)),
     deferrd(w, h),
     geom(loadProgram("geom-vs", "geom-fs")),
+    geomInstanced(loadProgram("geom-instanced-vs", "geom-fs")),
     pointLight(loadProgram("point-light-vs", "point-light-fs")),
     spotlight(loadProgram("spotlight-vs", "spotlight-fs")),
     combine(loadProgram("combine-vs", "combine-fs")),
@@ -98,7 +99,11 @@ Render::Render(int aW, int aH)
 
 auto Render::render(const Scene &scene) -> void
 {
-  prerenderData.clear();
+  geomRenderData.clear();
+  lightRenderData.clear();
+  uiRenderData.clear();
+  scene.prepareRenderData(*this);
+
   const auto tmpCamPos = camPos;
   const auto rotationMatrix =
     glm::rotate(glm::mat4{1.0f}, camRot.z, glm::vec3{0.0f, 0.0f, 1.0f}) * // Yaw around Z
@@ -116,149 +121,102 @@ auto Render::render(const Scene &scene) -> void
   bgfx::setViewTransform(geomRenderPass, &view, &proj);
   u_mtx = mtx;
   u_camPos = glm::vec4{camPos, 1.f};
-  scene.geomPassInternal(*this);
 
-  for (const auto &instances : prerenderData)
+  for (const auto &instances : geomRenderData)
   {
+    if (instances.second.empty())
+      continue;
     if (instances.second.size() == 1)
     {
       const auto &instance = instances.second.front();
       bgfx::setTransform(&instance);
-      bgfx::setVertexBuffer(0, std::get<bgfx::VertexBufferHandle>(instances.first));
-      bgfx::setIndexBuffer(std::get<bgfx::IndexBufferHandle>(instances.first));
-      const auto mat = std::get<const Material *>(instances.first);
-
-      auto tmpSettings = glm::vec4{};
-      if (mat)
-      {
-        if (std::holds_alternative<glm::vec4>(mat->baseColor))
-        {
-          tmpSettings.x = 0.0f;
-          u_baseColor = std::get<glm::vec4>(mat->baseColor);
-        }
-        else
-        {
-          tmpSettings.x = 1.f;
-          const auto tex = std::get<Tex *>(mat->baseColor);
-          assert(tex);
-          u_baseColorTex = *tex;
-        }
-        if (std::holds_alternative<float>(mat->metallic))
-        {
-          tmpSettings.y = 0.0f;
-          u_metallic = glm::vec4{std::get<float>(mat->metallic)};
-        }
-        else
-        {
-          tmpSettings.y = 1.f;
-          const auto tex = std::get<Tex *>(mat->metallic);
-          assert(tex);
-          u_metallicTex = *tex;
-        }
-        if (std::holds_alternative<float>(mat->roughness))
-        {
-          tmpSettings.z = 0.0f;
-          u_roughness = glm::vec4{std::get<float>(mat->roughness)};
-        }
-        else
-        {
-          tmpSettings.z = 1.f;
-          const auto tex = std::get<Tex *>(mat->roughness);
-          assert(tex);
-          u_roughnessTex = *tex;
-        }
-        if (std::holds_alternative<glm::vec4>(mat->emission))
-        {
-          tmpSettings.w = 0.0f;
-          u_emission = std::get<glm::vec4>(mat->emission);
-        }
-        else
-        {
-          tmpSettings.w = 1.f;
-          const auto tex = std::get<Tex *>(mat->emission);
-          assert(tex);
-          u_emissionTex = *tex;
-        }
-      }
-      u_settings = tmpSettings;
-
-      bgfx::submit(geomRenderPass, geom);
     }
-    else if (instances.second.empty())
-      continue;
     else
     {
-            bgfx::InstanceDataBuffer idb;
+      bgfx::InstanceDataBuffer idb;
       if (bgfx::getAvailInstanceDataBuffer(instances.second.size(), sizeof(glm::mat4)) !=
           instances.second.size())
       {
+        LOG("No available instance data buffers");
         continue;
       }
       bgfx::allocInstanceDataBuffer(&idb, instances.second.size(), sizeof(glm::mat4));
       memcpy(idb.data, instances.second.data(), instances.second.size() * sizeof(glm::mat4));
       bgfx::setInstanceDataBuffer(&idb);
-      bgfx::setVertexBuffer(0, std::get<bgfx::VertexBufferHandle>(instances.first));
-      bgfx::setIndexBuffer(std::get<bgfx::IndexBufferHandle>(instances.first));
-      const auto mat = std::get<const Material *>(instances.first);
-
-      auto tmpSettings = glm::vec4{};
-      if (mat)
-      {
-        if (std::holds_alternative<glm::vec4>(mat->baseColor))
-        {
-          tmpSettings.x = 0.0f;
-          u_baseColor = std::get<glm::vec4>(mat->baseColor);
-        }
-        else
-        {
-          tmpSettings.x = 1.f;
-          const auto tex = std::get<Tex *>(mat->baseColor);
-          assert(tex);
-          u_baseColorTex = *tex;
-        }
-        if (std::holds_alternative<float>(mat->metallic))
-        {
-          tmpSettings.y = 0.0f;
-          u_metallic = glm::vec4{std::get<float>(mat->metallic)};
-        }
-        else
-        {
-          tmpSettings.y = 1.f;
-          const auto tex = std::get<Tex *>(mat->metallic);
-          assert(tex);
-          u_metallicTex = *tex;
-        }
-        if (std::holds_alternative<float>(mat->roughness))
-        {
-          tmpSettings.z = 0.0f;
-          u_roughness = glm::vec4{std::get<float>(mat->roughness)};
-        }
-        else
-        {
-          tmpSettings.z = 1.f;
-          const auto tex = std::get<Tex *>(mat->roughness);
-          assert(tex);
-          u_roughnessTex = *tex;
-        }
-        if (std::holds_alternative<glm::vec4>(mat->emission))
-        {
-          tmpSettings.w = 0.0f;
-          u_emission = std::get<glm::vec4>(mat->emission);
-        }
-        else
-        {
-          tmpSettings.w = 1.f;
-          const auto tex = std::get<Tex *>(mat->emission);
-          assert(tex);
-          u_emissionTex = *tex;
-        }
-      }
-      u_settings = tmpSettings;
-      bgfx::submit(geomRenderPass, geom);
     }
+
+    bgfx::setVertexBuffer(0, instances.first.vbh);
+    bgfx::setIndexBuffer(instances.first.ibh);
+    const auto mat = instances.first.mat;
+
+    auto tmpSettings = glm::vec4{};
+    if (mat)
+    {
+      if (std::holds_alternative<glm::vec4>(mat->baseColor))
+      {
+        tmpSettings.x = 0.0f;
+        u_baseColor = std::get<glm::vec4>(mat->baseColor);
+      }
+      else
+      {
+        tmpSettings.x = 1.f;
+        const auto tex = std::get<Tex *>(mat->baseColor);
+        assert(tex);
+        u_baseColorTex = *tex;
+      }
+      if (std::holds_alternative<float>(mat->metallic))
+      {
+        tmpSettings.y = 0.0f;
+        u_metallic = glm::vec4{std::get<float>(mat->metallic)};
+      }
+      else
+      {
+        tmpSettings.y = 1.f;
+        const auto tex = std::get<Tex *>(mat->metallic);
+        assert(tex);
+        u_metallicTex = *tex;
+      }
+      if (std::holds_alternative<float>(mat->roughness))
+      {
+        tmpSettings.z = 0.0f;
+        u_roughness = glm::vec4{std::get<float>(mat->roughness)};
+      }
+      else
+      {
+        tmpSettings.z = 1.f;
+        const auto tex = std::get<Tex *>(mat->roughness);
+        assert(tex);
+        u_roughnessTex = *tex;
+      }
+      if (std::holds_alternative<glm::vec4>(mat->emission))
+      {
+        tmpSettings.w = 0.0f;
+        u_emission = std::get<glm::vec4>(mat->emission);
+      }
+      else
+      {
+        tmpSettings.w = 1.f;
+        const auto tex = std::get<Tex *>(mat->emission);
+        assert(tex);
+        u_emissionTex = *tex;
+      }
+    }
+    u_settings = tmpSettings;
+
+    if (instances.second.size() == 1)
+      bgfx::submit(geomRenderPass, geom);
+    else
+      bgfx::submit(geomRenderPass, geomInstanced);
   }
 
-  scene.lightPassInternal(*this);
+  for (const auto &v : lightRenderData)
+  {
+    deferrd.light();
+    u_lightTrans = v.trans;
+    u_lightColor = glm::vec4{v.color, 1.f};
+    u_lightAngle = glm::vec4{v.angle};
+    bgfx::submit(lightRenderPass, v.prog);
+  }
 
   { // combine render pass
     deferrd.combine();
@@ -281,7 +239,10 @@ auto Render::render(const Scene &scene) -> void
   }
 
   textBufferManager.clearTextBuffer(textBuffer);
-  scene.uiPassInternal(*this);
+
+  for (const auto &v : uiRenderData)
+    v();
+
   s_texColor = atlas.getTextureHandle();
   textBufferManager.submitTextBuffer(textBuffer, uiRenderPass);
 }
@@ -291,6 +252,7 @@ Render::~Render()
   bgfx::destroy(combine);
   bgfx::destroy(spotlight);
   bgfx::destroy(pointLight);
+  bgfx::destroy(geomInstanced);
   bgfx::destroy(geom);
   bgfx::destroy(imgProg);
   textBufferManager.destroyTextBuffer(textBuffer);
@@ -298,41 +260,44 @@ Render::~Render()
 
 auto Render::operator()(const ImgIn &v) -> void
 {
-  if (bgfx::getAvailTransientVertexBuffer(4, PosTexCoord0Vertex::ms_layout) == 0 ||
-      bgfx::getAvailTransientIndexBuffer(6) == 0) // 2 triangles, 3 indices each = 6 indices
-  {
-    return;
-  }
+  uiRenderData.emplace_back([v, this]() {
+    if (bgfx::getAvailTransientVertexBuffer(4, PosTexCoord0Vertex::ms_layout) == 0 ||
+        bgfx::getAvailTransientIndexBuffer(6) == 0) // 2 triangles, 3 indices each = 6 indices
+    {
+      return;
+    }
 
-  bgfx::TransientVertexBuffer vb;
-  bgfx::allocTransientVertexBuffer(&vb, 4, PosTexCoord0Vertex::ms_layout);
-  PosTexCoord0Vertex *vertex = (PosTexCoord0Vertex *)vb.data;
+    bgfx::setTransform(&v.trans);
+    bgfx::TransientVertexBuffer vb;
+    bgfx::allocTransientVertexBuffer(&vb, 4, PosTexCoord0Vertex::ms_layout);
+    PosTexCoord0Vertex *vertex = (PosTexCoord0Vertex *)vb.data;
 
-  bgfx::TransientIndexBuffer ib;
-  bgfx::allocTransientIndexBuffer(&ib, 6);
-  uint16_t *indices = (uint16_t *)ib.data;
+    bgfx::TransientIndexBuffer ib;
+    bgfx::allocTransientIndexBuffer(&ib, 6);
+    uint16_t *indices = (uint16_t *)ib.data;
 
-  // Quad vertices
-  vertex[0] = {glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec2{0.0f, 0.0f}}; // Top-left
-  vertex[1] = {glm::vec3{1.f, 0.0f, 0.0f}, glm::vec2{1.0f, 0.0f}};  // Top-right
-  vertex[2] = {glm::vec3{1.f, 1.f, 0.0f}, glm::vec2{1.0f, 1.0f}};   // Bottom-right
-  vertex[3] = {glm::vec3{0.0f, 1.f, 0.0f}, glm::vec2{0.0f, 1.0f}};  // Bottom-left
+    // Quad vertices
+    vertex[0] = {glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec2{0.0f, 0.0f}}; // Top-left
+    vertex[1] = {glm::vec3{1.f, 0.0f, 0.0f}, glm::vec2{1.0f, 0.0f}};  // Top-right
+    vertex[2] = {glm::vec3{1.f, 1.f, 0.0f}, glm::vec2{1.0f, 1.0f}};   // Bottom-right
+    vertex[3] = {glm::vec3{0.0f, 1.f, 0.0f}, glm::vec2{0.0f, 1.0f}};  // Bottom-left
 
-  // Indices for two triangles forming a quad
-  indices[0] = 0;
-  indices[1] = 1;
-  indices[2] = 2;
+    // Indices for two triangles forming a quad
+    indices[0] = 0;
+    indices[1] = 1;
+    indices[2] = 2;
 
-  indices[3] = 0;
-  indices[4] = 2;
-  indices[5] = 3;
+    indices[3] = 0;
+    indices[4] = 2;
+    indices[5] = 3;
 
-  u_imgTex = v.tex;
+    u_imgTex = v.tex;
 
-  bgfx::setVertexBuffer(0, &vb);
-  bgfx::setIndexBuffer(&ib);
-  bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
-  bgfx::submit(uiRenderPass, imgProg);
+    bgfx::setVertexBuffer(0, &vb);
+    bgfx::setIndexBuffer(&ib);
+    bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
+    bgfx::submit(uiRenderPass, imgProg);
+  });
 }
 
 // TextureHandle bgfx::createTexture2D(
@@ -448,26 +413,19 @@ auto Render::Deferrd::combine() -> void
 
 auto Render::operator()(const MeshIn &in) -> void
 {
-  prerenderData[std::tuple<bgfx::VertexBufferHandle, bgfx::IndexBufferHandle, const Material *>{
-                  in.vbh, in.ibh, in.mat}]
-    .emplace_back(in.trans);
+  geomRenderData[MeshKey{.vbh = in.vbh, .ibh = in.ibh, .mat = in.mat}].emplace_back(in.trans);
 }
 
-auto Render::setPointLightAndRender(glm::vec3 pos, glm::vec3 color) -> void
+auto Render::operator()(const PointLightIn &in) -> void
 {
-  deferrd.light();
-  u_lightPos = glm::vec4{pos, 1.f};
-  u_lightColor = glm::vec4{color, 1.f};
-  bgfx::submit(lightRenderPass, pointLight);
+  lightRenderData.emplace_back(
+    Light{.trans = in.trans, .color = in.color, .angle = 0.0f, .prog = pointLight});
 }
 
-auto Render::setSpotlightAndRender(glm::mat4 trans, glm::vec3 color, float angle) -> void
+auto Render::operator()(const SpotlightIn &in) -> void
 {
-  deferrd.light();
-  u_lightTrans = trans;
-  u_lightColor = glm::vec4{color, 1.f};
-  u_lightAngle = glm::vec4{angle};
-  bgfx::submit(lightRenderPass, spotlight);
+  lightRenderData.emplace_back(
+    Light{.trans = in.trans, .color = in.color, .angle = in.angle, .prog = spotlight});
 }
 
 auto Render::setCamPos(glm::vec3 v) -> void
@@ -482,11 +440,13 @@ auto Render::setCamRot(glm::vec3 v) -> void
 
 auto Render::operator()(const TextIn &v) -> void
 {
-  const auto pos = v.trans[3];
-  textBufferManager.setTextColor(textBuffer,
-                                 (static_cast<uint32_t>(v.color.r * 0xff) << 24) |
-                                   (static_cast<uint32_t>(v.color.g * 0xff) << 16) |
-                                   (static_cast<uint32_t>(v.color.b * 0xff) << 8) | 0xff);
-  textBufferManager.setPenPosition(textBuffer, pos.x, pos.y);
-  textBufferManager.appendText(atlas, textBuffer, v.font, v.sz, v.text.c_str());
+  uiRenderData.emplace_back([v, this]() {
+    const auto pos = v.trans[3];
+    textBufferManager.setTextColor(textBuffer,
+                                   (static_cast<uint32_t>(v.color.r * 0xff) << 24) |
+                                     (static_cast<uint32_t>(v.color.g * 0xff) << 16) |
+                                     (static_cast<uint32_t>(v.color.b * 0xff) << 8) | 0xff);
+    textBufferManager.setPenPosition(textBuffer, pos.x, pos.y);
+    textBufferManager.appendText(atlas, textBuffer, v.font, v.sz, v.text.c_str());
+  });
 }
