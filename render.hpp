@@ -73,6 +73,7 @@ private:
   Uni<glm::vec4> u_camPos = {"camPos"};
   Uni<glm::mat4x4> u_mtx = "mtx";
   Uni<glm::mat4x4> u_projViewCombine = "projViewCombine";
+  Uni<glm::vec4> u_time = "time";
   Uni<Tex> u_baseColorTex = {"baseColorTex", 0};
   Uni<Tex> u_metallicTex = {"metallicTex", 1};
   Uni<Tex> u_roughnessTex = {"roughnessTex", 2};

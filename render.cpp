@@ -222,6 +222,7 @@ auto Render::render(const Scene &scene) -> void
     deferrd.combine();
     u_projViewCombine = viewProj;
     u_mtx = mtx;
+    u_time = glm::vec4{1.f * (SDL_GetTicks() % 16777216)};
     bgfx::submit(combineRenderPass, combine);
   }
 

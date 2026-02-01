@@ -10,9 +10,8 @@ SAMPLER2D(normalsCombine, 4);
 uniform vec4 ambient;
 uniform mat4 mtx;
 uniform mat4 projViewCombine;
-
-#define KERNEL_SIZE 8
-const float u_ssaoRadius = .125f;
+uniform vec4 time;
+const float ssaoRadius = .25f;
 const float bias = 0.01f;
 
 vec3 decodeNormalUint(vec4 _encodedNormal)
@@ -35,7 +34,7 @@ vec3 getOffset(vec3 N)
   float u = PCGHash() / float(0xffffffffU);
   float v = PCGHash() / float(0xffffffffU);
   float w = PCGHash() / float(0xffffffffU);
-  float r = u_ssaoRadius * pow(u, 1. / 3.);
+  float r = ssaoRadius * u;
   float phi = 2 * 3.141592654f * v;
   float theta = acos(w);
 
@@ -79,10 +78,9 @@ vec3 clipToWorld(mat4 _invViewProj, vec3 _clipPos)
   return wpos.xyz / wpos.w;
 }
 
-
 void main()
 {
-  rng_state = uint(v_uv.y * 5000.f * 5000.f + v_uv.x * 5000.f);
+  rng_state = uint(v_uv.y * 5000.f * 5000.f + v_uv.x * 5000.f + time.x);
 
   vec4 base = texture2D(deferrdBaseColor, v_uv);
   vec4 light = texture2D(lightBuffer, v_uv);
@@ -99,21 +97,21 @@ void main()
   clip.y = -clip.y;
 #endif
   vec3 worldPos = clipToWorld(mtx, clip);
-
-  vec4 screenOffseted;
-  vec3 worldSpaceOffset;
-  for (int i = 0; i < KERNEL_SIZE; ++i)
+  vec3 norm = decodeNormalUint(texture2D(normalsCombine, v_uv));
+  const int Samples = 16;
+  for (int i = 0; i < Samples; ++i)
   {
-    worldSpaceOffset = getOffset(decodeNormalUint(texture2D(normalsCombine, v_uv)));
+    vec3 worldSpaceOffset = getOffset(norm);
     vec3 worldOffseted = worldPos + worldSpaceOffset;
-    screenOffseted = projViewCombine * vec4(worldOffseted, 1.f);
+    vec4 screenOffseted = projViewCombine * vec4(worldOffseted, 1.f);
     screenOffseted = vec4(screenOffseted.xyz / screenOffseted.w, 1.f);
 
-    float dz = screenOffseted.z - getDepth((screenOffseted.xy + 1.0) / 2.0);
-    float intensity = smoothstep(0.0f, 0.0001f, dz) * (1.0f - smoothstep(0.0010f, 0.0025f, dz));
+    float dz = screenOffseted.z - getDepth((screenOffseted.xy + 1.f) / 2.f);
+    float th = max(0.0001f, .125f * length(screenOffseted.xyz - clip));
+    float intensity = smoothstep(0.0f, th * .1f, dz) * (1.f - smoothstep(th * .9f, th, dz));
     occlusion += intensity;
   }
-  occlusion = 1.f - occlusion / KERNEL_SIZE;
+  occlusion = 1.f - occlusion / Samples;
 
   // gl_FragColor =
   //   .5f * (projViewCombine * vec4(vec3(decodeNormalUint(texture2D(normalsCombine, v_uv))), 0.0f) +
