@@ -113,7 +113,7 @@ auto Render::render(const Scene &scene) -> void
   const auto view =
     glm::lookAt(tmpCamPos, tmpCamPos + forwardDir, glm::vec3(0.0f, 0.0f, 1.0f) /* Z-up */);
 
-  const auto proj = glm::perspective(glm::radians(60.0f), 1.f * w / h, 0.1f, 100.0f);
+  const auto proj = glm::perspective(glm::radians(60.0f), 1.f * w / h, 0.1f, 1000.0f);
   const auto viewProj = proj * view;
   const auto mtx = glm::inverse(viewProj);
 

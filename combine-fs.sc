@@ -123,5 +123,6 @@ void main()
 
   // gl_FragColor = light + ambient * occlusion;
 
-  gl_FragColor = base * (light + ambient * occlusion) + emission;
+  gl_FragColor = (base * (light + ambient * occlusion) + emission) * (1 - pow(clip.z, 150.f)) +
+                 vec4(.1f) * pow(clip.z, 150.f);
 }

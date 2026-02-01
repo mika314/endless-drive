@@ -128,6 +128,21 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         tmpNodes.push_back(node);
       }
     }
+    if (i % 20 == 0)
+    {
+      {
+        auto &node = scene.addNode3d<Mesh>(assets, "building.gltf/Building2");
+        node.setPos({dx + 12.f, y, 0.0f});
+        node.setRot({0.0f, 0.0f, -3.141592654f / 2 - getRoadAngle(y)});
+        tmpNodes.push_back(node);
+      }
+      {
+        auto &node = scene.addNode3d<Mesh>(assets, "building.gltf/Building2");
+        node.setPos({dx - 12.f, y, 0.0f});
+        node.setRot({0.0f, 0.0f, 3.141592654f / 2 - getRoadAngle(y)});
+        tmpNodes.push_back(node);
+      }
+    }
     if (rand() % 10 == 0 && (i > lastTire + 5 || n < 1))
     {
       if (i <= lastTire + 5)

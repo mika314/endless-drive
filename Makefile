@@ -20,7 +20,7 @@ GIMP_FILES := $(wildcard $(ASSETS_DIR)/*.xcf)
 DDS_FROM_XCF := $(patsubst $(ASSETS_DIR)/%.xcf,$(DATA_DIR)/%.dds,$(GIMP_FILES))
 
 all: FORCE $(SHADERC) $(VERTEX_BINS) $(FRAGMENT_BINS) $(GLTF_FILES) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS) $(DATA_FONTS) $(DDS_FROM_XCF)
-	coddle debug
+	coddle
 
 $(SHADERC):
 	@echo "Building bgfx (one-time setup)..."
