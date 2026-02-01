@@ -46,7 +46,7 @@ public:
       r.platformData.ndt = getNativeDisplayHandle(win);
       r.resolution.width = width;
       r.resolution.height = height;
-      r.resolution.reset = BGFX_RESET_VSYNC;
+      r.resolution.reset = 0; // BGFX_RESET_VSYNC;
       return r;
     }());
   }
@@ -72,7 +72,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto fuel = 100.f;
   auto lives = 3000000;
 
-  auto render = Render{win, width, height};
+  auto render = Render{width, height};
   auto assets = Assets{};
   auto scene = Scene{nullptr};
 

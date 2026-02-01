@@ -122,12 +122,7 @@ auto Mesh::processMesh(Assets &assets, const aiMesh *mesh, const aiScene *scene)
 auto Mesh::geomPass(class Render &render, glm::mat4 trans) const -> void
 {
   for (const auto &part : parts)
-  {
-    bgfx::setTransform(&trans);
-    bgfx::setIndexBuffer(part.ibh);
-    bgfx::setVertexBuffer(0, part.vbh);
-    render.setMaterialAndRender(part.material);
-  }
+    render(Render::MeshIn{.vbh = part.vbh, .ibh = part.ibh, .mat = part.material, .trans = trans});
 }
 
 auto Mesh::lightPass(class Render &, glm::mat4) const -> void {}

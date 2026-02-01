@@ -71,9 +71,8 @@ namespace
   }
 } // namespace
 
-Render::Render(sdl::Window &aWin, int aW, int aH)
-  : win(aWin),
-    w(aW),
+Render::Render(int aW, int aH)
+  : w(aW),
     h(aH),
     atlas(512),
     textBuffer(textBufferManager.createTextBuffer(FONT_TYPE_ALPHA, BufferType::Transient)),
@@ -99,8 +98,7 @@ Render::Render(sdl::Window &aWin, int aW, int aH)
 
 auto Render::render(const Scene &scene) -> void
 {
-  deferrd.geom();
-
+  prerenderData.clear();
   const auto tmpCamPos = camPos;
   const auto rotationMatrix =
     glm::rotate(glm::mat4{1.0f}, camRot.z, glm::vec3{0.0f, 0.0f, 1.0f}) * // Yaw around Z
@@ -110,18 +108,156 @@ auto Render::render(const Scene &scene) -> void
   const auto view =
     glm::lookAt(tmpCamPos, tmpCamPos + forwardDir, glm::vec3(0.0f, 0.0f, 1.0f) /* Z-up */);
 
-  glm::mat4 proj = glm::perspective(glm::radians(60.0f), 1.f * w / h, 0.1f, 100.0f);
+  const auto proj = glm::perspective(glm::radians(60.0f), 1.f * w / h, 0.1f, 100.0f);
   const auto viewProj = proj * view;
-  auto mtx = glm::inverse(viewProj);
+  const auto mtx = glm::inverse(viewProj);
 
+  deferrd.geom();
+  bgfx::setViewTransform(geomRenderPass, &view, &proj);
+  u_mtx = mtx;
+  u_camPos = glm::vec4{camPos, 1.f};
+  scene.geomPassInternal(*this);
+
+  for (const auto &instances : prerenderData)
   {
-    bgfx::setViewTransform(geomRenderPass, &view, &proj);
-    u_mtx = mtx;
+    if (instances.second.size() == 1)
+    {
+      const auto &instance = instances.second.front();
+      bgfx::setTransform(&instance);
+      bgfx::setVertexBuffer(0, std::get<bgfx::VertexBufferHandle>(instances.first));
+      bgfx::setIndexBuffer(std::get<bgfx::IndexBufferHandle>(instances.first));
+      const auto mat = std::get<const Material *>(instances.first);
+
+      auto tmpSettings = glm::vec4{};
+      if (mat)
+      {
+        if (std::holds_alternative<glm::vec4>(mat->baseColor))
+        {
+          tmpSettings.x = 0.0f;
+          u_baseColor = std::get<glm::vec4>(mat->baseColor);
+        }
+        else
+        {
+          tmpSettings.x = 1.f;
+          const auto tex = std::get<Tex *>(mat->baseColor);
+          assert(tex);
+          u_baseColorTex = *tex;
+        }
+        if (std::holds_alternative<float>(mat->metallic))
+        {
+          tmpSettings.y = 0.0f;
+          u_metallic = glm::vec4{std::get<float>(mat->metallic)};
+        }
+        else
+        {
+          tmpSettings.y = 1.f;
+          const auto tex = std::get<Tex *>(mat->metallic);
+          assert(tex);
+          u_metallicTex = *tex;
+        }
+        if (std::holds_alternative<float>(mat->roughness))
+        {
+          tmpSettings.z = 0.0f;
+          u_roughness = glm::vec4{std::get<float>(mat->roughness)};
+        }
+        else
+        {
+          tmpSettings.z = 1.f;
+          const auto tex = std::get<Tex *>(mat->roughness);
+          assert(tex);
+          u_roughnessTex = *tex;
+        }
+        if (std::holds_alternative<glm::vec4>(mat->emission))
+        {
+          tmpSettings.w = 0.0f;
+          u_emission = std::get<glm::vec4>(mat->emission);
+        }
+        else
+        {
+          tmpSettings.w = 1.f;
+          const auto tex = std::get<Tex *>(mat->emission);
+          assert(tex);
+          u_emissionTex = *tex;
+        }
+      }
+      u_settings = tmpSettings;
+
+      bgfx::submit(geomRenderPass, geom);
+    }
+    else if (instances.second.empty())
+      continue;
+    else
+    {
+            bgfx::InstanceDataBuffer idb;
+      if (bgfx::getAvailInstanceDataBuffer(instances.second.size(), sizeof(glm::mat4)) !=
+          instances.second.size())
+      {
+        continue;
+      }
+      bgfx::allocInstanceDataBuffer(&idb, instances.second.size(), sizeof(glm::mat4));
+      memcpy(idb.data, instances.second.data(), instances.second.size() * sizeof(glm::mat4));
+      bgfx::setInstanceDataBuffer(&idb);
+      bgfx::setVertexBuffer(0, std::get<bgfx::VertexBufferHandle>(instances.first));
+      bgfx::setIndexBuffer(std::get<bgfx::IndexBufferHandle>(instances.first));
+      const auto mat = std::get<const Material *>(instances.first);
+
+      auto tmpSettings = glm::vec4{};
+      if (mat)
+      {
+        if (std::holds_alternative<glm::vec4>(mat->baseColor))
+        {
+          tmpSettings.x = 0.0f;
+          u_baseColor = std::get<glm::vec4>(mat->baseColor);
+        }
+        else
+        {
+          tmpSettings.x = 1.f;
+          const auto tex = std::get<Tex *>(mat->baseColor);
+          assert(tex);
+          u_baseColorTex = *tex;
+        }
+        if (std::holds_alternative<float>(mat->metallic))
+        {
+          tmpSettings.y = 0.0f;
+          u_metallic = glm::vec4{std::get<float>(mat->metallic)};
+        }
+        else
+        {
+          tmpSettings.y = 1.f;
+          const auto tex = std::get<Tex *>(mat->metallic);
+          assert(tex);
+          u_metallicTex = *tex;
+        }
+        if (std::holds_alternative<float>(mat->roughness))
+        {
+          tmpSettings.z = 0.0f;
+          u_roughness = glm::vec4{std::get<float>(mat->roughness)};
+        }
+        else
+        {
+          tmpSettings.z = 1.f;
+          const auto tex = std::get<Tex *>(mat->roughness);
+          assert(tex);
+          u_roughnessTex = *tex;
+        }
+        if (std::holds_alternative<glm::vec4>(mat->emission))
+        {
+          tmpSettings.w = 0.0f;
+          u_emission = std::get<glm::vec4>(mat->emission);
+        }
+        else
+        {
+          tmpSettings.w = 1.f;
+          const auto tex = std::get<Tex *>(mat->emission);
+          assert(tex);
+          u_emissionTex = *tex;
+        }
+      }
+      u_settings = tmpSettings;
+      bgfx::submit(geomRenderPass, geom);
+    }
   }
 
-  u_camPos = glm::vec4{camPos, 1.f};
-
-  scene.geomPassInternal(*this);
   scene.lightPassInternal(*this);
 
   { // combine render pass
@@ -310,63 +446,11 @@ auto Render::Deferrd::combine() -> void
   screenSpaceQuad(caps->originBottomLeft);
 }
 
-auto Render::setMaterialAndRender(const Material *mat) -> void
+auto Render::operator()(const MeshIn &in) -> void
 {
-  auto tmpSettings = glm::vec4{};
-  if (mat)
-  {
-    if (std::holds_alternative<glm::vec4>(mat->baseColor))
-    {
-      tmpSettings.x = 0.0f;
-      u_baseColor = std::get<glm::vec4>(mat->baseColor);
-    }
-    else
-    {
-      tmpSettings.x = 1.f;
-      const auto tex = std::get<Tex *>(mat->baseColor);
-      assert(tex);
-      u_baseColorTex = *tex;
-    }
-    if (std::holds_alternative<float>(mat->metallic))
-    {
-      tmpSettings.y = 0.0f;
-      u_metallic = glm::vec4{std::get<float>(mat->metallic)};
-    }
-    else
-    {
-      tmpSettings.y = 1.f;
-      const auto tex = std::get<Tex *>(mat->metallic);
-      assert(tex);
-      u_metallicTex = *tex;
-    }
-    if (std::holds_alternative<float>(mat->roughness))
-    {
-      tmpSettings.z = 0.0f;
-      u_roughness = glm::vec4{std::get<float>(mat->roughness)};
-    }
-    else
-    {
-      tmpSettings.z = 1.f;
-      const auto tex = std::get<Tex *>(mat->roughness);
-      assert(tex);
-      u_roughnessTex = *tex;
-    }
-    if (std::holds_alternative<glm::vec4>(mat->emission))
-    {
-      tmpSettings.w = 0.0f;
-      u_emission = std::get<glm::vec4>(mat->emission);
-    }
-    else
-    {
-      tmpSettings.w = 1.f;
-      const auto tex = std::get<Tex *>(mat->emission);
-      assert(tex);
-      u_emissionTex = *tex;
-    }
-  }
-  u_settings = tmpSettings;
-
-  bgfx::submit(geomRenderPass, geom);
+  prerenderData[std::tuple<bgfx::VertexBufferHandle, bgfx::IndexBufferHandle, const Material *>{
+                  in.vbh, in.ibh, in.mat}]
+    .emplace_back(in.trans);
 }
 
 auto Render::setPointLightAndRender(glm::vec3 pos, glm::vec3 color) -> void

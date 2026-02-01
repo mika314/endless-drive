@@ -6,16 +6,57 @@
 #include "uni.hpp"
 #include <bgfx/bgfx.h>
 #include <sdlpp/sdlpp.hpp>
+#include <unordered_map>
+
+// Helper to combine hashes
+inline void hash_combine(std::size_t &seed, std::size_t v)
+{
+  seed ^= v + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+struct RenderKeyHasher
+{
+  std::size_t operator()(
+    const std::tuple<bgfx::VertexBufferHandle, bgfx::IndexBufferHandle, const class Material *> &key)
+    const
+  {
+    std::size_t seed = 0;
+    hash_combine(seed, std::hash<uint16_t>{}(std::get<0>(key).idx));
+    hash_combine(seed, std::hash<uint16_t>{}(std::get<1>(key).idx));
+    hash_combine(seed, std::hash<const Material *>{}(std::get<2>(key)));
+    return seed;
+  }
+};
+
+struct RenderKeyEqual
+{
+  bool operator()(
+    const std::tuple<bgfx::VertexBufferHandle, bgfx::IndexBufferHandle, const class Material *> &lhs,
+    const std::tuple<bgfx::VertexBufferHandle, bgfx::IndexBufferHandle, const class Material *> &rhs)
+    const
+  {
+    return std::get<0>(lhs).idx == std::get<0>(rhs).idx &&
+           std::get<1>(lhs).idx == std::get<1>(rhs).idx && std::get<2>(lhs) == std::get<2>(rhs);
+  }
+};
 
 class Render
 {
 public:
-  Render(sdl::Window &, int w, int h);
+  Render(int w, int h);
   ~Render();
   auto render(const Scene &) -> void;
   auto setCamPos(glm::vec3) -> void;
   auto setCamRot(glm::vec3) -> void;
-  auto setMaterialAndRender(const class Material *) -> void;
+
+  struct MeshIn
+  {
+    bgfx::VertexBufferHandle vbh;
+    bgfx::IndexBufferHandle ibh;
+    class Material *mat;
+    glm::mat4 trans;
+  };
+  auto operator()(const MeshIn &) -> void;
   auto setPointLightAndRender(glm::vec3 pos, glm::vec3 color) -> void;
   auto setSpotlightAndRender(glm::mat4 trans, glm::vec3 color, float angle) -> void;
 
@@ -36,7 +77,6 @@ public:
   auto operator()(const ImgIn &) -> void;
 
 private:
-  sdl::Window &win;
   int w;
   int h;
   Atlas atlas;
@@ -100,4 +140,9 @@ private:
   bgfx::ProgramHandle combine;
   bgfx::ProgramHandle imgProg;
   GlyphInfo blackGlyph;
+  std::unordered_map<std::tuple<bgfx::VertexBufferHandle, bgfx::IndexBufferHandle, const Material *>,
+                     std::vector<glm::mat4>,
+                     RenderKeyHasher,
+                     RenderKeyEqual>
+    prerenderData;
 };

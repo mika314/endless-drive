@@ -121,9 +121,9 @@ void main()
 
   // gl_FragColor = vec4(v_uv, 0.f, 1.f);
 
-  // gl_FragColor = vec4(vec3(occlusion), 1.f);
-
   // gl_FragColor = (screenOffseted + 1.0) / 2.0;
+
+  // gl_FragColor = light + ambient * occlusion;
 
   gl_FragColor = base * (light + ambient * occlusion) + emission;
 }
