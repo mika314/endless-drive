@@ -14,6 +14,5 @@ public:
   glm::vec3 color = {.5f, .5f, .5f};
   float sz = 42.f;
 
-protected:
   auto uiPass(class Render &, glm::mat4) const -> void;
 };

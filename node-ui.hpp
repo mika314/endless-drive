@@ -2,6 +2,20 @@
 #include "node.hpp"
 #include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
+#include <type_traits>
+
+template <typename T, typename = void>
+struct HasUiPass : std::false_type
+{
+};
+
+template <typename T>
+struct HasUiPass<T,
+                 std::void_t<decltype(std::declval<const T>().uiPass(std::declval<class Render &>(),
+                                                                     std::declval<glm::mat4>()))>>
+  : std::true_type
+{
+};
 
 class BaseNodeUi : public BaseNode
 {
@@ -29,9 +43,14 @@ public:
   NodeUiRef(BaseNode *parent, const T &aAsset) : BaseNodeUi(parent), asset(aAsset) {}
   auto uiPass(class Render &render) const -> void final
   {
-    if (!isVisible)
-      return;
-    asset.get().geomPass(render, getTrans());
+    if constexpr (HasUiPass<T>::value)
+    {
+      if (!isVisible)
+        return;
+      asset.get().uiPass(render, getTrans());
+    }
+    else
+      BaseNodeUi::uiPass(render, getTrans());
   }
 
 private:
@@ -48,8 +67,13 @@ public:
   }
   auto uiPass(class Render &render) const -> void final
   {
-    if (!isVisible)
-      return;
-    T::uiPass(render, getTrans());
+    if constexpr (HasUiPass<T>::value)
+    {
+      if (!isVisible)
+        return;
+      T::uiPass(render, getTrans());
+    }
+    else
+      BaseNodeUi::uiPass(render);
   }
 };

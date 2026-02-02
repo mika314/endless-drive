@@ -12,10 +12,7 @@ class Mesh final : public BaseAsset
 {
 public:
   Mesh(const std::string &path, class Assets &);
-  Mesh(const Mesh &) = delete;
-  Mesh(Mesh &&) = delete;
   auto geomPass(class Render &, glm::mat4 trans) const -> void;
-  auto lightPass(class Render &, glm::mat4 trans) const -> void;
 
 private:
   std::string meshName;

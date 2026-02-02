@@ -2,6 +2,7 @@
 #include "canister.hpp"
 #include "car.hpp"
 #include "coin.hpp"
+#include "consts.hpp"
 #include "font.hpp"
 #include "get-natives.hpp"
 #include "get-road-offset.hpp"
@@ -11,6 +12,7 @@
 #include "mesh.hpp"
 #include "render.hpp"
 #include "scene.hpp"
+#include "sound-wave.hpp"
 #include "spotlight.hpp"
 #include "street-light.hpp"
 #include "tire.hpp"
@@ -58,7 +60,7 @@ enum class ObstacleType { canister, tire };
 auto main(int /*argc*/, char ** /*argv*/) -> int
 {
   srand(time(nullptr));
-  auto init = sdl::Init(SDL_INIT_VIDEO);
+  auto init = sdl::Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
   const auto startLoadingTime = SDL_GetTicks();
   const auto width = 1920;
   const auto height = 1080;
@@ -80,6 +82,13 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
   std::list<std::reference_wrapper<BaseNode3d>> tmpNodes;
   std::list<std::reference_wrapper<Obstacle>> obstacles;
+
+  auto want =
+    SDL_AudioSpec{.freq = SampleRate, .format = AUDIO_F32LSB, .channels = ChN, .samples = 1024};
+  auto have = SDL_AudioSpec{};
+  auto audio = sdl::Audio{nullptr, false, &want, &have, 0};
+  audio.pause(false);
+  auto &coinSound = assets.get<SoundWave>("coin");
 
   int lastTire = 50;
   int n = 1;
@@ -189,6 +198,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         node.y = y;
         tmpNodes.push_back(node);
         obstacles.push_back(node);
+        audio.queue(coinSound.pcm.data(), coinSound.pcm.size() * sizeof(coinSound.pcm[0]));
       }
     }
   };

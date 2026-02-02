@@ -121,8 +121,6 @@ auto Mesh::processMesh(Assets &assets, const aiMesh *mesh, const aiScene *scene)
 
 auto Mesh::geomPass(class Render &render, glm::mat4 trans) const -> void
 {
-  for (const auto &part : parts)
-    render(Render::MeshIn{.vbh = part.vbh, .ibh = part.ibh, .mat = part.material, .trans = trans});
+  for (const auto &v : parts)
+    render(Render::MeshIn{.vbh = v.vbh, .ibh = v.ibh, .mat = v.material, .trans = trans});
 }
-
-auto Mesh::lightPass(class Render &, glm::mat4) const -> void {}

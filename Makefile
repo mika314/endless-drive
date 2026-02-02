@@ -15,11 +15,13 @@ FONT_VERTEX_BINS := $(patsubst %-uivs.sc,$(DATA_DIR)/%-uivs.bin,$(FONT_VERTEX_SH
 FONT_FRAGMENT_BINS := $(patsubst %-uifs.sc,$(DATA_DIR)/%-uifs.bin,$(FONT_FRAGMENT_SHADERS))
 ASSETS_FONTS := $(wildcard $(ASSETS_DIR)/*.ttf)
 DATA_FONTS := $(patsubst $(ASSETS_DIR)/%,$(DATA_DIR)/%,$(ASSETS_FONTS))
-
 GIMP_FILES := $(wildcard $(ASSETS_DIR)/*.xcf)
 DDS_FROM_XCF := $(patsubst $(ASSETS_DIR)/%.xcf,$(DATA_DIR)/%.dds,$(GIMP_FILES))
+ASSETS_WAVS := $(wildcard $(ASSETS_DIR)/*.wav)
+DATA_WAVS := $(patsubst $(ASSETS_DIR)/%,$(DATA_DIR)/%,$(ASSETS_WAVS))
 
-all: FORCE $(SHADERC) $(VERTEX_BINS) $(FRAGMENT_BINS) $(GLTF_FILES) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS) $(DATA_FONTS) $(DDS_FROM_XCF)
+
+all: FORCE $(SHADERC) $(VERTEX_BINS) $(FRAGMENT_BINS) $(GLTF_FILES) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS) $(DATA_FONTS) $(DDS_FROM_XCF) $(DATA_WAVS)
 	coddle
 
 $(SHADERC):
@@ -45,6 +47,9 @@ $(DATA_DIR)/%-uifs.bin: %-uifs.sc ui-varying.def.sc | $(DATA_DIR)
 
 $(DATA_DIR)/%: $(ASSETS_DIR)/% | $(DATA_DIR)
 	cp $< $@
+
+$(DATA_DIR)/%.wav: $(ASSETS_DIR)/%.wav | $(DATA_DIR)
+	ffmpeg -i $< -ar 48000 -ac 2 -c:a pcm_s16le -y $@
 
 $(DATA_DIR)/%.gltf: $(ASSETS_DIR)/%.blend $(EXPORT_SCRIPT) | $(DATA_DIR) $(TEXTUREC)
 	@echo "Exporting $< to $@"

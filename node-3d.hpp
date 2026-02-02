@@ -1,7 +1,35 @@
 #pragma once
 #include "node.hpp"
+#include <concepts>
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
+#include <type_traits>
+
+template <typename T, typename = void>
+struct HasGeomPass : std::false_type
+{
+};
+
+template <typename T>
+struct HasGeomPass<T,
+                   std::void_t<decltype(std::declval<const T>().geomPass(std::declval<class Render &>(),
+                                                                         std::declval<glm::mat4>()))>>
+  : std::true_type
+{
+};
+
+template <typename T, typename = void>
+struct HasLightPass : std::false_type
+{
+};
+
+template <typename T>
+struct HasLightPass<
+  T,
+  std::void_t<decltype(std::declval<const T>().lightPass(std::declval<class Render &>(),
+                                                         std::declval<glm::mat4>()))>> : std::true_type
+{
+};
 
 class BaseNode3d : public BaseNode
 {
@@ -29,15 +57,25 @@ public:
   Node3dRef(BaseNode *parent, const T &aAsset) : BaseNode3d(parent), asset(aAsset) {}
   auto geomPass(class Render &render) const -> void final
   {
-    if (!isVisible)
-      return;
-    asset.get().geomPass(render, getTrans());
+    if constexpr (HasGeomPass<T>::value)
+    {
+      if (!isVisible)
+        return;
+      asset.get().geomPass(render, getTrans());
+    }
+    else
+      BaseNode3d::geomPass(render);
   }
   auto lightPass(class Render &render) const -> void final
   {
-    if (!isVisible)
-      return;
-    asset.get().lightPass(render, getTrans());
+    if constexpr (HasLightPass<T>::value)
+    {
+      if (!isVisible)
+        return;
+      asset.get().lightPass(render, getTrans());
+    }
+    else
+      BaseNode3d::lightPass(render);
   }
 
 private:
@@ -55,14 +93,25 @@ public:
 
   auto geomPass(class Render &render) const -> void final
   {
-    if (!isVisible)
-      return;
-    T::geomPass(render, getTrans());
+    if constexpr (HasGeomPass<T>::value)
+    {
+      if (!isVisible)
+        return;
+      T::geomPass(render, getTrans());
+    }
+    else
+      BaseNode3d::geomPass(render);
   }
   auto lightPass(class Render &render) const -> void final
   {
-    if (!isVisible)
-      return;
-    T::lightPass(render, getTrans());
+    if constexpr (HasLightPass<T>::value)
+    {
+      if (!isVisible)
+        return;
+      T::lightPass(render, getTrans());
+    }
+    else
+      BaseNode3d::lightPass(render);
   }
 };
+
