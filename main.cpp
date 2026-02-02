@@ -55,8 +55,6 @@ public:
   ~BgfxInit() { bgfx::shutdown(); }
 };
 
-enum class ObstacleType { canister, tire };
-
 auto main(int /*argc*/, char ** /*argv*/) -> int
 {
   srand(time(nullptr));
