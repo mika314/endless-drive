@@ -10,6 +10,5 @@ public:
   auto onHit() -> void final;
 
 private:
-  bool isHit = false;
   glm::vec3 vel = {};
 };

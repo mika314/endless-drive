@@ -8,5 +8,9 @@ public:
   float y;
   using MeshNode::MeshNode;
   virtual ~Obstacle() = default;
-  virtual auto onHit() -> void = 0;
+  virtual auto onHit() -> void;
+  auto wasHit() const -> bool;
+
+private:
+  bool wasHit_ = false;
 };

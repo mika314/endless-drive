@@ -227,7 +227,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
   auto &scoreLb = scene.addNode<LabelNode>(Label{.text = "Score:",
                                                  .font = assets.get<Font>("chp-fire.ttf"),
-                                                 .color = glm::vec3{0.f, 0.f, 1.f},
+                                                 .color = glm::vec3{1.f, 1.f, .5f},
                                                  .sz = 100});
   scoreLb.setPos(glm::vec2{width - 500.f, 150.f});
 
@@ -303,11 +303,12 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     while (!obstacles.empty() && obstacles.front().get().y < carYOffset - 4.4f / 2.f)
       obstacles.pop_front();
 
-    while (!obstacles.empty())
+    for (auto &obstacle : obstacles)
     {
-      auto &obstacle = obstacles.front();
-      if (obstacle.get().x == car.currentLane && std::abs(obstacle.get().y - carYOffset) < 4.4f / 2.f)
+      if (std::abs(obstacle.get().y - car.getPos().y) < 4.4f / 2.f)
       {
+        if (obstacle.get().x != car.currentLane || obstacle.get().wasHit())
+          continue;
         if (dynamic_cast<Canister *>(&obstacle.get()))
         {
           fuel = std::min(100.f, fuel + 10.f);
@@ -333,6 +334,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         {
           tireHitSound.play(C4);
           --lives;
+          fuel = 100.f;
           if (!livesIco.empty())
           {
             auto &live = livesIco.back();
@@ -341,7 +343,6 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
           }
         }
         obstacle.get().onHit();
-        obstacles.pop_front();
       }
       else
         break;
@@ -349,8 +350,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     for (; roadIdx * 2 - 200 < carYOffset; ++roadIdx)
       addRoadMeshes(roadIdx);
 
-    render.setCamPos({0.0f, carYOffset - 12.f, 2.3f});
-    render.setCamRot({0.0f, 0.0f, 0.0f});
+    render.setCamPos({0.0f, carYOffset - 12.f, 7.5f});
+    render.setCamRot({-.25f, 0.0f, 0.0f});
     render.render(scene);
     while (!tmpNodes.empty() && tmpNodes.front().get().getPos().y < carYOffset - 24.f)
     {

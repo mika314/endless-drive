@@ -10,7 +10,7 @@ Tire::Tire(BaseNode *parent, class Assets &assets)
 auto Tire::tick(float dt) -> void
 {
   const auto now = SDL_GetTicks();
-  if (isHit)
+  if (wasHit())
   {
     setRot({0.0f, now / 500.f, now / 300.f});
     auto p = getPos();
@@ -22,7 +22,7 @@ auto Tire::tick(float dt) -> void
 
 auto Tire::onHit() -> void
 {
-  isHit = true;
+  Obstacle::onHit();
   const auto now = 0.001f * SDL_GetTicks();
   vel = glm::vec3{0.0f, 30.f + 3.0e-4f * now * now, 7.5f};
 }
