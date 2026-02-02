@@ -9,8 +9,10 @@
 #include "img-node.hpp"
 #include "label-node.hpp"
 #include "live.hpp"
+#include "master-speaker.hpp"
 #include "mesh.hpp"
 #include "render.hpp"
+#include "sample.hpp"
 #include "scene.hpp"
 #include "sound-wave.hpp"
 #include "spotlight.hpp"
@@ -70,7 +72,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
   auto score = 0;
   auto fuel = 100.f;
-  auto lives = 3000000;
+  auto lives = 3;
 
   auto render = Render{width, height};
   auto assets = Assets{};
@@ -81,12 +83,13 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   std::list<std::reference_wrapper<BaseNode3d>> tmpNodes;
   std::list<std::reference_wrapper<Obstacle>> obstacles;
 
-  auto want =
-    SDL_AudioSpec{.freq = SampleRate, .format = AUDIO_F32LSB, .channels = ChN, .samples = 1024};
-  auto have = SDL_AudioSpec{};
-  auto audio = sdl::Audio{nullptr, false, &want, &have, 0};
-  audio.pause(false);
-  auto &coinSound = assets.get<SoundWave>("coin");
+  auto speaker = MasterSpeaker{};
+  auto coinSound = Sample{130., speaker, assets.get<SoundWave>("coin"), 1., 0.0, C4};
+  auto liveSound = Sample{130., speaker, assets.get<SoundWave>("live"), 1., 0.0, C4};
+  auto tireHitSound = Sample{130., speaker, assets.get<SoundWave>("tire-hit"), 1., 0.0, C4};
+  auto fuelSound = Sample{130., speaker, assets.get<SoundWave>("fuel"), 1., 0.0, C4};
+  auto lowGasSound = Sample{130., speaker, assets.get<SoundWave>("low-gas"), 1., 0.0, C4};
+  auto emptyTankSound = Sample{130., speaker, assets.get<SoundWave>("empty-tank"), 1., 0.0, C4};
 
   int lastTire = 50;
   int n = 1;
@@ -196,15 +199,11 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         node.y = y;
         tmpNodes.push_back(node);
         obstacles.push_back(node);
-        audio.queue(coinSound.pcm.data(), coinSound.pcm.size() * sizeof(coinSound.pcm[0]));
       }
     }
   };
 
-  for (auto i = -10; i < 100; ++i)
-    addRoadMeshes(i);
-
-  auto roadIdx = 100;
+  auto roadIdx = -10;
 
   auto &floor = scene.addNode3d<Mesh>(assets, "floor.gltf/Floor");
 
@@ -270,10 +269,20 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     const auto dt = (now - dt0) / 1000.f;
     dt0 = now;
 
-    fuel -= (carYOffset - lastY) * 0.025f;
+    const auto oldFuel = fuel;
+    fuel -= (carYOffset - lastY) * 0.0125f;
+    if (oldFuel > 20. && fuel <= 20.)
+    {
+      auto n = C4;
+      n.dur = 4;
+      lowGasSound.play(n);
+    }
     lastY = carYOffset;
     if (fuel <= 0)
     {
+      auto n = C4;
+      n.dur = 4;
+      emptyTankSound.play(n);
       fuel = 100.f;
       --lives;
       if (!livesIco.empty())
@@ -300,9 +309,13 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       if (obstacle.get().x == car.currentLane && std::abs(obstacle.get().y - carYOffset) < 4.4f / 2.f)
       {
         if (dynamic_cast<Canister *>(&obstacle.get()))
+        {
           fuel = std::min(100.f, fuel + 10.f);
+          fuelSound.play(C4);
+        }
         else if (dynamic_cast<Live *>(&obstacle.get()))
         {
+          liveSound.play(C4);
           ++lives;
           auto &liveIco = livesIco
                             .emplace_back(scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("heart-ico"),
@@ -312,9 +325,13 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
           liveIco.setPos(glm::vec2{width - 500.f + (livesIco.size() - 1) * 100.f, 100.f});
         }
         else if (dynamic_cast<Coin *>(&obstacle.get()))
+        {
+          coinSound.play(C4);
           score += 10;
+        }
         else if (dynamic_cast<Tire *>(&obstacle.get()))
         {
+          tireHitSound.play(C4);
           --lives;
           if (!livesIco.empty())
           {
@@ -329,6 +346,8 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       else
         break;
     }
+    for (; roadIdx * 2 - 200 < carYOffset; ++roadIdx)
+      addRoadMeshes(roadIdx);
 
     render.setCamPos({0.0f, carYOffset - 12.f, 2.3f});
     render.setCamRot({0.0f, 0.0f, 0.0f});
@@ -338,8 +357,6 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       scene.remove(tmpNodes.front());
       tmpNodes.pop_front();
     }
-    for (; roadIdx * 2 - 200 < carYOffset; ++roadIdx)
-      addRoadMeshes(roadIdx);
 
     scoreLb.text = "Score: " + std::to_string(score);
     fuelGaugeNiddleIco.setRot(2.f * fuel / 100.f - 1.f);
