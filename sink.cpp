@@ -21,8 +21,6 @@ auto Sink::mix(int samples) -> std::vector<float>
   auto r = std::vector<float>{};
   for (auto &s : sources)
   {
-    if (!s->isBusy())
-      continue;
     r.resize(samples * ChN);
     const auto chunk = s->pull(samples);
     const auto a = s->gain;

@@ -35,5 +35,5 @@ auto Car::tick(float dt) -> void
 auto Car::desiredY() -> float
 {
   const auto now = .001f * SDL_GetTicks();
-  return now * 15.f + 1.5e-4f * now * now * now;
+  return now * 30.f + 1.5e-4f * now * now * now;
 }

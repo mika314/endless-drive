@@ -1,5 +1,4 @@
 #pragma once
-#include "entity.hpp"
 #include "sink.hpp"
 #include <sdlpp/sdlpp.hpp>
 
@@ -10,7 +9,6 @@ public:
   auto lock() const -> void final;
   auto unlock() const -> void final;
   auto getSamplesProcessed() const -> int;
-  std::vector<std::unique_ptr<Entity>> orphanage;
 
 private:
   SDL_AudioSpec want;

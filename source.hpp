@@ -1,10 +1,9 @@
 #pragma once
-#include "entity.hpp"
 #include <deque>
 #include <memory>
 #include <vector>
 
-class Source : public Entity
+class Source
 {
 public:
   Source(class Sink &);

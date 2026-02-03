@@ -11,7 +11,6 @@ public:
 
 private:
   auto internalPull(int samples) -> std::vector<float> final;
-  auto isBusy() const -> bool final;
 
   std::reference_wrapper<Source> owner;
   std::deque<std::vector<float>> q;

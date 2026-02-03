@@ -13,12 +13,6 @@ MasterSpeaker::MasterSpeaker()
 
       samplesProcessed += samples;
 
-      for (auto it = std::begin(orphanage); it != std::end(orphanage);)
-        if (!it->get()->isBusy())
-          it = orphanage.erase(it);
-        else
-          ++it;
-
       for (auto i = r.size(); i < samples * ChN; ++i)
         reinterpret_cast<float *>(stream)[i] = 0.0f;
 

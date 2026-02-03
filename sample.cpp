@@ -5,24 +5,12 @@
 #include <cmath>
 #include <log/log.hpp>
 
-Sample::Sample(const double &aBpm,
-               class Sink &sink,
-               const SoundWave &soundWave,
-               double aGain,
-               double aPan,
-               Note aNote)
-  : Source(sink), bpm(aBpm), sample(soundWave.pcm), sampleFreq(440. * powf(2., (aNote.n - 57.) / 12.))
+Sample::Sample(class Sink &sink, const SoundWave &soundWave, double aGain, double aPan)
+  : Source(sink), sample(soundWave.pcm)
 {
   gain = aGain;
   pan = aPan;
   isReady = true;
-}
-
-auto Sample::isBusy() const -> bool
-{
-  sink.get().lock();
-  return !notes.empty() && isReady;
-  sink.get().unlock();
 }
 
 auto Sample::internalPull(int samples) -> std::vector<float>
@@ -37,13 +25,12 @@ auto Sample::internalPull(int samples) -> std::vector<float>
       auto a = 0.0f;
       for (const auto &n : notes)
       {
-        const auto p = n.freq / sampleFreq;
-        const auto idx_ = static_cast<double>(pos - n.start) * p;
-        const auto idx = static_cast<int>(idx_);
-        const auto frac = idx_ - idx;
-        const auto v = envelope.amp(static_cast<double>(pos - n.start) / SampleRate, n.dur);
-        a += (idx >= 0 && idx + 1 < static_cast<int>(sample.get().size()))
-               ? 1. * v * (sample.get()[idx] * (1 - frac) + sample.get()[idx + 1] * frac)
+        const auto idx_ = pos - n.start;
+        a += (idx_ >= 0 && idx_ < static_cast<int>(sample.get().size()))
+               ? n.gain *
+                   ((idx_ % 2 == 1) ? ((n.pan <= 0) ? 1.f : 1.f + n.pan)
+                                    : ((n.pan <= 0) ? 1.f - n.pan : 1.f)) *
+                   sample.get()[idx_]
                : 0.0f;
       }
       return a;
@@ -53,8 +40,7 @@ auto Sample::internalPull(int samples) -> std::vector<float>
 
     for (auto it = std::begin(notes); it != std::end(notes);)
     {
-      const auto p = it->freq / sampleFreq;
-      if (static_cast<double>(pos - it->start) * p >= sample.get().size())
+      if (static_cast<double>(pos - it->start) >= sample.get().size())
         it = notes.erase(it);
       else
         ++it;
@@ -63,17 +49,9 @@ auto Sample::internalPull(int samples) -> std::vector<float>
   return r;
 }
 
-auto Sample::play(Note aNote) -> void
+auto Sample::play(double gain, double pan) -> void
 {
   sink.get().lock();
-  notes.emplace_back(N{.freq = 440. * powf(2., (aNote.n - 57.) / 12.),
-                       .dur = aNote.dur,
-                       .vel = pow(10., aNote.vel / 20.),
-                       .start = pos});
+  notes.emplace_back(N{.gain = gain, .pan = pan, .start = pos});
   sink.get().unlock();
-}
-
-auto Sample::set(Envelope e) -> void
-{
-  envelope = e;
 }

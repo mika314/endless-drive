@@ -9,6 +9,7 @@
 #include "img-node.hpp"
 #include "label-node.hpp"
 #include "live.hpp"
+#include "looping-sample.hpp"
 #include "master-speaker.hpp"
 #include "mesh.hpp"
 #include "render.hpp"
@@ -50,7 +51,7 @@ public:
       r.platformData.ndt = getNativeDisplayHandle(win);
       r.resolution.width = width;
       r.resolution.height = height;
-      r.resolution.reset = 0; // BGFX_RESET_VSYNC;
+      r.resolution.reset = BGFX_RESET_VSYNC;
       return r;
     }());
   }
@@ -84,12 +85,13 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   std::list<std::reference_wrapper<Obstacle>> obstacles;
 
   auto speaker = MasterSpeaker{};
-  auto coinSound = Sample{130., speaker, assets.get<SoundWave>("coin"), 1., 0.0, C4};
-  auto liveSound = Sample{130., speaker, assets.get<SoundWave>("live"), 1., 0.0, C4};
-  auto tireHitSound = Sample{130., speaker, assets.get<SoundWave>("tire-hit"), 1., 0.0, C4};
-  auto fuelSound = Sample{130., speaker, assets.get<SoundWave>("fuel"), 1., 0.0, C4};
-  auto lowGasSound = Sample{130., speaker, assets.get<SoundWave>("low-gas"), 1., 0.0, C4};
-  auto emptyTankSound = Sample{130., speaker, assets.get<SoundWave>("empty-tank"), 1., 0.0, C4};
+  auto coinSound = Sample{speaker, assets.get<SoundWave>("coin"), .33, 0.0};
+  auto liveSound = Sample{speaker, assets.get<SoundWave>("live"), .33, 0.0};
+  auto tireHitSound = Sample{speaker, assets.get<SoundWave>("tire-hit"), 1., 0.0};
+  auto fuelSound = Sample{speaker, assets.get<SoundWave>("fuel"), 1., 0.0};
+  auto lowGasSound = Sample{speaker, assets.get<SoundWave>("low-gas"), 1., 0.0};
+  auto emptyTankSound = Sample{speaker, assets.get<SoundWave>("empty-tank"), 1., 0.0};
+  auto bgm = LoopingSample{speaker, assets.get<SoundWave>("bgm"), .1, 0.0};
 
   int lastTire = 50;
   int n = 1;
@@ -170,7 +172,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     }
     else if (rand() % 2 == 0)
     {
-      if (rand() % 20 == 0)
+      if (rand() % 370 == 0)
       {
         auto &node = scene.addNode<Canister>(assets);
         const auto x = rand() % 3 - 1;
@@ -180,7 +182,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         tmpNodes.push_back(node);
         obstacles.push_back(node);
       }
-      else if (rand() % 100 == 0)
+      else if (rand() % 800 == 0)
       {
         auto &node = scene.addNode<Live>(assets);
         const auto x = rand() % 3 - 1;
@@ -270,19 +272,13 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
     dt0 = now;
 
     const auto oldFuel = fuel;
-    fuel -= (carYOffset - lastY) * 0.0125f;
+    fuel -= (carYOffset - lastY) * .01875f;
     if (oldFuel > 20. && fuel <= 20.)
-    {
-      auto n = C4;
-      n.dur = 4;
-      lowGasSound.play(n);
-    }
+      lowGasSound.play();
     lastY = carYOffset;
     if (fuel <= 0)
     {
-      auto n = C4;
-      n.dur = 4;
-      emptyTankSound.play(n);
+      emptyTankSound.play();
       fuel = 100.f;
       --lives;
       if (!livesIco.empty())
@@ -312,11 +308,11 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         if (dynamic_cast<Canister *>(&obstacle.get()))
         {
           fuel = std::min(100.f, fuel + 10.f);
-          fuelSound.play(C4);
+          fuelSound.play(1.0, .5 * car.currentLane);
         }
         else if (dynamic_cast<Live *>(&obstacle.get()))
         {
-          liveSound.play(C4);
+          liveSound.play(1.0, .5 * car.currentLane);
           ++lives;
           auto &liveIco = livesIco
                             .emplace_back(scene.addNode<ImgNode>(Img{.tex = assets.get<Tex>("heart-ico"),
@@ -327,12 +323,12 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
         }
         else if (dynamic_cast<Coin *>(&obstacle.get()))
         {
-          coinSound.play(C4);
+          coinSound.play(1.0, .5 * car.currentLane);
           score += 10;
         }
         else if (dynamic_cast<Tire *>(&obstacle.get()))
         {
-          tireHitSound.play(C4);
+          tireHitSound.play(1.0, .5 * car.currentLane);
           --lives;
           fuel = 100.f;
           if (!livesIco.empty())

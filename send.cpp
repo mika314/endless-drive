@@ -24,7 +24,3 @@ auto Send::internalPull(int samples) -> std::vector<float>
   return r;
 }
 
-auto Send::isBusy() const -> bool
-{
-  return owner.get().isBusy();
-}
