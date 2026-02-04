@@ -1,7 +1,7 @@
 #include "obstacle.hpp"
 #include <sdlpp/sdlpp.hpp>
 
-auto Obstacle::onHit() -> void
+auto Obstacle::onHit(float /*now*/) -> void
 {
   wasHit_ = true;
 }

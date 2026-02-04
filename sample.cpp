@@ -55,3 +55,8 @@ auto Sample::play(double gain, double pan) -> void
   notes.emplace_back(N{.gain = gain, .pan = pan, .start = pos});
   sink.get().unlock();
 }
+
+auto Sample::dur() const -> double
+{
+  return 1. * sample.get().size() / SampleRate;
+}

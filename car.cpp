@@ -20,9 +20,8 @@ Car::Car(BaseNode *parent, class Assets &assets)
 
 auto Car::tick(float dt) -> void
 {
-  const auto now = SDL_GetTicks();
-  const auto carYOffset = desiredY();
-  setScale({1.0f, 1.0f, 1.f + .03f * sin(now / 100.f)});
+  const auto carYOffset = desiredY(now);
+  setScale({1.0f, 1.0f, 1.f + .03f * sin(now * 10.f)});
   auto laneOffset = 0.f;
   laneOffset = 2.6f * currentLane;
   const auto desiredX = getRoadOffset(carYOffset) + laneOffset;
@@ -32,8 +31,7 @@ auto Car::tick(float dt) -> void
   setRot({0.f, 0.f, -getRoadAngle(carYOffset) - 2.f * dx});
 }
 
-auto Car::desiredY() -> float
+auto Car::desiredY(float now) -> float
 {
-  const auto now = .001f * SDL_GetTicks();
   return now * 30.f + 1.5e-4f * now * now * now;
 }

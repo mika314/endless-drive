@@ -20,9 +20,8 @@ auto Tire::tick(float dt) -> void
   }
 }
 
-auto Tire::onHit() -> void
+auto Tire::onHit(float now) -> void
 {
-  Obstacle::onHit();
-  const auto now = 0.001f * SDL_GetTicks();
+  Obstacle::onHit(now);
   vel = glm::vec3{0.0f, 30.f + 3.0e-4f * now * now, 7.5f};
 }

@@ -8,7 +8,7 @@ public:
   float y;
   using MeshNode::MeshNode;
   virtual ~Obstacle() = default;
-  virtual auto onHit() -> void;
+  virtual auto onHit(float now) -> void;
   auto wasHit() const -> bool;
 
 private:

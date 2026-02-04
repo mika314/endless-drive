@@ -7,6 +7,7 @@ class Sample : public Source
 public:
   Sample(class Sink &, const class SoundWave &, double gain, double pan);
   auto play(double gain = 1., double pan = 0.0) -> void;
+  auto dur() const -> double;
 
 private:
   auto internalPull(int samples) -> std::vector<float> final;

@@ -18,6 +18,7 @@ class Render
 public:
   Render(int w, int h);
   ~Render();
+  auto getDimensions(const Font &font, float sz, const std::string &text) -> glm::vec2;
   auto render(const Scene &) -> void;
   auto setCamPos(glm::vec3) -> void;
   auto setCamRot(glm::vec3) -> void;

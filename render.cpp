@@ -1,4 +1,5 @@
 #include "render.hpp"
+#include "font.hpp"
 #include "get-natives.hpp"
 #include "load-program.hpp"
 #include "material.hpp"
@@ -222,7 +223,7 @@ auto Render::render(const Scene &scene) -> void
     deferrd.combine();
     u_projViewCombine = viewProj;
     u_mtx = mtx;
-    u_time = glm::vec4{1.f * (SDL_GetTicks() % 16777216)};
+    u_time = glm::vec4{1.f * (rand() % 16777216)};
     bgfx::submit(combineRenderPass, combine);
   }
 
@@ -450,4 +451,9 @@ auto Render::operator()(const TextIn &v) -> void
     textBufferManager.setPenPosition(textBuffer, pos.x, pos.y);
     textBufferManager.appendText(atlas, textBuffer, v.font, v.sz, v.text.c_str());
   });
+}
+
+auto Render::getDimensions(const Font &font, float sz, const std::string &text) -> glm::vec2
+{
+  return font.getDimensions(atlas, sz, text);
 }

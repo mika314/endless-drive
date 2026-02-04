@@ -1,5 +1,6 @@
 #include "font.hpp"
 #include "assets.hpp"
+#include "text-metrics.hpp"
 #include <bgfx/bgfx.h>
 #include <fstream>
 #include <sstream>
@@ -50,7 +51,7 @@ Font::~Font()
     fontManager.get().destroyFont(e.second);
 }
 
-auto Font::getSizedFont(int size) const -> FontHandle
+auto Font::getSizedFont(float size) const -> FontHandle
 {
   auto it = sizedFonts.find(size);
   if (it == std::end(sizedFonts))
@@ -75,4 +76,11 @@ auto Font::getFontInfo(FontHandle h) const -> const FontInfo &
 auto Font::getKerning(FontHandle h, CodePoint prev, CodePoint cur) const -> float
 {
   return fontManager.get().getKerning(h, prev, cur);
+}
+
+auto Font::getDimensions(Atlas &atlas, float size, const std::string &text) const -> glm::vec2
+{
+  auto metr = TextMetrics{&fontManager.get()};
+  metr.appendText(atlas, getSizedFont(size), text.c_str());
+  return glm::vec2{metr.getWidth(), metr.getHeight()};
 }
