@@ -6,6 +6,7 @@
 #include "master-speaker.hpp"
 #include "render.hpp"
 #include "sample.hpp"
+#include "settings.hpp"
 #include "sound-wave.hpp"
 #include "title-screen.hpp"
 #include <sdlpp/sdlpp.hpp>
@@ -66,7 +67,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       coinSound.play();
       GameOver(assets, render, masterSpeaker, Gameplay(assets, render, masterSpeaker).run()).run();
       break;
-    case TitleScreen::Opt::settings: break;
+    case TitleScreen::Opt::settings: Settings(assets, render, masterSpeaker).run(); break;
     case TitleScreen::Opt::quit: return 0;
     }
   }

@@ -36,6 +36,7 @@ auto TitleScreen::run() -> Opt
       coinSound.play();
       opt = static_cast<Opt>((static_cast<int>(opt) + 1) % 3);
       break;
+    case SDLK_SPACE:
     case SDLK_RETURN: done = true; break;
     }
   };

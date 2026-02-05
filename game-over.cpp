@@ -24,6 +24,7 @@ auto GameOver::run() -> void
     switch (e.keysym.sym)
     {
     case SDLK_ESCAPE:
+    case SDLK_SPACE:
     case SDLK_RETURN: done = true; break;
     }
   };
