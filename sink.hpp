@@ -1,5 +1,4 @@
 #pragma once
-#include "consts.hpp"
 #include <unordered_set>
 #include <vector>
 
@@ -11,6 +10,7 @@ public:
   auto del(Source *) -> void;
   virtual auto lock() const -> void = 0;
   virtual auto unlock() const -> void = 0;
+  double gain = 1.;
 
 protected:
   std::unordered_set<Source *> sources;

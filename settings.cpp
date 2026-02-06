@@ -6,27 +6,102 @@
 #include "master-speaker.hpp"
 #include "render.hpp"
 #include "sample.hpp"
+#include "scene.hpp"
 #include "sound-wave.hpp"
+#include <algorithm>
+#include <cmath>
 #include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>
 
-Settings::Settings(Assets &aAssets, Render &aRender, Sink &aSink)
-  : assets(aAssets), render(aRender), sink(aSink), scene(nullptr)
+Settings::Settings(Assets &aAssets, Render &aRender, Sink &aMaster, Sink &aMusicSend, Sink &aSfxSend)
+  : assets(aAssets), render(aRender), master(aMaster), musicSend(aMusicSend), sfxSend(aSfxSend)
 {
+}
+
+// Converts a linear slider value (0.0 to 1.0) to audio gain.
+// Uses a decibel-based logarithmic mapping for natural hearing response.
+static auto sliderToGain(float x) -> float
+{
+  if (x <= 0.0f)
+    return 0.0f;
+  const auto minDb = -45.f;
+  const auto db = (x * -minDb) + minDb;
+  return std::pow(10.f, db / 20.f);
 }
 
 auto Settings::run() -> void
 {
-  auto coinSound = Sample{sink, assets.get<SoundWave>("coin"), 1., 0.0};
+  auto scene = Scene{nullptr};
+  auto coinSound = Sample{sfxSend, assets.get<SoundWave>("coin"), .33, 0.0};
   auto done = false;
   auto e = sdl::EventHandler{};
   e.quit = [&done](const SDL_QuitEvent &) { done = true; };
   e.keyDown = [&](const SDL_KeyboardEvent &e) {
     switch (e.keysym.sym)
     {
-    case SDLK_ESCAPE:
+    case SDLK_ESCAPE: done = true; break;
     case SDLK_SPACE:
-    case SDLK_RETURN: done = true; break;
+    case SDLK_RETURN:
+      switch (selection)
+      {
+      case 3:
+        coinSound.play();
+        fullScreen = !fullScreen;
+        break;
+      case 4:
+        coinSound.play();
+        showFps = !showFps;
+        break;
+      }
+      break;
+    case SDLK_UP:
+      coinSound.play();
+      selection = (selection + 5 - 1) % 5;
+      break;
+    case SDLK_DOWN:
+      coinSound.play();
+      selection = (selection + 1) % 5;
+      break;
+    case SDLK_LEFT:
+      switch (selection)
+      {
+      case 0:
+        masterVolume = std::max(0.0f, masterVolume - 0.05f);
+        master.gain = sliderToGain(masterVolume);
+        coinSound.play();
+        break;
+      case 1:
+        music = std::max(0.0f, music - 0.05f);
+        musicSend.gain = sliderToGain(music);
+        coinSound.play();
+        break;
+      case 2:
+        sfx = std::max(0.0f, sfx - 0.05f);
+        sfxSend.gain = sliderToGain(sfx);
+        coinSound.play();
+        break;
+      }
+      break;
+    case SDLK_RIGHT:
+      switch (selection)
+      {
+      case 0:
+        masterVolume = std::min(1.f, masterVolume + 0.05f);
+        master.gain = sliderToGain(masterVolume);
+        coinSound.play();
+        break;
+      case 1:
+        music = std::min(1.f, music + 0.05f);
+        musicSend.gain = sliderToGain(music);
+        coinSound.play();
+        break;
+      case 2:
+        sfx = std::min(1.f, sfx + 0.05f);
+        sfxSend.gain = sliderToGain(sfx);
+        coinSound.play();
+        break;
+      }
+      break;
     }
   };
 
@@ -34,6 +109,7 @@ auto Settings::run() -> void
   auto masterVolumePos = glm::vec2{};
   auto musicPos = glm::vec2{};
   auto sfxPos = glm::vec2{};
+  auto minX = 1.f * width;
   {
     auto &node = scene.addNode<LabelNode>(Label{.text = "Settings",
                                                 .font = assets.get<Font>("chp-fire.ttf"),
@@ -57,6 +133,7 @@ auto Settings::run() -> void
     img.setPos(masterVolumePos);
     node.setPos(glm::vec2{(width - (dim.x + 250.f)) / 2.f, y});
     y += dim.y;
+    minX = std::min(minX, node.getPos().x);
   }
   {
     auto &node = scene.addNode<LabelNode>(Label{.text = "Music",
@@ -72,6 +149,7 @@ auto Settings::run() -> void
     img.setPos(musicPos);
     node.setPos(glm::vec2{(width - (dim.x + 250.f)) / 2.f, y});
     y += dim.y;
+    minX = std::min(minX, node.getPos().x);
   }
   {
     auto &node = scene.addNode<LabelNode>(Label{.text = "SFX",
@@ -87,38 +165,67 @@ auto Settings::run() -> void
     img.setPos(sfxPos);
     node.setPos(glm::vec2{(width - (dim.x + 250.f)) / 2.f, y});
     y += dim.y;
+    minX = std::min(minX, node.getPos().x);
   }
-  {
+
+  auto fullScreenCheckMark = [&]() {
     auto &node = scene.addNode<LabelNode>(Label{.text = "Full Screen",
                                                 .font = assets.get<Font>("chp-fire.ttf"),
                                                 .color = glm::vec3{1.f, 1.f, 1.f},
                                                 .sz = 100});
     const auto dim = node.getDimensions(render);
-    node.setPos(glm::vec2{(width - dim.x) / 2.f, y});
+    auto &img = node.addNode<ImgNode>(Img{
+      .tex = assets.get<Tex>("checkbox"), .sz = glm::vec2{90.f, 90.f}, .pivot = glm::vec2{1.0f, 0.0f}});
+    img.setPos(glm::vec2{-20.0f, 100.f});
+    auto &checkMark = node.addNode<ImgNode>(Img{.tex = assets.get<Tex>("check-mark"),
+                                                .sz = glm::vec2{90.f, 90.f},
+                                                .pivot = glm::vec2{1.0f, 0.0f}});
+    checkMark.setPos(glm::vec2{-20.0f, 100.f});
+    node.setPos(glm::vec2{(width - dim.x - 64.f - 10.f) / 2.f + 64.f + 10.f, y});
     y += dim.y;
-  }
-  {
+    minX = std::min(minX, node.getPos().x - 20.f - 90.f);
+    return &checkMark;
+  }();
+
+  auto selectionHeight = 0.0f;
+  auto showFpsCheckMark = [&]() {
     auto &node = scene.addNode<LabelNode>(Label{.text = "Show FPS",
                                                 .font = assets.get<Font>("chp-fire.ttf"),
                                                 .color = glm::vec3{1.f, 1.f, 1.f},
                                                 .sz = 100});
     const auto dim = node.getDimensions(render);
-    node.setPos(glm::vec2{(width - dim.x) / 2.f, y});
+    auto &img = node.addNode<ImgNode>(Img{
+      .tex = assets.get<Tex>("checkbox"), .sz = glm::vec2{90.f, 90.f}, .pivot = glm::vec2{1.0f, 0.0f}});
+    img.setPos(glm::vec2{-20.0f, 100.f});
+    auto &checkMark = node.addNode<ImgNode>(Img{.tex = assets.get<Tex>("check-mark"),
+                                                .sz = glm::vec2{90.f, 90.f},
+                                                .pivot = glm::vec2{1.0f, 0.0f}});
+    checkMark.setPos(glm::vec2{-20.0f, 100.f});
+    node.setPos(glm::vec2{(width - dim.x - 64.f - 10.f) / 2.f + 64.f + 10.f, y});
     y += dim.y;
-  }
+    selectionHeight = dim.y;
+    minX = std::min(minX, node.getPos().x - 20.f - 90.f);
+    return &checkMark;
+  }();
   auto &masterVolumeThumb = scene.addNode<ImgNode>(
     Img{.tex = assets.get<Tex>("thumb"), .sz = glm::vec2{50.f, 50.f}, .pivot = glm::vec2{.5f, 0.0f}});
-  masterVolumeThumb.setPos(masterVolumePos + glm::vec2{200.f, 0.0f});
   auto &musicThumb = scene.addNode<ImgNode>(
     Img{.tex = assets.get<Tex>("thumb"), .sz = glm::vec2{50.f, 50.f}, .pivot = glm::vec2{.5f, 0.0f}});
-  musicThumb.setPos(musicPos + glm::vec2{200.f, 0.0f});
   auto &sfxThumb = scene.addNode<ImgNode>(
     Img{.tex = assets.get<Tex>("thumb"), .sz = glm::vec2{50.f, 50.f}, .pivot = glm::vec2{.5f, 0.0f}});
-  sfxThumb.setPos(sfxPos + glm::vec2{200.f, 0.0f});
+  auto &selector = scene.addNode<ImgNode>(Img{
+    .tex = assets.get<Tex>("selector"), .sz = glm::vec2{100.f, 100.f}, .pivot = glm::vec2{1.f, 0.0f}});
 
   while (!done)
   {
     while (e.poll()) {}
+    selector.setPos(
+      glm::vec2{minX - 20.f, height / 16.f + 200.f + 100.f + 40.f + selection * selectionHeight});
+    masterVolumeThumb.setPos(masterVolumePos + glm::vec2{200.f * masterVolume, 0.0f});
+    musicThumb.setPos(musicPos + glm::vec2{200.f * music, 0.0f});
+    sfxThumb.setPos(sfxPos + glm::vec2{200.f * sfx, 0.0f});
+    fullScreenCheckMark->isVisible = fullScreen;
+    showFpsCheckMark->isVisible = showFps;
     render.render(scene);
     bgfx::frame();
   }

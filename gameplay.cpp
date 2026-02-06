@@ -13,6 +13,7 @@
 #include "render.hpp"
 #include "sample.hpp"
 #include "scene.hpp"
+#include "settings.hpp"
 #include "sink.hpp"
 #include "sound-wave.hpp"
 #include "spotlight.hpp"
@@ -24,24 +25,31 @@
 #include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>
 
-Gameplay::Gameplay(Assets &aAssets, Render &aRender, Sink &aSink)
-  : assets(aAssets), render(aRender), sink(aSink), scene(nullptr)
+Gameplay::Gameplay(Assets &aAssets,
+                   Render &aRender,
+                   Sink &aMusicSend,
+                   Sink &aSfxSend,
+                   Settings &aSettings)
+  : assets(aAssets), render(aRender), musicSend(aMusicSend), sfxSend(aSfxSend), settings(aSettings)
 {
 }
 
 auto Gameplay::run() -> int
 {
-  LOG("fuel", fuel);
+  auto scene = Scene{nullptr};
+  std::list<std::reference_wrapper<class BaseNode3d>> tmpNodes;
+  std::list<std::reference_wrapper<class Obstacle>> obstacles;
+
   const auto startLoadingTime = SDL_GetTicks();
 
   auto &car = scene.addNode<Car>(assets);
-  auto coinSound = Sample{sink, assets.get<SoundWave>("coin"), .33, 0.0};
-  auto liveSound = Sample{sink, assets.get<SoundWave>("live"), .33, 0.0};
-  auto tireHitSound = Sample{sink, assets.get<SoundWave>("tire-hit"), 1., 0.0};
-  auto fuelSound = Sample{sink, assets.get<SoundWave>("fuel"), 1., 0.0};
-  auto lowGasSound = Sample{sink, assets.get<SoundWave>("low-gas"), 1., 0.0};
-  auto emptyTankSound = Sample{sink, assets.get<SoundWave>("empty-tank"), 1., 0.0};
-  auto bgm = LoopingSample{sink, assets.get<SoundWave>("bgm"), .1, 0.0};
+  auto coinSound = Sample{sfxSend, assets.get<SoundWave>("coin"), .33, 0.0};
+  auto liveSound = Sample{sfxSend, assets.get<SoundWave>("live"), .33, 0.0};
+  auto tireHitSound = Sample{sfxSend, assets.get<SoundWave>("tire-hit"), 1., 0.0};
+  auto fuelSound = Sample{sfxSend, assets.get<SoundWave>("fuel"), 1., 0.0};
+  auto lowGasSound = Sample{sfxSend, assets.get<SoundWave>("low-gas"), 1., 0.0};
+  auto emptyTankSound = Sample{sfxSend, assets.get<SoundWave>("empty-tank"), 1., 0.0};
+  auto bgm = LoopingSample{musicSend, assets.get<SoundWave>("bgm"), .1, 0.0};
 
   int lastTire = 50;
   int n = 1;
@@ -165,7 +173,7 @@ auto Gameplay::run() -> int
   e.keyDown = [&](const SDL_KeyboardEvent &e) {
     switch (e.keysym.sym)
     {
-    case SDLK_q: done = true; break;
+    case SDLK_ESCAPE: done = true; break;
     case SDLK_LEFT:
       if (car.currentLane > -1)
         --car.currentLane;
@@ -315,7 +323,8 @@ auto Gameplay::run() -> int
     auto t1 = SDL_GetTicks();
     ++cnt;
     static float fps = 0.0f;
-    bgfx::dbgTextPrintf(0, 4, 0x0f, "FPS: %f", fps);
+    if (settings.showFps)
+      bgfx::dbgTextPrintf(0, 4, 0x0f, "FPS: %f", fps);
     if (t1 - t0 >= 1'000)
     {
       fps = cnt * 1000. / (t1 - t0);

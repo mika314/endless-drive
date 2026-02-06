@@ -1,5 +1,4 @@
 #pragma once
-#include "scene.hpp"
 
 class TitleScreen
 {
@@ -12,6 +11,5 @@ private:
   Assets &assets;
   Render &render;
   Sink &sink;
-  Scene scene;
   Opt opt = Opt::gameplay;
 };

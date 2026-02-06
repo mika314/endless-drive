@@ -1,4 +1,5 @@
 #include "sink.hpp"
+#include "consts.hpp"
 #include "source.hpp"
 #include <cmath>
 
@@ -26,8 +27,9 @@ auto Sink::mix(int samples) -> std::vector<float>
     const auto a = s->gain;
     const auto pan = static_cast<float>(s->pan);
     for (auto i = 0; i < std::min(samples * ChN, static_cast<int>(chunk.size())); ++i)
-      r[i] +=
-        a * ((i % 2 == 1) ? ((pan <= 0) ? 1.f : 1.f + pan) : ((pan <= 0) ? 1.f - pan : 1.f)) * chunk[i];
+      r[i] += gain * a *
+              ((i % 2 == 1) ? ((pan <= 0) ? 1.f : 1.f + pan) : ((pan <= 0) ? 1.f - pan : 1.f)) *
+              chunk[i];
   }
   return r;
 }

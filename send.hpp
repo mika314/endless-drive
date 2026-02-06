@@ -1,17 +1,15 @@
 #pragma once
+#include "sink.hpp"
 #include "source.hpp"
 #include <deque>
 
-class Send : public Source
+class Send final : public Source, public Sink
 {
-  friend class Source;
-
 public:
-  Send(class Sink &, Source &owner, double gain, double pan);
+  Send(class Sink &);
+  auto lock() const -> void final {}
+  auto unlock() const -> void final {}
 
 private:
   auto internalPull(int samples) -> std::vector<float> final;
-
-  std::reference_wrapper<Source> owner;
-  std::deque<std::vector<float>> q;
 };

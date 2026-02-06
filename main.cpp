@@ -6,6 +6,7 @@
 #include "master-speaker.hpp"
 #include "render.hpp"
 #include "sample.hpp"
+#include "send.hpp"
 #include "settings.hpp"
 #include "sound-wave.hpp"
 #include "title-screen.hpp"
@@ -48,6 +49,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 {
   srand(time(nullptr));
   auto init = sdl::Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+  SDL_ShowCursor(false);
 
   auto win = sdl::Window{"Endless Drive", 0, 0, width, height, SDL_WINDOW_FULLSCREEN_DESKTOP};
 
@@ -57,17 +59,21 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto assets = Assets{};
   auto render = Render{width, height};
   auto masterSpeaker = MasterSpeaker{};
+  auto musicSend = Send{masterSpeaker};
+  auto sfxSend = Send{masterSpeaker};
   auto coinSound = Sample{masterSpeaker, assets.get<SoundWave>("coin"), .33, 0.0};
-
+  auto settings = Settings{assets, render, masterSpeaker, musicSend, sfxSend};
+  auto titleScreen = TitleScreen{assets, render, sfxSend};
   for (;;)
   {
-    switch (TitleScreen{assets, render, masterSpeaker}.run())
+    switch (titleScreen.run())
     {
     case TitleScreen::Opt::gameplay:
       coinSound.play();
-      GameOver(assets, render, masterSpeaker, Gameplay(assets, render, masterSpeaker).run()).run();
+      GameOver{assets, render, sfxSend, Gameplay{assets, render, musicSend, sfxSend, settings}.run()}
+        .run();
       break;
-    case TitleScreen::Opt::settings: Settings(assets, render, masterSpeaker).run(); break;
+    case TitleScreen::Opt::settings: settings.run(); break;
     case TitleScreen::Opt::quit: return 0;
     }
   }

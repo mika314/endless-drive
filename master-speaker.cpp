@@ -1,4 +1,5 @@
 #include "master-speaker.hpp"
+#include "consts.hpp"
 #include "source.hpp"
 #include <log/log.hpp>
 

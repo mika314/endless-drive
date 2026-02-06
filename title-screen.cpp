@@ -5,6 +5,7 @@
 #include "label-node.hpp"
 #include "render.hpp"
 #include "sample.hpp"
+#include "scene.hpp"
 #include "sink.hpp"
 #include "sound-wave.hpp"
 #include <glm/vec2.hpp>
@@ -12,12 +13,13 @@
 #include <sdlpp/sdlpp.hpp>
 
 TitleScreen::TitleScreen(Assets &aAssets, Render &aRender, Sink &aSink)
-  : assets(aAssets), render(aRender), sink(aSink), scene(nullptr)
+  : assets(aAssets), render(aRender), sink(aSink)
 {
 }
 
 auto TitleScreen::run() -> Opt
 {
+  auto scene = Scene{nullptr};
   auto coinSound = Sample{sink, assets.get<SoundWave>("coin"), .33, 0.0};
   auto done = false;
   auto e = sdl::EventHandler{};
