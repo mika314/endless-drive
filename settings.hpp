@@ -1,4 +1,6 @@
 #pragma once
+#include <ser/macro.hpp>
+#include <string>
 
 class Settings
 {
@@ -11,11 +13,14 @@ public:
   bool fullScreen = true;
   bool showFps = true;
 
+  SER_PROPS(masterVolume, music, sfx, fullScreen, showFps);
+
 private:
   Assets &assets;
   Render &render;
   Sink &master;
   Sink &musicSend;
   Sink &sfxSend;
+  std::string prefPath;
   int selection = 0;
 };

@@ -10,12 +10,26 @@
 #include "sound-wave.hpp"
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include <json-ser/json-ser.hpp>
 #include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>
 
 Settings::Settings(Assets &aAssets, Render &aRender, Sink &aMaster, Sink &aMusicSend, Sink &aSfxSend)
-  : assets(aAssets), render(aRender), master(aMaster), musicSend(aMusicSend), sfxSend(aSfxSend)
+  : assets(aAssets),
+    render(aRender),
+    master(aMaster),
+    musicSend(aMusicSend),
+    sfxSend(aSfxSend),
+    prefPath([]() {
+      auto cPrefPath = SDL_GetPrefPath("1eu", "endless-drive");
+      auto r = std::string{cPrefPath};
+      SDL_free(cPrefPath);
+      return r;
+    }())
 {
+  if (auto f = std::ifstream{prefPath + "settings.json"})
+    jsonDeser(f, *this);
 }
 
 // Converts a linear slider value (0.0 to 1.0) to audio gain.
@@ -31,6 +45,8 @@ static auto sliderToGain(float x) -> float
 
 auto Settings::run() -> void
 {
+  if (auto f = std::ifstream{prefPath + "settings.json"})
+    jsonDeser(f, *this);
   auto scene = Scene{nullptr};
   auto coinSound = Sample{sfxSend, assets.get<SoundWave>("coin"), .33, 0.0};
   auto done = false;
@@ -229,4 +245,6 @@ auto Settings::run() -> void
     render.render(scene);
     bgfx::frame();
   }
+  if (auto f = std::ofstream{prefPath + "settings.json"})
+    jsonSer(f, *this);
 }
