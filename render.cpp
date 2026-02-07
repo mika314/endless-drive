@@ -457,3 +457,20 @@ auto Render::getDimensions(const Font &font, float sz, const std::string &text) 
 {
   return font.getDimensions(atlas, sz, text);
 }
+
+void Render::resize(int newW, int newH)
+{
+  w = newW;
+  h = newH;
+  deferrd.~Deferrd();
+  new (&deferrd) Deferrd(w, h);
+}
+
+auto Render::getWidth() const -> int
+{
+  return w;
+}
+auto Render::getHeight() const -> int
+{
+  return h;
+}

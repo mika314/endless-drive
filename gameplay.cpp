@@ -170,6 +170,15 @@ auto Gameplay::run() -> int
   auto done = false;
   auto e = sdl::EventHandler{};
   e.quit = [&done](const SDL_QuitEvent &) { done = true; };
+  e.windowEvent = [&](const SDL_WindowEvent &sdl_e) {
+    if (sdl_e.event == SDL_WINDOWEVENT_RESIZED || sdl_e.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+    {
+      const auto w = sdl_e.data1;
+      const auto h = sdl_e.data2;
+      bgfx::reset(w, h, BGFX_RESET_VSYNC);
+      render.resize(w, h);
+    }
+  };
   e.keyDown = [&](const SDL_KeyboardEvent &e) {
     switch (e.keysym.sym)
     {
@@ -184,6 +193,8 @@ auto Gameplay::run() -> int
       break;
     }
   };
+
+  const auto width = render.getWidth();
 
   auto &scoreLb = scene.addNode<LabelNode>(Label{.text = "Score:",
                                                  .font = assets.get<Font>("chp-fire.ttf"),

@@ -2,11 +2,16 @@
 #include <ser/macro.hpp>
 #include <string>
 
+namespace sdl
+{
+class Window;
+}
+
 class Settings
 {
 public:
   Settings(class Assets &, class Render &, class Sink &master, Sink &musicSend, Sink &sfxSend);
-  auto run() -> void;
+  auto run(sdl::Window &win) -> void;
   float masterVolume = 1.f;
   float music = 1.f;
   float sfx = 1.f;

@@ -22,6 +22,7 @@ public:
   auto render(const Scene &) -> void;
   auto setCamPos(glm::vec3) -> void;
   auto setCamRot(glm::vec3) -> void;
+  auto resize(int newW, int newH) -> void;
 
   struct MeshIn
   {
@@ -62,6 +63,8 @@ public:
     const Tex &tex;
   };
   auto operator()(const ImgIn &) -> void;
+  auto getWidth() const -> int;
+  auto getHeight() const -> int;
 
 private:
   int w;
@@ -96,6 +99,7 @@ private:
   public:
     Deferrd(int w, int h);
     Deferrd(const Deferrd &) = delete;
+    auto operator=(const Deferrd &) = delete;
     ~Deferrd();
     auto geom() -> void;
     auto light() -> void;

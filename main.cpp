@@ -27,9 +27,12 @@
 class BgfxInit
 {
 public:
-  BgfxInit(sdl::Window &win, int width, int height)
+  BgfxInit(sdl::Window &win)
   {
     bgfx::init([&]() {
+      int width;
+      int height;
+      win.getSize(&width, &height);
       auto r = bgfx::Init{};
       r.type = bgfx::RendererType::OpenGL;
       // .type     = bgfx::RendererType::Vulkan;
@@ -51,18 +54,28 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto init = sdl::Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
   SDL_ShowCursor(false);
 
-  auto win = sdl::Window{"Endless Drive", 0, 0, width, height, SDL_WINDOW_FULLSCREEN_DESKTOP};
+  auto win = sdl::Window{"Endless Drive", 0, 0, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP};
 
-  auto bgfxInit = BgfxInit{win, width, height};
+  auto bgfxInit = BgfxInit{win};
   bgfx::setDebug(BGFX_DEBUG_TEXT);
 
   auto assets = Assets{};
+  int width;
+  int height;
+  win.getSize(&width, &height);
   auto render = Render{width, height};
   auto masterSpeaker = MasterSpeaker{};
   auto musicSend = Send{masterSpeaker};
   auto sfxSend = Send{masterSpeaker};
   auto coinSound = Sample{masterSpeaker, assets.get<SoundWave>("coin"), .33, 0.0};
   auto settings = Settings{assets, render, masterSpeaker, musicSend, sfxSend};
+
+  if (!settings.fullScreen)
+  {
+    win.setFullscreen(0);
+    SDL_SetWindowResizable(win.get(), SDL_TRUE);
+  }
+
   auto titleScreen = TitleScreen{assets, render, sfxSend};
   for (;;)
   {
@@ -73,7 +86,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       GameOver{assets, render, sfxSend, Gameplay{assets, render, musicSend, sfxSend, settings}.run()}
         .run();
       break;
-    case TitleScreen::Opt::settings: settings.run(); break;
+    case TitleScreen::Opt::settings: settings.run(win); break;
     case TitleScreen::Opt::quit: return 0;
     }
   }

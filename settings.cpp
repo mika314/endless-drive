@@ -43,7 +43,7 @@ static auto sliderToGain(float x) -> float
   return std::pow(10.f, db / 20.f);
 }
 
-auto Settings::run() -> void
+auto Settings::run(sdl::Window &win) -> void
 {
   if (auto f = std::ifstream{prefPath + "settings.json"})
     jsonDeser(f, *this);
@@ -52,6 +52,15 @@ auto Settings::run() -> void
   auto done = false;
   auto e = sdl::EventHandler{};
   e.quit = [&done](const SDL_QuitEvent &) { done = true; };
+  e.windowEvent = [&](const SDL_WindowEvent &sdl_e) {
+    if (sdl_e.event == SDL_WINDOWEVENT_RESIZED || sdl_e.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+    {
+      const auto w = sdl_e.data1;
+      const auto h = sdl_e.data2;
+      bgfx::reset(w, h, BGFX_RESET_VSYNC);
+      render.resize(w, h);
+    }
+  };
   e.keyDown = [&](const SDL_KeyboardEvent &e) {
     switch (e.keysym.sym)
     {
@@ -63,6 +72,14 @@ auto Settings::run() -> void
       case 3:
         coinSound.play();
         fullScreen = !fullScreen;
+        win.setFullscreen(fullScreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+        SDL_SetWindowResizable(win.get(), fullScreen ? SDL_FALSE : SDL_TRUE);
+        {
+          int w, h;
+          win.getSize(&w, &h);
+          bgfx::reset(w, h, BGFX_RESET_VSYNC);
+          render.resize(w, h);
+        }
         break;
       case 4:
         coinSound.play();
@@ -120,6 +137,9 @@ auto Settings::run() -> void
       break;
     }
   };
+
+  const auto width = render.getWidth();
+  const auto height = render.getHeight();
 
   auto y = height / 16.f;
   auto masterVolumePos = glm::vec2{};

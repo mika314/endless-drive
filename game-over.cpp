@@ -29,6 +29,9 @@ auto GameOver::run() -> void
     }
   };
 
+  const auto width = render.getWidth();
+  const auto height = render.getHeight();
+
   {
     auto &node = scene.addNode<LabelNode>(Label{.text = "game over",
                                                 .font = assets.get<Font>("chp-fire.ttf"),
