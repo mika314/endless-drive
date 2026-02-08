@@ -73,12 +73,12 @@ vec3 clipToWorld(mat4 _invViewProj, vec3 _clipPos)
 
 void main()
 {
-  vec3 lBaseColor = vec3(1.f);
+  vec3 lBaseColor = vec3_splat(1.f);
   float lMetallic = texture2D(metallicRoughness, v_uv).b;
   float lRoughness = texture2D(metallicRoughness, v_uv).g;
   vec3 normal = decodeNormalUint(texture2D(normals, v_uv));
 
-  vec3 totColor = vec3(0.0);
+  vec3 totColor = vec3_splat(0.0);
 
   // Reconstruct world position from depth
   float deviceDepth = texture2D(depth, v_uv).x;
@@ -93,11 +93,11 @@ void main()
   vec3 N = normal;
   vec3 V = normalize(camPos.xyz - worldPos);
 
-  vec3 F0 = vec3(0.04);
+  vec3 F0 = vec3_splat(0.04);
   F0 = mix(F0, lBaseColor, lMetallic);
 
   // reflectance equation
-  vec3 Lo = vec3(0.0);
+  vec3 Lo = vec3_splat(0.0);
 
   // calculate per-light radiance
   vec3 L = normalize(lightTrans[3].xyz - worldPos);
@@ -112,7 +112,7 @@ void main()
   vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
 
   vec3 kS = F;
-  vec3 kD = vec3(1.0) - kS;
+  vec3 kD = vec3_splat(1.0) - kS;
   kD *= 1.0 - lMetallic;
 
   vec3 numerator = NDF * G * F;
@@ -125,8 +125,8 @@ void main()
 
   vec3 color = Lo;
 
-  color = color / (color + vec3(1.0));
-  color = pow(color, vec3(1.0 / 2.2));
+  color = color / (color + vec3_splat(1.0));
+  color = pow(color, vec3_splat(1.0 / 2.2));
 
   gl_FragColor = vec4(color, 1.0);
 }

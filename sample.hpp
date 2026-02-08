@@ -1,6 +1,7 @@
 #pragma once
 #include "source.hpp"
 #include <atomic>
+#include <functional>
 
 class Sample : public Source
 {

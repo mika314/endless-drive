@@ -19,7 +19,7 @@ auto loadTexture(const char *fileName, uint64_t flags) -> bgfx::TextureHandle
 
   // const auto t0 = SDL_GetTicks();
 
-  auto file = std::ifstream{fileName};
+  auto file = std::ifstream{fileName, std::ios::binary};
   if (!file)
     return BGFX_INVALID_HANDLE;
   auto content = std::vector<std::byte>{};

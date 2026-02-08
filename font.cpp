@@ -7,7 +7,7 @@
 
 static TrueTypeHandle loadTtf(FontManager &_fm, const std::string &_filePath)
 {
-  auto file = std::ifstream{_filePath};
+  auto file = std::ifstream{_filePath, std::ios::binary};
   if (!file)
     return BGFX_INVALID_HANDLE;
 

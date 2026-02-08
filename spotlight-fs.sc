@@ -51,7 +51,7 @@ vec3 clipToWorld(mat4 _invViewProj, vec3 _clipPos)
 
 void main()
 {
-  vec3 lBaseColor = vec3(1.f);
+  vec3 lBaseColor = vec3_splat(1.f);
   float lMetallic = texture2D(metallicRoughness, v_uv).b;
   float lRoughness = texture2D(metallicRoughness, v_uv).g;
   vec3 normal = decodeNormalUint(texture2D(normals, v_uv));
@@ -67,7 +67,7 @@ void main()
 
   vec3 N = normal;
   vec3 V = normalize(camPos.xyz - worldPos);
-  vec3 F0 = vec3(0.04);
+  vec3 F0 = vec3_splat(0.04);
   F0 = mix(F0, lBaseColor, lMetallic);
 
   // Extract light position and direction from lightTrans
@@ -94,7 +94,7 @@ void main()
   // Early exit if outside spotlight cone
   if (spotIntensity <= 0.0)
   {
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    gl_FragColor = vec4_splat(0.0);
     return;
   }
 
@@ -107,7 +107,7 @@ void main()
   float G = geometrySmith(N, V, L, lRoughness);
   vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
   vec3 kS = F;
-  vec3 kD = vec3(1.0) - kS;
+  vec3 kD = vec3_splat(1.0) - kS;
   kD *= 1.0 - lMetallic;
   vec3 numerator = NDF * G * F;
   float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
@@ -115,11 +115,11 @@ void main()
   // add to outgoing radiance Lo
   float NdotL = max(dot(N, L), 0.0);
   // reflectance equation
-  vec3 Lo = vec3(0.0);
+  vec3 Lo = vec3_splat(0.0);
 
   Lo += (kD * lBaseColor / PI + specular) * radiance * NdotL;
   vec3 color = Lo;
-  color = color / (color + vec3(1.0));
-  color = pow(color, vec3(1.0 / 2.2));
+  color = color / (color + vec3_splat(1.0));
+  color = pow(color, vec3_splat(1.0 / 2.2));
   gl_FragColor = vec4(color, 1.0);
 }

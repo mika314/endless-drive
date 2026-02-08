@@ -21,6 +21,7 @@
 #include "tire.hpp"
 #include <bgfx/platform.h>
 #include <fstream>
+#include <functional>
 #include <list>
 #include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>

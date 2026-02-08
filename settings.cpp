@@ -28,7 +28,7 @@ Settings::Settings(Assets &aAssets, Render &aRender, Sink &aMaster, Sink &aMusic
       return r;
     }())
 {
-  if (auto f = std::ifstream{prefPath + "settings.json"})
+  if (auto f = std::ifstream{prefPath + "settings.json", std::ios::binary})
     jsonDeser(f, *this);
 }
 
@@ -45,7 +45,7 @@ static auto sliderToGain(float x) -> float
 
 auto Settings::run(sdl::Window &win) -> void
 {
-  if (auto f = std::ifstream{prefPath + "settings.json"})
+  if (auto f = std::ifstream{prefPath + "settings.json", std::ios::binary})
     jsonDeser(f, *this);
   auto scene = Scene{nullptr};
   auto coinSound = Sample{sfxSend, assets.get<SoundWave>("coin"), .33, 0.0};
@@ -265,6 +265,6 @@ auto Settings::run(sdl::Window &win) -> void
     render.render(scene);
     bgfx::frame();
   }
-  if (auto f = std::ofstream{prefPath + "settings.json"})
+  if (auto f = std::ofstream{prefPath + "settings.json", std::ios::binary})
     jsonSer(f, *this);
 }

@@ -54,7 +54,7 @@ vec3 getOffset(vec3 N)
   vec3 localOffset = vec3(r * sinTheta * cos(phi), r * sinTheta * sin(phi), r * cos(theta) + bias);
 
   // 4. Multiply Matrix by Local Offset to get World/View Space Offset
-  return transitionMatrix * localOffset;
+  return mul(transitionMatrix, localOffset);
 }
 
 float toClipSpaceDepth(float _depthTextureZ)
@@ -103,7 +103,7 @@ void main()
   {
     vec3 worldSpaceOffset = getOffset(norm);
     vec3 worldOffseted = worldPos + worldSpaceOffset;
-    vec4 screenOffseted = projViewCombine * vec4(worldOffseted, 1.f);
+    vec4 screenOffseted = mul(projViewCombine, vec4(worldOffseted, 1.f));
     screenOffseted = vec4(screenOffseted.xyz / screenOffseted.w, 1.f);
 
     float dz = screenOffseted.z - getDepth((screenOffseted.xy + 1.f) / 2.f);
@@ -124,5 +124,5 @@ void main()
   // gl_FragColor = light + ambient * occlusion;
 
   gl_FragColor = (base * (light + ambient * occlusion) + emission) * (1 - pow(clip.z, 150.f)) +
-                 vec4(.1f) * pow(clip.z, 150.f);
+                 vec4_splat(0.1f) * pow(clip.z, 150.f);
 }

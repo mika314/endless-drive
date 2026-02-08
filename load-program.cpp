@@ -51,7 +51,7 @@ static bgfx::ShaderHandle loadShader(const char *_name)
   {
   case bgfx::RendererType::Noop:
   case bgfx::RendererType::Direct3D11:
-  case bgfx::RendererType::Direct3D12: shaderPath = "bgfx/bgfx/examples/runtime/shaders/dx11/"; break;
+  case bgfx::RendererType::Direct3D12: shaderPath = "data/"; break;
   case bgfx::RendererType::Agc:
   case bgfx::RendererType::Gnm: shaderPath = "bgfx/bgfx/examples/runtime/shaders/pssl/"; break;
   case bgfx::RendererType::Metal: shaderPath = "bgfx/bgfx/examples/runtime/shaders/metal/"; break;

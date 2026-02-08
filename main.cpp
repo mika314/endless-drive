@@ -34,7 +34,11 @@ public:
       int height;
       win.getSize(&width, &height);
       auto r = bgfx::Init{};
+#ifdef BX_PLATFORM_WINDOWS
       r.type = bgfx::RendererType::OpenGL;
+#else
+      r.type = bgfx::RendererType::OpenGL;
+#endif
       // .type     = bgfx::RendererType::Vulkan;
       r.vendorId = BGFX_PCI_ID_NONE; // args.m_pciId;
       r.platformData.nwh = getNativeWindowHandle(win);
