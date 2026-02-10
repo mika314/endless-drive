@@ -1,5 +1,7 @@
 $input v_uv
+
 #include <bgfx_shader.sh>
+
 uniform mat4 mtx;
 uniform vec4 camPos;
 uniform mat4 lightTrans;
@@ -8,6 +10,7 @@ uniform vec4 lightAngle;
 SAMPLER2D(normals, 0);
 SAMPLER2D(metallicRoughness, 1);
 SAMPLER2D(depth, 2);
+
 const float PI = 3.141592654;
 float distributionGGX(vec3 N, vec3 H, float roughness)
 {
@@ -63,6 +66,7 @@ void main()
 #if !BGFX_SHADER_LANGUAGE_GLSL
   clip.y = -clip.y;
 #endif
+
   vec3 worldPos = clipToWorld(mtx, clip);
 
   vec3 N = normal;
@@ -72,10 +76,10 @@ void main()
 
   // Extract light position and direction from lightTrans
   // Position is in the 4th column
-  vec3 lightPos = lightTrans[3].xyz;
+  vec3 lightPos = mul(lightTrans, vec4(0.0f, 0.0f, 0.0f, 1.f)).xyz;
 
   // Direction is Y-forward (second column) in Z-up coordinate system
-  vec3 lightDir = normalize(lightTrans[1].xyz);
+  vec3 lightDir = normalize(mul(lightTrans, vec4(0.0f, 1.f, 0.0f, 0.0f)).xyz);
 
   // Calculate direction from light to fragment
   vec3 L = normalize(lightPos - worldPos);
@@ -83,7 +87,7 @@ void main()
   // Spotlight cone calculation
   float spotAngle = lightAngle.x; // Opening angle in radians
   float cosOuterCone = cos(spotAngle);
-  float cosInnerCone = cos(spotAngle * 0.9); // 90% of outer angle for smooth falloff
+  float cosInnerCone = cos(spotAngle * .9f); // 90% of outer angle for smooth falloff
 
   // Calculate angle between light direction and direction to fragment
   float theta = dot(-L, lightDir);
@@ -121,5 +125,5 @@ void main()
   vec3 color = Lo;
   color = color / (color + vec3_splat(1.0));
   color = pow(color, vec3_splat(1.0 / 2.2));
-  gl_FragColor = vec4(color, 1.0);
+  gl_FragColor = vec4(color, 1.f);
 }

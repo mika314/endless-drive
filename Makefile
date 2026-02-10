@@ -34,16 +34,16 @@ $(SHADERC):
 shaders: $(VERTEX_BINS) $(FRAGMENT_BINS) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS)
 
 $(DATA_DIR)/%-vs.bin: %-vs.sc varying.def.sc shaderlib.sh | $(DATA_DIR)
-	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform linux --profile 120 --varyingdef varying.def.sc
+	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform linux --profile spirv --varyingdef varying.def.sc
 
 $(DATA_DIR)/%-fs.bin: %-fs.sc varying.def.sc shaderlib.sh | $(DATA_DIR)
-	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform linux --profile 120 --varyingdef varying.def.sc
+	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform linux --profile spirv --varyingdef varying.def.sc
 
 $(DATA_DIR)/%-uivs.bin: %-uivs.sc ui-varying.def.sc shaderlib.sh | $(DATA_DIR)
-	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform linux --profile 120 --varyingdef ui-varying.def.sc
+	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform linux --profile spirv --varyingdef ui-varying.def.sc
 
 $(DATA_DIR)/%-uifs.bin: %-uifs.sc ui-varying.def.sc shaderlib.sh | $(DATA_DIR)
-	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform linux --profile 120 --varyingdef ui-varying.def.sc
+	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform linux --profile spirv --varyingdef ui-varying.def.sc
 
 $(DATA_DIR)/%: $(ASSETS_DIR)/% | $(DATA_DIR)
 	cp $< $@

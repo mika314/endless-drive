@@ -5,6 +5,6 @@ $output v_uv
 
 void main()
 {
-	gl_Position = mul(u_modelViewProj, vec4(a_position, 1.0) );
-	v_uv = a_texcoord0;
+  gl_Position = mul(u_modelViewProj, vec4(a_position, 1.0));
+  v_uv = a_texcoord0;
 }

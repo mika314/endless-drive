@@ -19,9 +19,7 @@ vec3 decodeNormalUint(vec4 _encodedNormal)
   return normalize(_encodedNormal.xyz * 2.0 - 1.0);
 }
 
-uint rng_state;
-
-uint PCGHash()
+uint PCGHash(inout uint rng_state)
 {
   rng_state = rng_state * 747796405U + 2891336453U;
   uint state = rng_state;
@@ -29,11 +27,11 @@ uint PCGHash()
   return (word >> 22U) ^ word;
 }
 
-vec3 getOffset(vec3 N)
+vec3 getOffset(vec3 N, inout uint rng_state)
 {
-  float u = PCGHash() / float(0xffffffffU);
-  float v = PCGHash() / float(0xffffffffU);
-  float w = PCGHash() / float(0xffffffffU);
+  float u = PCGHash(rng_state) / float(0xffffffffU);
+  float v = PCGHash(rng_state) / float(0xffffffffU);
+  float w = PCGHash(rng_state) / float(0xffffffffU);
   float r = ssaoRadius * u;
   float phi = 2 * 3.141592654f * v;
   float theta = acos(w);
@@ -66,11 +64,19 @@ float toClipSpaceDepth(float _depthTextureZ)
 #endif // BGFX_SHADER_LANGUAGE_GLSL
 }
 
+#if BGFX_SHADER_LANGUAGE_GLSL
 float getDepth(vec2 uv)
 {
   float deviceDepth = texture2D(depth, uv).x;
   return toClipSpaceDepth(deviceDepth);
 }
+#else
+float getDepth(vec2 uv)
+{
+  float deviceDepth = texture2D(depth, vec2(uv.x, -uv.y)).x;
+  return toClipSpaceDepth(deviceDepth);
+}
+#endif
 
 vec3 clipToWorld(mat4 _invViewProj, vec3 _clipPos)
 {
@@ -80,7 +86,7 @@ vec3 clipToWorld(mat4 _invViewProj, vec3 _clipPos)
 
 void main()
 {
-  rng_state = uint(v_uv.y * 5000.f * 5000.f + v_uv.x * 5000.f + time.x);
+  uint rng_state = uint(v_uv.y * 5000.f * 5000.f + v_uv.x * 5000.f + time.x);
 
   vec4 base = texture2D(deferrdBaseColor, v_uv);
   vec4 light = texture2D(lightBuffer, v_uv);
@@ -101,7 +107,7 @@ void main()
   const int Samples = 16;
   for (int i = 0; i < Samples; ++i)
   {
-    vec3 worldSpaceOffset = getOffset(norm);
+    vec3 worldSpaceOffset = getOffset(norm, rng_state);
     vec3 worldOffseted = worldPos + worldSpaceOffset;
     vec4 screenOffseted = mul(projViewCombine, vec4(worldOffseted, 1.f));
     screenOffseted = vec4(screenOffseted.xyz / screenOffseted.w, 1.f);

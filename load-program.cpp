@@ -58,7 +58,7 @@ static bgfx::ShaderHandle loadShader(const char *_name)
   case bgfx::RendererType::Nvn: shaderPath = "bgfx/bgfx/examples/runtime/shaders/nvn/"; break;
   case bgfx::RendererType::OpenGL: shaderPath = "data/"; break;
   case bgfx::RendererType::OpenGLES: shaderPath = "bgfx/bgfx/examples/runtime/shaders/essl/"; break;
-  case bgfx::RendererType::Vulkan: shaderPath = "bgfx/bgfx/examples/runtime/shaders/spirv/"; break;
+  case bgfx::RendererType::Vulkan: shaderPath = "data/"; break;
 
   case bgfx::RendererType::Count: BX_ASSERT(false, "You should not be here!"); break;
   }

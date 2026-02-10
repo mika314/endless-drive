@@ -74,9 +74,9 @@ private:
   TextBufferHandle textBuffer;
   glm::vec3 camPos = {0.f, -5.f, 1.8f};
   glm::vec3 camRot = {-0.3f, 0.0f, 0.0f};
-  Uni<glm::vec4> u_camPos = {"camPos"};
-  Uni<glm::mat4x4> u_mtx = "mtx";
-  Uni<glm::mat4x4> u_projViewCombine = "projViewCombine";
+  Uni<glm::vec4> u_camPos = "camPos";
+  Uni<glm::mat4> u_mtx = "mtx";
+  Uni<glm::mat4> u_projViewCombine = "projViewCombine";
   Uni<glm::vec4> u_time = "time";
   Uni<Tex> u_baseColorTex = {"baseColorTex", 0};
   Uni<Tex> u_metallicTex = {"metallicTex", 1};
@@ -87,7 +87,6 @@ private:
   Uni<glm::vec4> u_metallic = "metallic";
   Uni<glm::vec4> u_roughness = "roughness";
   Uni<glm::vec4> u_emission = "emission";
-  Uni<glm::vec4> u_lightPos = {"lightPos", glm::vec4{-1.25f, 1.f, 2.f, 0.f}};
   Uni<glm::vec4> u_lightColor = {"lightColor", glm::vec4{1.f}};
   Uni<glm::mat4> u_lightTrans = "lightTrans";
   Uni<glm::vec4> u_lightAngle = {"lightAngle", glm::vec4{.4f}};

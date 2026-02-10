@@ -433,7 +433,7 @@ vec3 clipToWorld(mat4 _invViewProj, vec3 _clipPos)
 	return wpos.xyz / wpos.w;
 }
 
-#if BGFX_SHADER_LANGUAGE_HLSL
+#if !BGFX_SHADER_LANGUAGE_GLSL
 mat4 inverse(mat4 m) {
     float n11 = m[0][0], n12 = m[1][0], n13 = m[2][0], n14 = m[3][0];
     float n21 = m[0][1], n22 = m[1][1], n23 = m[2][1], n24 = m[3][1];
