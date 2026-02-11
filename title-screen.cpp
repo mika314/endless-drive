@@ -32,7 +32,7 @@ auto TitleScreen::run() -> Opt
     {
       const auto w = sdl_e.data1;
       const auto h = sdl_e.data2;
-      bgfx::reset(w, h, BGFX_RESET_VSYNC);
+      bgfx::reset(w, h, ResetFlags);
       render.resize(w, h);
     }
   };

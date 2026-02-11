@@ -92,6 +92,7 @@ private:
   Uni<glm::vec4> u_lightAngle = {"lightAngle", glm::vec4{.4f}};
   Uni<Tex> s_texColor = {"s_texColor", 0};
   Uni<Tex> u_imgTex = {"imgTex", 0};
+  const bgfx::Caps *caps;
 
   class Deferrd
   {

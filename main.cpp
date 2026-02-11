@@ -39,13 +39,12 @@ public:
 #else
       r.type = bgfx::RendererType::Vulkan;
 #endif
-      r.debug = true;
       r.vendorId = BGFX_PCI_ID_NONE; // args.m_pciId;
       r.platformData.nwh = getNativeWindowHandle(win);
       r.platformData.ndt = getNativeDisplayHandle(win);
       r.resolution.width = width;
       r.resolution.height = height;
-      r.resolution.reset = BGFX_RESET_VSYNC;
+      r.resolution.reset = ResetFlags;
       return r;
     }());
   }

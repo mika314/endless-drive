@@ -77,6 +77,7 @@ Render::Render(int aW, int aH)
     h(aH),
     atlas(512),
     textBuffer(textBufferManager.createTextBuffer(FONT_TYPE_ALPHA, BufferType::Transient)),
+    caps(bgfx::getCaps()),
     deferrd(w, h),
     geom(loadProgram("geom-vs", "geom-fs")),
     geomInstanced(loadProgram("geom-instanced-vs", "geom-fs")),
@@ -230,11 +231,17 @@ auto Render::render(const Scene &scene) -> void
   // UI Pass setup
   bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
   {
-    const auto uiView = glm::lookAt(glm::vec3(0.0f, 0.0f, 1.0f),  // Camera is at (0,0,1)
-                                    glm::vec3(0.0f, 0.0f, 0.0f),  // Looks at (0,0,0)
-                                    glm::vec3(0.0f, 1.0f, 0.0f)); // Up is (0,1,0)
-    const auto uiProj =
-      glm::ortho(0.0f, 1.f * w, 1.f * h, 0.0f, 0.0f, 100.0f); // 0,w,h,0 for top-left origin
+    const auto uiView = glm::lookAt(glm::vec3(0.0f, 0.0f, 1.0f),          // Camera is at (0,0,1)
+                                    glm::vec3(0.0f, 0.0f, 0.0f),          // Looks at (0,0,0)
+                                    glm::vec3(0.0f, 1.0f, 0.0f));         // Up is (0,1,0)
+    auto uiProj = glm::ortho(0.0f, 1.f * w, 1.f * h, 0.0f, 0.0f, 100.0f); // 0,w,h,0 for top-left origin
+
+    if (!caps->homogeneousDepth)
+    {
+      // OpenGL uses [-1, 1] for depth, need to adjust
+      uiProj[2][2] *= 0.5f;
+      uiProj[3][2] = uiProj[3][2] * 0.5f + 0.5f;
+    }
     bgfx::setViewTransform(uiRenderPass, &uiView, &uiProj);
     bgfx::setViewRect(uiRenderPass, 0, 0, w, h);
     bgfx::setViewClear(uiRenderPass, BGFX_CLEAR_NONE);

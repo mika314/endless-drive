@@ -44,7 +44,7 @@ vec3 getOffset(vec3 N, inout uint rng_state)
 
   // 2. This IS your matrix.
   // It maps the 'Z-up' hemisphere to your 'Normal-up' hemisphere.
-  mat3 transitionMatrix = mat3(T, B, N);
+  mat3 transitionMatrix = mtxFromCols(T, B, N);
 
   // 3. Calculate the local offset in "Normal-Space"
   // Using your specific variables
@@ -92,8 +92,6 @@ void main()
   vec4 light = texture2D(lightBuffer, v_uv);
   vec4 emission = texture2D(emissionBuffer, v_uv);
 
-  float occlusion = 0.0;
-
   // Reconstruct world position from depth
   float deviceDepth = texture2D(depth, v_uv).x;
   float depth = toClipSpaceDepth(deviceDepth);
@@ -104,6 +102,7 @@ void main()
 #endif
   vec3 worldPos = clipToWorld(mtx, clip);
   vec3 norm = decodeNormalUint(texture2D(normalsCombine, v_uv));
+  float occlusion = 0.0f;
   const int Samples = 16;
   for (int i = 0; i < Samples; ++i)
   {
