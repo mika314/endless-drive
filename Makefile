@@ -5,14 +5,14 @@ ASSETS_DIR := assets
 EXPORT_SCRIPT := tools/export-gltf.py
 VERTEX_SHADERS := $(wildcard *-vs.sc)
 FRAGMENT_SHADERS := $(wildcard *-fs.sc)
-VERTEX_BINS := $(patsubst %-vs.sc,$(DATA_DIR)/%-vs.bin,$(VERTEX_SHADERS))
-FRAGMENT_BINS := $(patsubst %-fs.sc,$(DATA_DIR)/%-fs.bin,$(FRAGMENT_SHADERS))
+VERTEX_BINS := $(patsubst %-vs.sc,$(DATA_DIR)/%-vs.spv,$(VERTEX_SHADERS))
+FRAGMENT_BINS := $(patsubst %-fs.sc,$(DATA_DIR)/%-fs.spv,$(FRAGMENT_SHADERS))
 BLEND_FILES := $(wildcard $(ASSETS_DIR)/*.blend)
 GLTF_FILES := $(patsubst $(ASSETS_DIR)/%.blend,$(DATA_DIR)/%.gltf,$(BLEND_FILES))
 FONT_VERTEX_SHADERS := $(wildcard *-uivs.sc)
 FONT_FRAGMENT_SHADERS := $(wildcard *-uifs.sc)
-FONT_VERTEX_BINS := $(patsubst %-uivs.sc,$(DATA_DIR)/%-uivs.bin,$(FONT_VERTEX_SHADERS))
-FONT_FRAGMENT_BINS := $(patsubst %-uifs.sc,$(DATA_DIR)/%-uifs.bin,$(FONT_FRAGMENT_SHADERS))
+FONT_VERTEX_BINS := $(patsubst %-uivs.sc,$(DATA_DIR)/%-uivs.spv,$(FONT_VERTEX_SHADERS))
+FONT_FRAGMENT_BINS := $(patsubst %-uifs.sc,$(DATA_DIR)/%-uifs.spv,$(FONT_FRAGMENT_SHADERS))
 ASSETS_FONTS := $(wildcard $(ASSETS_DIR)/*.ttf)
 DATA_FONTS := $(patsubst $(ASSETS_DIR)/%,$(DATA_DIR)/%,$(ASSETS_FONTS))
 GIMP_FILES := $(wildcard $(ASSETS_DIR)/*.xcf)
@@ -33,16 +33,16 @@ $(SHADERC):
 
 shaders: $(VERTEX_BINS) $(FRAGMENT_BINS) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS)
 
-$(DATA_DIR)/%-vs.bin: %-vs.sc varying.def.sc shaderlib.sh | $(DATA_DIR)
+$(DATA_DIR)/%-vs.spv: %-vs.sc varying.def.sc shaderlib.sh | $(DATA_DIR)
 	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform linux --profile spirv --varyingdef varying.def.sc
 
-$(DATA_DIR)/%-fs.bin: %-fs.sc varying.def.sc shaderlib.sh | $(DATA_DIR)
+$(DATA_DIR)/%-fs.spv: %-fs.sc varying.def.sc shaderlib.sh | $(DATA_DIR)
 	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform linux --profile spirv --varyingdef varying.def.sc
 
-$(DATA_DIR)/%-uivs.bin: %-uivs.sc ui-varying.def.sc shaderlib.sh | $(DATA_DIR)
+$(DATA_DIR)/%-uivs.spv: %-uivs.sc ui-varying.def.sc shaderlib.sh | $(DATA_DIR)
 	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform linux --profile spirv --varyingdef ui-varying.def.sc
 
-$(DATA_DIR)/%-uifs.bin: %-uifs.sc ui-varying.def.sc shaderlib.sh | $(DATA_DIR)
+$(DATA_DIR)/%-uifs.spv: %-uifs.sc ui-varying.def.sc shaderlib.sh | $(DATA_DIR)
 	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform linux --profile spirv --varyingdef ui-varying.def.sc
 
 $(DATA_DIR)/%: $(ASSETS_DIR)/% | $(DATA_DIR)
