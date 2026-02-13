@@ -9,10 +9,10 @@ BLEND_FILES := $(wildcard $(ASSETS_DIR)/*.blend)
 GLTF_FILES := $(patsubst $(ASSETS_DIR)/%.blend,$(DATA_DIR)/%.gltf,$(BLEND_FILES))
 FONT_VERTEX_SHADERS := $(wildcard *-uivs.sc)
 FONT_FRAGMENT_SHADERS := $(wildcard *-uifs.sc)
-DIRECTX_VERTEX_SHADERS := $(patsubst %-vs.sc,$(DATA_DIR)/%-vs.bin,$(VERTEX_SHADERS))
-DIRECTX_FRAGMENT_SHADERS := $(patsubst %-fs.sc,$(DATA_DIR)/%-fs.bin,$(FRAGMENT_SHADERS))
-DIRECTX_FONT_VERTEX_SHADERS := $(patsubst %-uivs.sc,$(DATA_DIR)/%-uivs.bin,$(FONT_VERTEX_SHADERS))
-DIRECTX_FONT_FRAGMENT_SHADERS := $(patsubst %-uifs.sc,$(DATA_DIR)/%-uifs.bin,$(FONT_FRAGMENT_SHADERS))
+DIRECTX_VERTEX_SHADERS := $(patsubst %-vs.sc,$(DATA_DIR)/%-vs.hlsl,$(VERTEX_SHADERS))
+DIRECTX_FRAGMENT_SHADERS := $(patsubst %-fs.sc,$(DATA_DIR)/%-fs.hlsl,$(FRAGMENT_SHADERS))
+DIRECTX_FONT_VERTEX_SHADERS := $(patsubst %-uivs.sc,$(DATA_DIR)/%-uivs.hlsl,$(FONT_VERTEX_SHADERS))
+DIRECTX_FONT_FRAGMENT_SHADERS := $(patsubst %-uifs.sc,$(DATA_DIR)/%-uifs.hlsl,$(FONT_FRAGMENT_SHADERS))
 ASSETS_FONTS := $(wildcard $(ASSETS_DIR)/*.ttf)
 DATA_FONTS := $(patsubst $(ASSETS_DIR)/%,$(DATA_DIR)/%,$(ASSETS_FONTS))
 GIMP_FILES := $(wildcard $(ASSETS_DIR)/*.xcf)
@@ -33,17 +33,17 @@ $(SHADERC):
 
 shaders: $(VERTEX_BINS) $(FRAGMENT_BINS) $(FONT_VERTEX_BINS) $(FONT_FRAGMENT_BINS)
 
-$(DATA_DIR)/%-vs.bin: %-vs.sc varying.def.sc shaderlib.sh | $(DATA_DIR)
-	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform windows --profile 120 --varyingdef varying.def.sc
+$(DATA_DIR)/%-vs.hlsl: %-vs.sc varying.def.sc shaderlib.sh | $(DATA_DIR)
+	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform windows --profile s_5_0 --varyingdef varying.def.sc
 
-$(DATA_DIR)/%-fs.bin: %-fs.sc varying.def.sc shaderlib.sh | $(DATA_DIR)
-	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform windows --profile 120 --varyingdef varying.def.sc
+$(DATA_DIR)/%-fs.hlsl: %-fs.sc varying.def.sc shaderlib.sh | $(DATA_DIR)
+	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform windows --profile s_5_0 --varyingdef varying.def.sc
 
-$(DATA_DIR)/%-uivs.bin: %-uivs.sc ui-varying.def.sc shaderlib.sh | $(DATA_DIR)
-	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform windows --profile 120 --varyingdef ui-varying.def.sc
+$(DATA_DIR)/%-uivs.hlsl: %-uivs.sc ui-varying.def.sc shaderlib.sh | $(DATA_DIR)
+	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type vertex --platform windows --profile s_5_0 --varyingdef ui-varying.def.sc
 
-$(DATA_DIR)/%-uifs.bin: %-uifs.sc ui-varying.def.sc shaderlib.sh | $(DATA_DIR)
-	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform windows --profile 120 --varyingdef ui-varying.def.sc
+$(DATA_DIR)/%-uifs.hlsl: %-uifs.sc ui-varying.def.sc shaderlib.sh | $(DATA_DIR)
+	$(SHADERC) -i bgfx/bgfx/src -f $< -o $@ --type fragment --platform windows --profile s_5_0 --varyingdef ui-varying.def.sc
 
 $(DATA_DIR)/%: $(ASSETS_DIR)/% | $(DATA_DIR)
 	cp $< $@

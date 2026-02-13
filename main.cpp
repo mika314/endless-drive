@@ -35,7 +35,7 @@ public:
       win.getSize(&width, &height);
       auto r = bgfx::Init{};
 #ifdef BX_PLATFORM_WINDOWS
-      r.type = bgfx::RendererType::Vulkan;
+      r.type = bgfx::RendererType::Direct3D12;
 #else
       r.type = bgfx::RendererType::Vulkan;
 #endif
