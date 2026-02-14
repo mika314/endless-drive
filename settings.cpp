@@ -72,12 +72,18 @@ auto Settings::run(sdl::Window &win) -> void
       case 3:
         coinSound.play();
         fullScreen = !fullScreen;
-        win.setFullscreen(fullScreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
-        SDL_SetWindowResizable(win.get(), fullScreen ? SDL_FALSE : SDL_TRUE);
+        if (fullScreen)
+          win.setFullscreen(true);
+        else
+        {
+          win.setFullscreen(false);
+          SDL_SetWindowResizable(win.get(), SDL_TRUE);
+          win.setSize(1884, 1060);
+        }
         {
           int w, h;
           win.getSize(&w, &h);
-          bgfx::reset(w, h, 0);
+          bgfx::reset(w, h, ResetFlags);
           render.resize(w, h);
         }
         break;

@@ -75,8 +75,9 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
 
   if (!settings.fullScreen)
   {
-    win.setFullscreen(0);
+    win.setFullscreen(false);
     SDL_SetWindowResizable(win.get(), SDL_TRUE);
+    win.setSize(1884, 1060);
   }
 
   auto titleScreen = TitleScreen{assets, render, sfxSend};
