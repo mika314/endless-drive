@@ -78,86 +78,111 @@ auto Settings::run() -> void
       render.resize(w, h);
     }
   };
+
+  auto exit = [&]() { done = true; };
+  auto apply = [&]() {
+    switch (selection)
+    {
+    case 3:
+      coinSound.play();
+      fullScreen = !fullScreen;
+      if (fullScreen)
+        win.setFullscreen(true);
+      else
+      {
+        win.setFullscreen(false);
+        SDL_SetWindowResizable(win.get(), SDL_TRUE);
+        win.setSize(1884, 1060);
+      }
+      {
+        int w, h;
+        win.getSize(&w, &h);
+        bgfx::reset(w, h, ResetFlags);
+        render.resize(w, h);
+      }
+      break;
+    case 4:
+      coinSound.play();
+      showFps = !showFps;
+      break;
+    }
+  };
+
+  auto up = [&]() {
+    coinSound.play();
+    selection = (selection + 5 - 1) % 5;
+  };
+
+  auto down = [&]() {
+    coinSound.play();
+    selection = (selection + 1) % 5;
+  };
+
+  auto dec = [&]() {
+    switch (selection)
+    {
+    case 0:
+      masterVolume = std::max(0.0f, masterVolume - 0.05f);
+      master.gain = sliderToGain(masterVolume);
+      coinSound.play();
+      break;
+    case 1:
+      music = std::max(0.0f, music - 0.05f);
+      musicSend.gain = sliderToGain(music);
+      coinSound.play();
+      break;
+    case 2:
+      sfx = std::max(0.0f, sfx - 0.05f);
+      sfxSend.gain = sliderToGain(sfx);
+      coinSound.play();
+      break;
+    }
+  };
+
+  auto inc = [&]() {
+    switch (selection)
+    {
+    case 0:
+      masterVolume = std::min(1.f, masterVolume + 0.05f);
+      master.gain = sliderToGain(masterVolume);
+      coinSound.play();
+      break;
+    case 1:
+      music = std::min(1.f, music + 0.05f);
+      musicSend.gain = sliderToGain(music);
+      coinSound.play();
+      break;
+    case 2:
+      sfx = std::min(1.f, sfx + 0.05f);
+      sfxSend.gain = sliderToGain(sfx);
+      coinSound.play();
+      break;
+    }
+  };
+
   e.keyDown = [&](const SDL_KeyboardEvent &e) {
     switch (e.keysym.sym)
     {
-    case SDLK_ESCAPE: done = true; break;
+    case SDLK_ESCAPE: exit(); break;
     case SDLK_SPACE:
-    case SDLK_RETURN:
-      switch (selection)
-      {
-      case 3:
-        coinSound.play();
-        fullScreen = !fullScreen;
-        if (fullScreen)
-          win.setFullscreen(true);
-        else
-        {
-          win.setFullscreen(false);
-          SDL_SetWindowResizable(win.get(), SDL_TRUE);
-          win.setSize(1884, 1060);
-        }
-        {
-          int w, h;
-          win.getSize(&w, &h);
-          bgfx::reset(w, h, ResetFlags);
-          render.resize(w, h);
-        }
-        break;
-      case 4:
-        coinSound.play();
-        showFps = !showFps;
-        break;
-      }
-      break;
-    case SDLK_UP:
-      coinSound.play();
-      selection = (selection + 5 - 1) % 5;
-      break;
-    case SDLK_DOWN:
-      coinSound.play();
-      selection = (selection + 1) % 5;
-      break;
-    case SDLK_LEFT:
-      switch (selection)
-      {
-      case 0:
-        masterVolume = std::max(0.0f, masterVolume - 0.05f);
-        master.gain = sliderToGain(masterVolume);
-        coinSound.play();
-        break;
-      case 1:
-        music = std::max(0.0f, music - 0.05f);
-        musicSend.gain = sliderToGain(music);
-        coinSound.play();
-        break;
-      case 2:
-        sfx = std::max(0.0f, sfx - 0.05f);
-        sfxSend.gain = sliderToGain(sfx);
-        coinSound.play();
-        break;
-      }
-      break;
-    case SDLK_RIGHT:
-      switch (selection)
-      {
-      case 0:
-        masterVolume = std::min(1.f, masterVolume + 0.05f);
-        master.gain = sliderToGain(masterVolume);
-        coinSound.play();
-        break;
-      case 1:
-        music = std::min(1.f, music + 0.05f);
-        musicSend.gain = sliderToGain(music);
-        coinSound.play();
-        break;
-      case 2:
-        sfx = std::min(1.f, sfx + 0.05f);
-        sfxSend.gain = sliderToGain(sfx);
-        coinSound.play();
-        break;
-      }
-      break;
+    case SDLK_RETURN: apply(); break;
+    case SDLK_UP: up(); break;
+    case SDLK_DOWN: down(); break;
+    case SDLK_LEFT: dec(); break;
+    case SDLK_RIGHT: inc(); break;
+    }
+  };
+
+  e.controllerButtonDown = [&](const auto &e) {
+    switch (e.button)
+    {
+    case SDL_CONTROLLER_BUTTON_START:
+    case SDL_CONTROLLER_BUTTON_B: exit(); break;
+    case SDL_CONTROLLER_BUTTON_A: apply(); break;
+    case SDL_CONTROLLER_BUTTON_DPAD_UP: up(); break;
+    case SDL_CONTROLLER_BUTTON_DPAD_DOWN: down(); break;
+    case SDL_CONTROLLER_BUTTON_DPAD_LEFT: dec(); break;
+    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: inc(); break;
     }
   };
 

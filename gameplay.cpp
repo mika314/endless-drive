@@ -180,7 +180,7 @@ auto Gameplay::run() -> int
       render.resize(w, h);
     }
   };
-  e.keyDown = [&](const SDL_KeyboardEvent &e) {
+  e.keyDown = [&](const auto &e) {
     switch (e.keysym.sym)
     {
     case SDLK_ESCAPE: done = true; break;
@@ -189,6 +189,23 @@ auto Gameplay::run() -> int
         --car.currentLane;
       break;
     case SDLK_RIGHT:
+      if (car.currentLane < 1)
+        ++car.currentLane;
+      break;
+    }
+  };
+  e.controllerButtonDown = [&](const auto &e) {
+    switch (e.button)
+    {
+    case SDL_CONTROLLER_BUTTON_START:
+    case SDL_CONTROLLER_BUTTON_B: done = true; break;
+    case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+      if (car.currentLane > -1)
+        --car.currentLane;
+      break;
+    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
       if (car.currentLane < 1)
         ++car.currentLane;
       break;

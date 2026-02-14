@@ -54,10 +54,28 @@ public:
   }
 };
 
+namespace
+{
+  struct Controller
+  {
+    Controller()
+      : controller([]() {
+          for (auto i = 0; i < SDL_NumJoysticks(); ++i)
+            if (SDL_IsGameController(i))
+              return SDL_GameControllerOpen(i);
+          return decltype(SDL_GameControllerOpen(0)){};
+        }())
+    {
+    }
+    ~Controller() { SDL_GameControllerClose(controller); }
+    decltype(SDL_GameControllerOpen(0)) controller;
+  };
+} // namespace
+
 auto main(int /*argc*/, char ** /*argv*/) -> int
 {
   srand(time(nullptr));
-  auto init = sdl::Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+  auto init = sdl::Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER);
   SDL_ShowCursor(false);
 
   auto win = sdl::Window{"Endless Drive", 0, 0, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP};
@@ -75,6 +93,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto sfxSend = Send{masterSpeaker};
   auto coinSound = Sample{masterSpeaker, assets.get<SoundWave>("coin"), .33, 0.0};
   auto settings = Settings{assets, win, render, masterSpeaker, musicSend, sfxSend};
+  auto controller = Controller{};
 
   auto titleScreen = TitleScreen{assets, render, sfxSend};
   for (;;)

@@ -29,6 +29,15 @@ auto GameOver::run() -> void
     }
   };
 
+  e.controllerButtonDown = [&](const auto &e) {
+    switch (e.button)
+    {
+    case SDL_CONTROLLER_BUTTON_START:
+    case SDL_CONTROLLER_BUTTON_A:
+    case SDL_CONTROLLER_BUTTON_B: done = true; break;
+    }
+  };
+
   const auto width = render.getWidth();
   const auto height = render.getHeight();
 

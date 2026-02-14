@@ -52,6 +52,22 @@ auto TitleScreen::run() -> Opt
     }
   };
 
+  e.controllerButtonDown = [&](const auto &e) {
+    switch (e.button)
+    {
+    case SDL_CONTROLLER_BUTTON_A:
+    case SDL_CONTROLLER_BUTTON_B: done = true; break;
+    case SDL_CONTROLLER_BUTTON_DPAD_UP:
+      coinSound.play();
+      opt = static_cast<Opt>((static_cast<int>(opt) + 3 - 1) % 3);
+      break;
+    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+      coinSound.play();
+      opt = static_cast<Opt>((static_cast<int>(opt) + 1) % 3);
+      break;
+    }
+  };
+
   const auto width = render.getWidth();
   const auto height = render.getHeight();
 
