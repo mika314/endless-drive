@@ -11,8 +11,8 @@ uniform vec4 ambient;
 uniform mat4 mtx;
 uniform mat4 projViewCombine;
 uniform vec4 time;
-const float ssaoRadius = .25f;
-const float bias = 0.01f;
+static const float ssaoRadius = .25f;
+static const float bias = 0.01f;
 
 vec3 decodeNormalUint(vec4 _encodedNormal)
 {
@@ -100,10 +100,31 @@ void main()
 #if !BGFX_SHADER_LANGUAGE_GLSL
   clip.y = -clip.y;
 #endif
-  vec3 worldPos = clipToWorld(mtx, clip);
+
+  const vec3 worldPos = clipToWorld(mtx, clip);
+
+#if 0
+  vec4 tmp = mul(projViewCombine, vec4(worldPos, 1.f));
+  vec3 backToScreen = tmp.xyz / tmp.w;
+  float k = .0025f;
+  gl_FragColor = vec4(1.f / k * (clip - backToScreen + vec3(k / 2.f, k / 2.f, k / 2.f)), 1.f);
+  return;
+#endif
+
   vec3 norm = decodeNormalUint(texture2D(normalsCombine, v_uv));
+#if 0
+  gl_FragColor = vec4(0.5 * (norm + vec3_splat(1.f)), 1.f);
+  return;
+#endif
+
   float occlusion = 0.0f;
   const int Samples = 16;
+
+#if 0
+  gl_FragColor = vec4(0.5 * (getOffset(norm, rng_state) + vec3_splat(1.f)), 1.f);
+  return;
+#endif
+
   for (int i = 0; i < Samples; ++i)
   {
     vec3 worldSpaceOffset = getOffset(norm, rng_state);
