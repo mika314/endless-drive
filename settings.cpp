@@ -15,8 +15,25 @@
 #include <log/log.hpp>
 #include <sdlpp/sdlpp.hpp>
 
-Settings::Settings(Assets &aAssets, Render &aRender, Sink &aMaster, Sink &aMusicSend, Sink &aSfxSend)
+// Converts a linear slider value (0.0 to 1.0) to audio gain.
+// Uses a decibel-based logarithmic mapping for natural hearing response.
+static auto sliderToGain(float x) -> float
+{
+  if (x <= 0.0f)
+    return 0.0f;
+  const auto minDb = -45.f;
+  const auto db = (x * -minDb) + minDb;
+  return std::pow(10.f, db / 20.f);
+}
+
+Settings::Settings(Assets &aAssets,
+                   sdl::Window &aWin,
+                   Render &aRender,
+                   Sink &aMaster,
+                   Sink &aMusicSend,
+                   Sink &aSfxSend)
   : assets(aAssets),
+    win(aWin),
     render(aRender),
     master(aMaster),
     musicSend(aMusicSend),
@@ -30,20 +47,20 @@ Settings::Settings(Assets &aAssets, Render &aRender, Sink &aMaster, Sink &aMusic
 {
   if (auto f = std::ifstream{prefPath + "settings.json", std::ios::binary})
     jsonDeser(f, *this);
+
+  if (!fullScreen)
+  {
+    win.setFullscreen(false);
+    SDL_SetWindowResizable(win.get(), SDL_TRUE);
+    win.setSize(1884, 1060);
+  }
+
+  master.gain = sliderToGain(masterVolume);
+  musicSend.gain = sliderToGain(music);
+  sfxSend.gain = sliderToGain(sfx);
 }
 
-// Converts a linear slider value (0.0 to 1.0) to audio gain.
-// Uses a decibel-based logarithmic mapping for natural hearing response.
-static auto sliderToGain(float x) -> float
-{
-  if (x <= 0.0f)
-    return 0.0f;
-  const auto minDb = -45.f;
-  const auto db = (x * -minDb) + minDb;
-  return std::pow(10.f, db / 20.f);
-}
-
-auto Settings::run(sdl::Window &win) -> void
+auto Settings::run() -> void
 {
   if (auto f = std::ifstream{prefPath + "settings.json", std::ios::binary})
     jsonDeser(f, *this);

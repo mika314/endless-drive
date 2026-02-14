@@ -48,7 +48,10 @@ public:
       return r;
     }());
   }
-  ~BgfxInit() { bgfx::shutdown(); }
+  ~BgfxInit()
+  {
+    bgfx::shutdown();
+  }
 };
 
 auto main(int /*argc*/, char ** /*argv*/) -> int
@@ -71,14 +74,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
   auto musicSend = Send{masterSpeaker};
   auto sfxSend = Send{masterSpeaker};
   auto coinSound = Sample{masterSpeaker, assets.get<SoundWave>("coin"), .33, 0.0};
-  auto settings = Settings{assets, render, masterSpeaker, musicSend, sfxSend};
-
-  if (!settings.fullScreen)
-  {
-    win.setFullscreen(false);
-    SDL_SetWindowResizable(win.get(), SDL_TRUE);
-    win.setSize(1884, 1060);
-  }
+  auto settings = Settings{assets, win, render, masterSpeaker, musicSend, sfxSend};
 
   auto titleScreen = TitleScreen{assets, render, sfxSend};
   for (;;)
@@ -90,7 +86,7 @@ auto main(int /*argc*/, char ** /*argv*/) -> int
       GameOver{assets, render, sfxSend, Gameplay{assets, render, musicSend, sfxSend, settings}.run()}
         .run();
       break;
-    case TitleScreen::Opt::settings: settings.run(win); break;
+    case TitleScreen::Opt::settings: settings.run(); break;
     case TitleScreen::Opt::quit: return 0;
     }
   }

@@ -4,14 +4,19 @@
 
 namespace sdl
 {
-class Window;
+  class Window;
 }
 
 class Settings
 {
 public:
-  Settings(class Assets &, class Render &, class Sink &master, Sink &musicSend, Sink &sfxSend);
-  auto run(sdl::Window &win) -> void;
+  Settings(class Assets &,
+           sdl::Window &,
+           class Render &,
+           class Sink &master,
+           Sink &musicSend,
+           Sink &sfxSend);
+  auto run() -> void;
   float masterVolume = 1.f;
   float music = 1.f;
   float sfx = 1.f;
@@ -22,6 +27,7 @@ public:
 
 private:
   Assets &assets;
+  sdl::Window &win;
   Render &render;
   Sink &master;
   Sink &musicSend;
