@@ -133,7 +133,7 @@ auto Gameplay::run() -> int
     }
     else if (rand() % 2 == 0)
     {
-      if (rand() % 370 == 0)
+      if (rand() % 185 == 0)
       {
         auto &node = scene.addNode<Canister>(assets);
         const auto x = rand() % 3 - 1;
