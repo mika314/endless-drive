@@ -10,6 +10,7 @@
 #include "live.hpp"
 #include "looping-sample.hpp"
 #include "mesh.hpp"
+#include "multiplier.hpp"
 #include "render.hpp"
 #include "sample.hpp"
 #include "scene.hpp"
@@ -51,6 +52,7 @@ auto Gameplay::run() -> int
   auto lowGasSound = Sample{sfxSend, assets.get<SoundWave>("low-gas"), 1., 0.0};
   auto emptyTankSound = Sample{sfxSend, assets.get<SoundWave>("empty-tank"), 1., 0.0};
   auto bgm = LoopingSample{musicSend, assets.get<SoundWave>("bgm"), .1, 0.0};
+  auto multiplierSound = Sample{sfxSend, assets.get<SoundWave>("multiplier"), .33, 0.0};
 
   int lastTire = 50;
   int n = 1;
@@ -151,6 +153,16 @@ auto Gameplay::run() -> int
         tmpNodes.push_back(node);
         obstacles.push_back(node);
       }
+      else if (rand() % 100 == 0)
+      {
+        auto &node = scene.addNode<Multiplier>(assets);
+        const auto x = rand() % 3 - 1;
+        node.setPos({dx + x * 2.6f, y, 0.0f});
+        node.x = x;
+        node.y = y;
+        tmpNodes.push_back(node);
+        obstacles.push_back(node);
+      }
       else
       {
         auto &node = scene.addNode<Coin>(assets);
@@ -218,7 +230,12 @@ auto Gameplay::run() -> int
                                                  .font = assets.get<Font>("chp-fire.ttf"),
                                                  .color = glm::vec3{1.f, 1.f, .5f},
                                                  .sz = 100});
-  scoreLb.setPos(glm::vec2{width - 500.f, 150.f});
+  scoreLb.setPos(glm::vec2{width - 600.f, 150.f});
+  auto &multiplierLb = scene.addNode<LabelNode>(Label{.text = "x1",
+                                                      .font = assets.get<Font>("chp-fire.ttf"),
+                                                      .color = glm::vec3{.5f, .5f, 1.f},
+                                                      .sz = 100});
+  multiplierLb.setPos(glm::vec2{width - 375.f, 350.f});
 
   auto livesIco = std::vector<std::reference_wrapper<ImgNode>>{};
   for (auto i = 0; i < std::min(lives, 10); ++i)
@@ -269,6 +286,7 @@ auto Gameplay::run() -> int
     {
       emptyTankSound.play();
       fuel = 100.f;
+      multiplier = 1;
       --lives;
       if (!livesIco.empty())
       {
@@ -296,7 +314,7 @@ auto Gameplay::run() -> int
           continue;
         if (dynamic_cast<Canister *>(&obstacle.get()))
         {
-          fuel = std::min(100.f, fuel + 10.f);
+          fuel = std::min(100.f, fuel + 33.f);
           fuelSound.play(1.0, .5 * car.currentLane);
         }
         else if (dynamic_cast<Live *>(&obstacle.get()))
@@ -310,16 +328,22 @@ auto Gameplay::run() -> int
                             .get();
           liveIco.setPos(glm::vec2{width - 500.f + (livesIco.size() - 1) * 100.f, 100.f});
         }
+        else if (dynamic_cast<Multiplier *>(&obstacle.get()))
+        {
+          multiplierSound.play(1.0, .5 * car.currentLane);
+          multiplier *= 2;
+        }
         else if (dynamic_cast<Coin *>(&obstacle.get()))
         {
           coinSound.play(1.0, .5 * car.currentLane);
-          score += 10;
+          score += multiplier;
         }
         else if (dynamic_cast<Tire *>(&obstacle.get()))
         {
           tireHitSound.play(1.0, .5 * car.currentLane);
           --lives;
           fuel = 100.f;
+          multiplier = 1;
           if (!livesIco.empty())
           {
             auto &live = livesIco.back();
@@ -345,6 +369,7 @@ auto Gameplay::run() -> int
     }
 
     scoreLb.text = "Score: " + std::to_string(score);
+    multiplierLb.text = "x" + std::to_string(multiplier);
     fuelGaugeNiddleIco.setRot(2.f * fuel / 100.f - 1.f);
 
     bgfx::dbgTextClear();

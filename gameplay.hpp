@@ -16,4 +16,5 @@ private:
   int score = 0;
   float fuel = 100.f;
   int lives = 3;
+  int multiplier = 1;
 };
