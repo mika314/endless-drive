@@ -13,8 +13,9 @@
 
 static const auto geomRenderPass = 0;
 static const auto lightRenderPass = 1;
-static const auto combineRenderPass = 2;
-static const auto uiRenderPass = 3;
+static const auto bloomRenderPass = 2;
+static const auto combineRenderPass = 3;
+static const auto uiRenderPass = 4;
 
 namespace
 {
@@ -83,6 +84,7 @@ Render::Render(int aW, int aH)
     geomInstanced(loadProgram("geom-instanced-vs", "geom-fs")),
     pointLight(loadProgram("point-light-vs", "point-light-fs")),
     spotlight(loadProgram("spotlight-vs", "spotlight-fs")),
+    bloom(loadProgram("bloom-vs", "bloom-fs")),
     combine(loadProgram("combine-vs", "combine-fs")),
     imgProg(loadProgram("img-uivs", "img-uifs"))
 {
@@ -220,6 +222,11 @@ auto Render::render(const Scene &scene) -> void
     bgfx::submit(lightRenderPass, v.prog);
   }
 
+  { // bloom render pass
+    deferrd.bloom();
+    bgfx::submit(bloomRenderPass, bloom);
+  }
+
   { // combine render pass
     deferrd.combine();
     u_projViewCombine = viewProj;
@@ -337,6 +344,9 @@ Render::Deferrd::Deferrd(int w, int h)
     t_emission(
       bgfx::createTexture2D(w, h, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT | flags)),
     t_depth(bgfx::createTexture2D(w, h, false, 1, depthBufTexFmt(), BGFX_TEXTURE_RT | flags)),
+    t_bloomBuffer(
+      bgfx::createTexture2D(w, h, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT | flags)),
+    bloomBuffer(bgfx::createFrameBuffer(1, &t_bloomBuffer, true)),
     gBuffer(bgfx::createFrameBuffer(
       gBufferAt.size(),
       [&]() {
@@ -353,7 +363,7 @@ Render::Deferrd::Deferrd(int w, int h)
     lightBuffer(bgfx::createFrameBuffer(1, &t_lightBuffer, true)),
     caps(bgfx::getCaps())
 {
-  bgfx::setViewClear(geomRenderPass, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x505050ff, 1.0f, 0);
+  bgfx::setViewClear(geomRenderPass, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x000000ff, 1.0f, 0);
   bgfx::setViewRect(geomRenderPass, 0, 0, w, h);
   bgfx::setViewFrameBuffer(geomRenderPass, gBuffer);
   auto proj = glm::ortho(0.0f,  // left
@@ -376,6 +386,11 @@ Render::Deferrd::Deferrd(int w, int h)
   bgfx::setViewRect(lightRenderPass, 0, 0, w, h);
   bgfx::setViewTransform(lightRenderPass, nullptr, &proj);
 
+  bgfx::setViewFrameBuffer(bloomRenderPass, bloomBuffer);
+  bgfx::setViewClear(bloomRenderPass, BGFX_CLEAR_COLOR, 0xffffffff, 1.0f, 0);
+  bgfx::setViewRect(bloomRenderPass, 0, 0, w, h);
+  bgfx::setViewTransform(bloomRenderPass, nullptr, &proj);
+
   bgfx::setViewClear(combineRenderPass, BGFX_CLEAR_COLOR, 0xffffffff, 1.0f, 0);
   bgfx::setViewRect(combineRenderPass, 0, 0, w, h);
   bgfx::setViewTransform(combineRenderPass, nullptr, &proj);
@@ -386,6 +401,8 @@ Render::Deferrd::~Deferrd()
   bgfx::destroy(lightBuffer);
   bgfx::destroy(t_lightBuffer);
   bgfx::destroy(gBuffer);
+  bgfx::destroy(bloomBuffer);
+  bgfx::destroy(t_bloomBuffer);
   bgfx::destroy(t_depth);
   bgfx::destroy(t_emission);
   bgfx::destroy(t_normals);
@@ -408,12 +425,19 @@ auto Render::Deferrd::light() -> void
   screenSpaceQuad(caps->originBottomLeft);
 }
 
+auto Render::Deferrd::bloom() -> void
+{
+  u_emissionBuffer = t_emission;
+  bgfx::setState(0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);
+  screenSpaceQuad(caps->originBottomLeft);
+}
+
 auto Render::Deferrd::combine() -> void
 {
   u_baseColor = t_baseColor;
   u_lightBuffer = t_lightBuffer;
   u_depth = t_depth;
-  u_emissionBuffer = t_emission;
+  u_emissionBuffer = t_bloomBuffer;
   u_normalsCombine = t_normals;
   u_ambient = glm::vec4{.5f};
   bgfx::setState(0 | BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A);

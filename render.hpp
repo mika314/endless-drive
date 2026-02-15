@@ -103,6 +103,7 @@ private:
     ~Deferrd();
     auto geom() -> void;
     auto light() -> void;
+    auto bloom() -> void;
     auto combine() -> void;
 
   private:
@@ -111,6 +112,8 @@ private:
     bgfx::TextureHandle t_normals;
     bgfx::TextureHandle t_emission;
     bgfx::TextureHandle t_depth;
+    bgfx::TextureHandle t_bloomBuffer;
+    bgfx::FrameBufferHandle bloomBuffer;
     std::array<bgfx::Attachment, 5> gBufferAt;
     bgfx::FrameBufferHandle gBuffer;
     bgfx::TextureHandle t_lightBuffer;
@@ -130,6 +133,7 @@ private:
   bgfx::ProgramHandle geomInstanced;
   bgfx::ProgramHandle pointLight;
   bgfx::ProgramHandle spotlight;
+  bgfx::ProgramHandle bloom;
   bgfx::ProgramHandle combine;
   bgfx::ProgramHandle imgProg;
   GlyphInfo blackGlyph;

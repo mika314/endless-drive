@@ -1,0 +1,1 @@
+ldflags="-Lbgfx/bgfx/.build/linux64_clang/bin/ -lbgfxRelease -lbimg_decodeRelease -lbimgRelease -lbxRelease -lglfw -ldl -lGL -lX11"

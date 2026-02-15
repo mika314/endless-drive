@@ -1,8 +1,2 @@
-cflags="-Wall -Wextra -Ibgfx/bgfx/include -Ibgfx/bx/include -Ibgfx/bimg/include -DBX_CONFIG_DEBUG=1"
 multithreaded=true
-
-# linking flags for Linux build
-# ldflags="-Lbgfx/bgfx/.build/linux64_clang/bin/ -lbgfxRelease -lbimg_decodeRelease -lbimgRelease -lbxRelease -lglfw -ldl -lGL -lX11"
-
-# linking flags for Windows build
-ldflags="-Lbgfx/bgfx/.build/win64_mingw-clang/bin/ -lbgfxRelease -lbimg_decodeRelease -lbimgRelease -lbxRelease -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lgdi32 -lwinmm -limm32 -lversion -lsetupapi -lole32 -loleaut32 -luuid"
+cflags="-Wall -Wextra -Ibgfx/bgfx/include -Ibgfx/bx/include -Ibgfx/bimg/include -DBX_CONFIG_DEBUG=1"
