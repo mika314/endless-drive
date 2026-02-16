@@ -1,1 +1,1 @@
-ldflags="-Lbgfx/bgfx/.build/win64_mingw-clang/bin/ -lbgfxRelease -lbimg_decodeRelease -lbimgRelease -lbxRelease -lmingw32 -lSDL2main -lSDL2 -lopengl32 -lgdi32 -lwinmm -limm32 -lversion -lsetupapi -lole32 -loleaut32 -luuid"
+ldflags="-Lbgfx/bgfx/.build/win64_mingw-clang/bin/ -lbgfxRelease -lbimg_decodeRelease -lbimgRelease -lbxRelease"
