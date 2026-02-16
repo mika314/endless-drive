@@ -78,5 +78,5 @@ clean:
 	rm -rf bgfx/bgfx/.build
 	rm -rf .tmp-*
 
-win:
+win: all
 	rsync -av --include='data/' --filter=':- .gitignore' --exclude='.git/' . win:/e/prj/endless-drive/
