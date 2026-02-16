@@ -28,7 +28,7 @@ auto Car::tick(float dt) -> void
   const auto curX = getPos().x;
   const auto dx = 10.f * dt * (desiredX - curX);
   setPos({curX + dx, carYOffset, 0.0f});
-  setRot({0.f, 0.f, -getRoadAngle(carYOffset) - 2.f * dx});
+  setRot({0.f, 0.f, -getRoadAngle(carYOffset) - .17f * (desiredX - curX)});
 }
 
 auto Car::desiredY(float now) -> float
