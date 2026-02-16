@@ -169,4 +169,6 @@ private:
   };
   std::vector<Light> lightRenderData;
   std::vector<std::function<auto()->void>> uiRenderData;
+  bgfx::VertexBufferHandle imgVb;
+  bgfx::IndexBufferHandle imgIb;
 };

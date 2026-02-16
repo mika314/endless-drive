@@ -5,6 +5,7 @@
 #include "material.hpp"
 #include "scene.hpp"
 #include "tex.hpp"
+#include <array>
 #include <bx/math.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -71,6 +72,14 @@ namespace
 
     bgfx::setVertexBuffer(0, &vb);
   }
+
+  const auto imgVertexData = std::array{
+    PosTexCoord0Vertex{glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec2{0.0f, 0.0f}}, // Top-left
+    PosTexCoord0Vertex{glm::vec3{1.f, 0.0f, 0.0f}, glm::vec2{1.0f, 0.0f}},  // Top-right
+    PosTexCoord0Vertex{glm::vec3{1.f, 1.f, 0.0f}, glm::vec2{1.0f, 1.0f}},   // Bottom-right
+    PosTexCoord0Vertex{glm::vec3{0.0f, 1.f, 0.0f}, glm::vec2{0.0f, 1.0f}},  // Bottom-left
+  };
+  const auto imgIndexData = std::array<uint16_t, 6>{0, 1, 2, 0, 2, 3};
 } // namespace
 
 Render::Render(int aW, int aH)
@@ -86,7 +95,12 @@ Render::Render(int aW, int aH)
     spotlight(loadProgram("spotlight-vs", "spotlight-fs")),
     bloom(loadProgram("bloom-vs", "bloom-fs")),
     combine(loadProgram("combine-vs", "combine-fs")),
-    imgProg(loadProgram("img-uivs", "img-uifs"))
+    imgProg(loadProgram("img-uivs", "img-uifs")),
+    imgVb(bgfx::createVertexBuffer(
+      bgfx::makeRef(imgVertexData.data(), imgVertexData.size() * sizeof(imgVertexData[0])),
+      PosTexCoord0Vertex::ms_layout)),
+    imgIb(bgfx::createIndexBuffer(
+      bgfx::makeRef(imgIndexData.data(), imgIndexData.size() * sizeof(imgIndexData[0]))))
 {
   const uint32_t W = 3;
   // Create filler rectangle
@@ -213,6 +227,11 @@ auto Render::render(const Scene &scene) -> void
       bgfx::submit(geomRenderPass, geomInstanced);
   }
 
+  { // bloom render pass
+    deferrd.bloom();
+    bgfx::submit(bloomRenderPass, bloom);
+  }
+
   for (const auto &v : lightRenderData)
   {
     deferrd.light();
@@ -220,11 +239,6 @@ auto Render::render(const Scene &scene) -> void
     u_lightColor = glm::vec4{v.color, 1.f};
     u_lightAngle = glm::vec4{v.angle};
     bgfx::submit(lightRenderPass, v.prog);
-  }
-
-  { // bloom render pass
-    deferrd.bloom();
-    bgfx::submit(bloomRenderPass, bloom);
   }
 
   { // combine render pass
@@ -260,11 +274,18 @@ auto Render::render(const Scene &scene) -> void
     v();
 
   s_texColor = atlas.getTextureHandle();
+
+  // TODO-Mika workaround for text rendering, I need to spend some time and find a proper fix
+  bgfx::TransientVertexBuffer vb;
+  bgfx::allocTransientVertexBuffer(&vb, 4, PosTexCoord0Vertex::ms_layout);
+
   textBufferManager.submitTextBuffer(textBuffer, uiRenderPass);
 }
 
 Render::~Render()
 {
+  bgfx::destroy(imgIb);
+  bgfx::destroy(imgVb);
   bgfx::destroy(combine);
   bgfx::destroy(spotlight);
   bgfx::destroy(pointLight);
@@ -284,33 +305,9 @@ auto Render::operator()(const ImgIn &v) -> void
     }
 
     bgfx::setTransform(&v.trans);
-    bgfx::TransientVertexBuffer vb;
-    bgfx::allocTransientVertexBuffer(&vb, 4, PosTexCoord0Vertex::ms_layout);
-    PosTexCoord0Vertex *vertex = (PosTexCoord0Vertex *)vb.data;
-
-    bgfx::TransientIndexBuffer ib;
-    bgfx::allocTransientIndexBuffer(&ib, 6);
-    uint16_t *indices = (uint16_t *)ib.data;
-
-    // Quad vertices
-    vertex[0] = {glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec2{0.0f, 0.0f}}; // Top-left
-    vertex[1] = {glm::vec3{1.f, 0.0f, 0.0f}, glm::vec2{1.0f, 0.0f}};  // Top-right
-    vertex[2] = {glm::vec3{1.f, 1.f, 0.0f}, glm::vec2{1.0f, 1.0f}};   // Bottom-right
-    vertex[3] = {glm::vec3{0.0f, 1.f, 0.0f}, glm::vec2{0.0f, 1.0f}};  // Bottom-left
-
-    // Indices for two triangles forming a quad
-    indices[0] = 0;
-    indices[1] = 1;
-    indices[2] = 2;
-
-    indices[3] = 0;
-    indices[4] = 2;
-    indices[5] = 3;
-
     u_imgTex = v.tex;
-
-    bgfx::setVertexBuffer(0, &vb);
-    bgfx::setIndexBuffer(&ib);
+    bgfx::setVertexBuffer(0, imgVb);
+    bgfx::setIndexBuffer(imgIb);
     bgfx::setState(BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA);
     bgfx::submit(uiRenderPass, imgProg);
   });
