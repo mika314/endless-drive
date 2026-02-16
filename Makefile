@@ -79,4 +79,4 @@ clean:
 	rm -rf .tmp-*
 
 win:
-	rsync -av --filter=':- .gitignore' --exclude='.git/' . win:/e/prj/endless-drive/
+	rsync -av --include='data/' --filter=':- .gitignore' --exclude='.git/' . win:/e/prj/endless-drive/
